@@ -1,0 +1,81 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+
+# Setup
+
+##### Load libraries {-}
+
+```{r eval=FALSE}
+library(sf)
+library(tmap)
+```
+
+
+##### Import ibutton data {-}
+
+```{r eval=FALSE}
+hills<-read.csv(file="0_data/external/Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv")
+
+RIVR<-read.csv(file="0_data/external/iButtons_RIVR_combined_April7_2022_no_extremes.csv")
+```
+
+
+# Combine ibutton data
+
+##### Create spatial data frame of iButtopn locations {-}
+
+```{r eval=FALSE}
+RIVR_xy<-RIVR%>%
+  dplyr::select(c(Project, Site_StationKey, Date_deplo, Lat, Long))%>%
+  dplyr::distinct()
+
+RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326)
+
+# save as spatial data frame
+save(RIVR_xy, file="0_data/manual/spatial/RIVR_xy.rData")
+
+# save as shapefile
+st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
+````
+
+##### Identify study area {-}
+
+```{r eval=FALSE}
+study_area<-st_bbox(RIVR_xy)
+
+
+```
+
+
+
+
+# Plot
+# m<-tm_shape(alberta)+tm_borders()+tm_fill(col = "#fddadd")+
+#   #tm_polygons(col=NA, border.col="black")+
+#   tm_layout(frame=FALSE)+
+#   tm_legend(outside=TRUE, frame=FALSE)+
+m<-tm_shape(RIVR_xy)+
+    tm_symbols(col = "#2e3c78", border.lwd = 0, size = .3, alpha=.3, title.shape="station location", legend.format = list(text.align="right", text.to.columns = TRUE))
+  #tm_legend(position=c("left", "top"), frame=TRUE)
+m
+
+tmap_save(m, "3_output/maps/RIVR_xy.png", asp=0, height = 5, width = 6, outer.margins=c(0,0,0,.08))
+
+
+```
+
+
+
+
+
+
+
+

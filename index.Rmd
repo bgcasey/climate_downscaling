@@ -1,0 +1,15 @@
+---
+title: "README"
+author: "Brendan Casey"
+date: '2022-09-15'
+output: html_document
+---
+
+
+```{r echo=FALSE}
+library(fs)
+root.dir = rprojroot::find_rstudio_root_file()
+
+fs::dir_tree(path = root.dir, recurse = TRUE)
+```
+
