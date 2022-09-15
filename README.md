@@ -1,8 +1,10 @@
 # climate_downscaling
 
 
+**Project directory index:**
+
 ```
-/Volumes/GoogleDrive/My Drive/CandianForestService/climate_downscaling
+climate_downscaling
 ├── 0_data
 │   ├── external
 │   │   ├── Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv
