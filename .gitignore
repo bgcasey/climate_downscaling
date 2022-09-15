@@ -39,7 +39,7 @@ vignettes/*.pdf
 .Renviron
 
 # Data folder
-0_data/
+0_data/*
 
 
-\!README!.md
+!0_data/README.md
