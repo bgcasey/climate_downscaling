@@ -35,11 +35,14 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-# R Environment Variables
-.Renviron
-
 # Data folder
 0_data/*
 
 
 !0_data/README.md
+
+
+# R Environment Variables
+.Renviron
+
+
