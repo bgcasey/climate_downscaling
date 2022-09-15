@@ -1,10 +1,10 @@
 # climate_downscaling
 
 
-R Project folder hierarchy:
+**Project directory index:**
 
 ```
-/climate_downscaling
+climate_downscaling
 ├── 0_data
 │   ├── external
 │   │   ├── Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv
