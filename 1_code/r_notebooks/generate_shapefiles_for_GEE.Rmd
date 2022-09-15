@@ -16,6 +16,8 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```{r eval=FALSE}
 library(sf)
 library(tmap)
+library(basemaps)
+
 ```
 
 
@@ -30,7 +32,7 @@ RIVR<-read.csv(file="0_data/external/iButtons_RIVR_combined_April7_2022_no_extre
 
 # Combine ibutton data
 
-##### Create spatial data frame of iButtopn locations {-}
+##### Create spatial data frame of iButton locations {-}
 
 ```{r eval=FALSE}
 RIVR_xy<-RIVR%>%
@@ -49,29 +51,56 @@ st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
 ##### Identify study area {-}
 
 ```{r eval=FALSE}
-study_area<-st_bbox(RIVR_xy)
+#create a bounding box around study area
+bb<-st_bbox(RIVR_xy)
 
+#Get aspect ratio of bounding box
+bb<-st_as_sfc(bb)
+bb<-st_as_sf(bb)
+bb_buf<-st_buffer(bb, 10000)
+bb_buf<-st_bbox(bb_buf)
+bb_buf<-st_as_sfc(bb_buf)
+bb_buf<-st_as_sf(bb_buf)
+
+study_area<-bb_buf
+
+# save as spatial data frame
+save(study_area, file="0_data/manual/spatial/study_area.rData")
+
+# save as shapefile
+st_write(study_area, "0_data/manual/spatial/study_area.shp")
 
 ```
 
 
 
-
+``` {r eval=FALSE}
 # Plot
+
+# get basemap
+base<-basemap_raster(study_area, map_service = "esri", map_type = "delorme_world_base_map")
+
+# get aspect ratio of the study area
+asp <- (study_area$ymax - study_area$ymin)/(study_area$xmax - study_area$xmin)
+
 # m<-tm_shape(alberta)+tm_borders()+tm_fill(col = "#fddadd")+
 #   #tm_polygons(col=NA, border.col="black")+
 #   tm_layout(frame=FALSE)+
 #   tm_legend(outside=TRUE, frame=FALSE)+
-m<-tm_shape(RIVR_xy)+
-    tm_symbols(col = "#2e3c78", border.lwd = 0, size = .3, alpha=.3, title.shape="station location", legend.format = list(text.align="right", text.to.columns = TRUE))
+m<-tm_shape(base)+
+  tm_rgb()+
+  tm_shape(RIVR_xy)+
+    tm_symbols(col = "#D00D00", border.lwd = 0, size = .3, alpha=.3, title.shape="iButton locations", legend.format = list(text.align="right", text.to.columns = TRUE))
   #tm_legend(position=c("left", "top"), frame=TRUE)
 m
 
-tmap_save(m, "3_output/maps/RIVR_xy.png", asp=0, height = 5, width = 6, outer.margins=c(0,0,0,.08))
-
+tmap_save(m, "3_output/maps/RIVR_xy.png")
 
 ```
 
+```{r studyArea, echo=FALSE, fig.cap= "iButton locations.", out.width = '100%'}
+knitr::include_graphics("3_output/maps/RIVR_xy.png")
+```
 
 
 
