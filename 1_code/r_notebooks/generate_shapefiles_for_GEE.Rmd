@@ -5,7 +5,7 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 
-# Setup
+## Setup
 
 ##### Load libraries {-}
 
@@ -26,7 +26,7 @@ RIVR<-read.csv(file="0_data/external/iButtons_RIVR_combined_April7_2022_no_extre
 ```
 
 
-# Combine ibutton data
+## Combine ibutton data
 
 ##### Create spatial data frame of iButton locations {-}
 
@@ -104,7 +104,7 @@ tmap_save(m, "3_output/maps/RIVR_xy.png")
 ```
 
 ```{r studyArea, echo=FALSE, fig.cap= "iButton locations.", out.width = '100%'}
-knitr::include_graphics("3_output/maps/RIVR_xy.png")
+knitr::include_graphics("../3_output/maps/RIVR_xy.png")
 ```
 
 
