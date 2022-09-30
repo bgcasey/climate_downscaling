@@ -1,9 +1,9 @@
-book_filename: "README.md"
+book_filename: "README.Rmd"
 language:
   ui:
     chapter_name: ""
-delete_merged_file: false
-output_dir: "_book"
+delete_merged_file: true
+output_dir: 3_output/book
 rmd_files: ["index.Rmd"]
 
 
