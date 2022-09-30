@@ -1,7 +1,3 @@
----
-title: "R Notebook"
-output: html_notebook
----
 
 ```{r setup, include=FALSE, cache=FALSE}
 #Set root directory to R project root
@@ -46,6 +42,15 @@ save(RIVR_xy, file="0_data/manual/spatial/RIVR_xy.rData")
 
 # save as shapefile
 st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
+
+# buffer points
+RIVR_xy_buff<-st_buffer(RIVR_xy, 100)
+
+# save as spatial data frame
+save(RIVR_xy_buff, file="0_data/manual/spatial/RIVR_xy_buf.rData")
+
+# save as shapefile
+st_write(RIVR_xy_buff, "0_data/manual/spatial/RIVR_xy_buf.shp")
 ````
 
 ##### Identify study area {-}

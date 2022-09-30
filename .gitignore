@@ -36,8 +36,8 @@ vignettes/*.pdf
 *.knit.md
 
 # Data folder
-0_data/*
-
+0_data/external/*
+0_data/manual/*
 
 !0_data/README.md
 
@@ -46,4 +46,7 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# temp Drive folder
+*driveupload/*
+.tmp.drivedownload/*
 

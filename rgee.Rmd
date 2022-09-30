@@ -1,0 +1,132 @@
+
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+
+# Setup
+
+##### Intall packages {-}
+
+```{r eval=FALSE}
+remotes::install_github("r-spatial/rgee")
+install.packages("rgee")
+
+
+library(rgee)
+library(sf)
+```
+
+## Setup Earth Engine in R {-}
+
+Resources to get started with RGEE:
+- https://csaybar.github.io/rgee-examples/
+- https://cran.r-project.org/web/packages/rgee/vignettes/rgee01.html
+
+The below code chunk describes the steps I took to get google drive working on my machine.
+```{r eval=False}
+
+#install rgee -------------------------------------------------------
+install.packages("rgee")
+library(rgee)
+library("googledrive") #required if you want to be able to use Google Drive with rgee. Used for instance to download images on your local computer
+# Python environment setup (requires Python >= v3.5 ; will install Miniconda)
+rgee::ee_install(py_env = "rgee") # It is just necessary once! Need to restart after and re-run in case ; path = C:/Users/`YOUR USER NAME`/AppData/Local/r-miniconda
+
+# Checking installation non-R dependencies
+rgee::ee_check()
+
+# Upgrade the GEE API
+rgee::ee_install_upgrade()
+reticulate::py_install('earthengine-api==0.1.323', envname='PUT_HERE_YOUR_PYENV')
+
+# recheck GEE API
+rgee::ee_check()
+
+
+#install gcloud ------------------------------------------------------
+# Install gcloud : follow the instructions of the web page link below. Pick all the default install options
+# https://cloud.google.com/sdk/docs/install-sdk
+# https://cloud.google.com/sdk/docs/install#mac
+# Can check that gcloud works within the rgee python environment : 
+#     Run python.exe in C:/Users/`YOUR USER NAME`/AppData/Local/r-miniconda\envs\rgee
+#     In the python console :
+#         import ee
+#         ee.Authenticate()
+# 
+# RESTART THE R SESSION AFTER INSTALLING gcloud BEFORE RUNNING THE NEXT LINES
+
+# Initialize Earth Engine and Google Dirve-------------------------------------------------------
+# /!\/!\/!\ NEED TO RUN RSTUDIO IN ADMINISTRATOR MODE FOR THIS LINE /!\/!\/!\
+
+# For Mac, go to Applications, then right click on RStudio and
+# 
+#     Select "Show Package Contents"
+#     Go to Contents/MacOS
+#     Now open terminal(in bash mode). Type sudo and drag the RStudio.exec into terminal and press on ENTER
+#     sudo /Applications/RStudio.app/Contents/MacOS/RStudio
+# Now RStudio will have admin access!
+
+library(googledrive)
+library(googleAuthR)
+library(googleCloudStorageR)
+
+rgee::ee_Initialize(drive = TRUE, gcs = FALSE)
+
+ee_clean_credentials("bgcasey@ualberta.ca")
+
+# Check users, credentials, path 
+rgee::ee_users()
+
+#check installation ------------------------------------------------------
+
+rgee::ee_get_earthengine_path()
+rgee::ee_check()
+rgee::ee_check_python()
+rgee::ee_check_credentials()
+rgee::ee_check_python_packages()
+
+
+#Test code ------------------------------------------------------
+srtm <- rgee::ee$Image("USGS/SRTMGL1_003")
+
+viz <- list(
+  max = 4000,
+  min = 0,
+  palette = c("#000000","#5AAD5A","#A9AD84","#FFFFFF")
+)
+
+rgee::Map$addLayer(
+  eeObject = srtm,
+  visParams =  viz,
+  name = 'SRTM',
+  # legend = TRUE
+)
+```
+
+# Try extractinhg data via RGEE {-}
+
+```{r eval=FALSE}
+load("0_data/manual/spatial/RIVR_xy_buf.rData")
+load("0_data/manual/spatial/study_area.rData")
+aoi<-study_area
+
+
+
+dataset<-ee$Image('NRCan/CDEM')
+elevation<-dataset$select('elevation');
+
+
+table_bounds <- function(image) {
+  #Crop by table extension
+  return image$clip(aoi);
+}
+
+
+
+```
+
+
+
+
