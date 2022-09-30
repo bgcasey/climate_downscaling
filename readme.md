@@ -56,3 +56,4 @@ fs::dir_tree(path = root.dir, recurse = TRUE)
 ```
 
 
+![Screen Shot 2022-09-28 at 8 02 24 AM](https://user-images.githubusercontent.com/31937548/193309798-0c38d7a9-d0ee-419c-b7a5-22be5fe35931.png)
