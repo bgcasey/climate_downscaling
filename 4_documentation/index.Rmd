@@ -4,9 +4,8 @@ author: "Brendan Casey"
 #supervisor: 
 site: bookdown::bookdown_site
 output: 
-    bookdown::gitbook:
-      split_by: "section"
-      split_bib: no
+  md_document:
+    variant: markdown_github
 #bibliography: library.bib
 #citation-style: ../../MendeleyBib/CitationStyles/nature.csl
 #citation-style: https://www.zotero.org/styles/elsevier-harvard

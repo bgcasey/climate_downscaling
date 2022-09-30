@@ -1,9 +1,9 @@
-book_filename: "RETN.Rmd"
+book_filename: "../README2.md"
 language:
   ui:
     chapter_name: ""
-delete_merged_file: true
-output_dir: html_book
+delete_merged_file: false
+output_dir: "_book"
 rmd_files: ["index.Rmd"]
 
 

@@ -1,6 +1,0 @@
-fig:studyArea
-overview
-gather-ibutton-data
-setup
-combine-ibutton-data
-references
