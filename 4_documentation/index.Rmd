@@ -5,7 +5,7 @@ author: "Brendan Casey"
 site: bookdown::bookdown_site
 output: 
   md_document:
-    variant: markdown_github
+    variant: gfm
 #bibliography: library.bib
 #citation-style: ../../MendeleyBib/CitationStyles/nature.csl
 #citation-style: https://www.zotero.org/styles/elsevier-harvard
