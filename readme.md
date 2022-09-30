@@ -41,3 +41,18 @@ climate_downscaling
 ├── README.md
 └── climate_downscaling.Rproj
 ```
+
+```{r echo=FALSE}
+library(fs)
+root.dir = rprojroot::find_rstudio_root_file()
+
+fs::dir_tree(path = root.dir, recurse = TRUE)
+```
+
+# test
+
+
+```{r child = '1_code/r_notebooks/generate_shapefiles_for_GEE'}
+```
+
+
