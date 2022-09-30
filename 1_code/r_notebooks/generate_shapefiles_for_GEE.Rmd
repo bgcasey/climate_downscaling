@@ -104,7 +104,7 @@ tmap_save(m, "3_output/maps/RIVR_xy.png")
 ```
 
 ```{r studyArea, echo=FALSE, fig.cap= "iButton locations.", out.width = '100%'}
-knitr::include_graphics("../3_output/maps/RIVR_xy.png")
+knitr::include_graphics("3_output/maps/RIVR_xy.png")
 ```
 
 

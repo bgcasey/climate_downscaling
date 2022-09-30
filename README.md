@@ -93,7 +93,7 @@ m
 tmap_save(m, "3_output/maps/RIVR_xy.png")
 ```
 
-<img src="../3_output/maps/RIVR_xy.png" alt="iButton locations." width="100%" />
+<img src="3_output/maps/RIVR_xy.png" alt="iButton locations." width="100%" />
 <p class="caption">
 iButton locations.
 </p>
