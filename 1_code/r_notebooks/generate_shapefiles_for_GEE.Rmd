@@ -51,7 +51,7 @@ save(RIVR_xy_buff, file="0_data/manual/spatial/RIVR_xy_buf.rData")
 
 # save as shapefile
 st_write(RIVR_xy_buff, "0_data/manual/spatial/RIVR_xy_buf.shp")
-````
+```
 
 ##### Identify study area {-}
 
