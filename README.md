@@ -1,6 +1,8 @@
 # Overview
 
-# Gather iButton data
+# iButton Data
+
+## Gather
 
 ## Setup
 
@@ -94,6 +96,32 @@ tmap_save(m, "3_output/maps/RIVR_xy.png")
 ```
 
 <img src="3_output/maps/RIVR_xy.png" alt="iButton locations." width="100%" />
+
+## Clean
+
+------------------------------------------------------------------------
+
+# Covariates
+
+## iButton deployment
+
+## Spatial
+
+Spatial covariates were extracted using Google Earth Engine’s online
+code editor at
+[code.earthengine.google.com](http://code.earthengine.google.com/).
+
+------------------------------------------------------------------------
+
+# Modelling
+
+## Data exploration and visualization
+
+## Model selection
+
+## Offset raster
+
+## Validate
 
 # References
 

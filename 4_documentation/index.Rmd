@@ -56,14 +56,59 @@ pre[class] {
 
 
 
-# Gather iButton data
+# iButton Data
 
-```{r child = '1_code/r_notebooks/generate_shapefiles_for_GEE.Rmd'}
+## Gather 
+```{r child = '1_code/r_notebooks/gather_iButton_data.Rmd'}
+```
+
+## Clean
+```{r child = '1_code/r_notebooks/clean_ibutton_data.Rmd'}
+```
+
+--- 
+
+# Covariates
+
+## iButton deployment
+
+```{r child = '1_code/r_notebooks/iButton_deployment_covariates.Rmd'}
 ```
 
 
 
+## Spatial
 
+```{r child = '1_code/r_notebooks/GEE_spatial_covariates.Rmd'}
+```
+
+Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
+
+
+
+--- 
+
+# Modelling
+
+
+## Data exploration and visualization
+```{r child = '1_code/r_notebooks/data_exploration.Rmd'}
+```
+
+
+## Model selection
+```{r child = '1_code/r_notebooks/model_selection.Rmd'}
+```
+
+
+## Offset raster
+```{r child = '1_code/r_notebooks/offset_raster.Rmd'}
+```
+
+
+## Validate
+```{r child = '1_code/r_notebooks/validate_model.Rmd'}
+```
 
 
 
