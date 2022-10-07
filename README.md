@@ -1,15 +1,7 @@
 -   <a href="#overview" id="toc-overview">Overview</a>
 -   <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
     -   <a href="#clean" id="toc-clean">Clean</a>
-        -   <a href="#rivr" id="toc-rivr">RIVR</a>
-        -   <a href="#hill" id="toc-hill">HILL</a>
     -   <a href="#combine" id="toc-combine">Combine</a>
-        -   <a href="#setup" id="toc-setup">Setup</a>
-        -   <a href="#combine-ibutton-data" id="toc-combine-ibutton-data">Combine
-            iButton data</a>
-        -   <a href="#create-spatial-data-frame-of-ibutton-locations"
-            id="toc-create-spatial-data-frame-of-ibutton-locations">Create spatial
-            data frame of iButton locations</a>
     -   <a href="#create-spatial-object" id="toc-create-spatial-object">Create
         spatial object</a>
 -   <a href="#covariates" id="toc-covariates">Covariates</a>
