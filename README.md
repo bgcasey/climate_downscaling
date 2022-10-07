@@ -4,9 +4,9 @@
         -   <a href="#setup" id="toc-setup">Setup</a>
         -   <a href="#combine-ibutton-data" id="toc-combine-ibutton-data">Combine
             iButton data</a>
-        -   <a href="#create-spatial-data-frame-of-ibutton-locations-.unnumbered"
-            id="toc-create-spatial-data-frame-of-ibutton-locations-.unnumbered">Create
-            spatial data frame of iButton locations {.unnumbered)</a>
+        -   <a href="#create-spatial-data-frame-of-ibutton-locations"
+            id="toc-create-spatial-data-frame-of-ibutton-locations">Create spatial
+            data frame of iButton locations</a>
     -   <a href="#clean" id="toc-clean">Clean</a>
 -   <a href="#covariates" id="toc-covariates">Covariates</a>
     -   <a href="#ibutton-deployment" id="toc-ibutton-deployment">iButton
@@ -36,6 +36,7 @@ library(sf)
 library(tmap)
 library(basemaps)
 library(dplyr)
+library(kableExtra)
 ```
 
 ##### Import iButton data
@@ -48,7 +49,7 @@ RIVR<-read.csv(file="0_data/external/iButton/RIVR/iButtons_RIVR_combined_April7_
 
 ### Combine iButton data
 
-#### Examine iButton data frames {.unnumbered)
+#### Examine iButton data frames
 
 ``` r
 # count unique deployments
@@ -58,67 +59,841 @@ nrow(distinct(as.data.frame((hills$Site_StationKey))))
     ## [1] 152
 
 ``` r
-head(hills)
+nrow(distinct(as.data.frame((RIVR$Site_StationKey))))
 ```
 
-    ##   X Site_StationKey       Date     Time Temperature           Date.Time
-    ## 1 1       HL-1-01-1 2014-06-25 11:00:01      19.107 2014-06-25 11:00:01
-    ## 2 2       HL-1-01-1 2014-06-25 13:30:01      14.600 2014-06-25 13:30:01
-    ## 3 3       HL-1-01-1 2014-06-25 16:00:01      17.605 2014-06-25 16:00:01
-    ## 4 4       HL-1-01-1 2014-06-25 18:30:01      18.607 2014-06-25 18:30:01
-    ## 5 5       HL-1-01-1 2014-06-25 21:00:01      17.105 2014-06-25 21:00:01
-    ## 6 6       HL-1-01-1 2014-06-25 23:30:01      13.096 2014-06-25 23:30:01
+    ## [1] 88
 
-``` r
-head(RIVR)
-```
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+X
+</th>
+<th style="text-align:left;">
+Site_StationKey
+</th>
+<th style="text-align:left;">
+Date
+</th>
+<th style="text-align:left;">
+Time
+</th>
+<th style="text-align:right;">
+Temperature
+</th>
+<th style="text-align:left;">
+Date.Time
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+HL-1-01-1
+</td>
+<td style="text-align:left;">
+2014-06-25
+</td>
+<td style="text-align:left;">
+11:00:01
+</td>
+<td style="text-align:right;">
+19.107
+</td>
+<td style="text-align:left;">
+2014-06-25 11:00:01
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+HL-1-01-1
+</td>
+<td style="text-align:left;">
+2014-06-25
+</td>
+<td style="text-align:left;">
+13:30:01
+</td>
+<td style="text-align:right;">
+14.600
+</td>
+<td style="text-align:left;">
+2014-06-25 13:30:01
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+HL-1-01-1
+</td>
+<td style="text-align:left;">
+2014-06-25
+</td>
+<td style="text-align:left;">
+16:00:01
+</td>
+<td style="text-align:right;">
+17.605
+</td>
+<td style="text-align:left;">
+2014-06-25 16:00:01
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+HL-1-01-1
+</td>
+<td style="text-align:left;">
+2014-06-25
+</td>
+<td style="text-align:left;">
+18:30:01
+</td>
+<td style="text-align:right;">
+18.607
+</td>
+<td style="text-align:left;">
+2014-06-25 18:30:01
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+HL-1-01-1
+</td>
+<td style="text-align:left;">
+2014-06-25
+</td>
+<td style="text-align:left;">
+21:00:01
+</td>
+<td style="text-align:right;">
+17.105
+</td>
+<td style="text-align:left;">
+2014-06-25 21:00:01
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+HL-1-01-1
+</td>
+<td style="text-align:left;">
+2014-06-25
+</td>
+<td style="text-align:left;">
+23:30:01
+</td>
+<td style="text-align:right;">
+13.096
+</td>
+<td style="text-align:left;">
+2014-06-25 23:30:01
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+X
+</th>
+<th style="text-align:right;">
+Site
+</th>
+<th style="text-align:right;">
+Point
+</th>
+<th style="text-align:left;">
+Project
+</th>
+<th style="text-align:left;">
+iBt_type
+</th>
+<th style="text-align:left;">
+Site_StationKey
+</th>
+<th style="text-align:right;">
+Value
+</th>
+<th style="text-align:left;">
+Date_Time
+</th>
+<th style="text-align:right;">
+N_of_heat_shields_at_station
+</th>
+<th style="text-align:left;">
+old_wrong\_
+</th>
+<th style="text-align:left;">
+Top_ibutton_id
+</th>
+<th style="text-align:left;">
+Bottom_ibutton_id
+</th>
+<th style="text-align:left;">
+Extra_top_ibutton_id
+</th>
+<th style="text-align:left;">
+Extra_bottom_ibutton_id
+</th>
+<th style="text-align:right;">
+Zone
+</th>
+<th style="text-align:right;">
+Easting
+</th>
+<th style="text-align:right;">
+Northing
+</th>
+<th style="text-align:left;">
+Date_deplo
+</th>
+<th style="text-align:left;">
+Time_deplo
+</th>
+<th style="text-align:left;">
+Comments
+</th>
+<th style="text-align:right;">
+Lat
+</th>
+<th style="text-align:right;">
+Long
+</th>
+<th style="text-align:left;">
+Status
+</th>
+<th style="text-align:left;">
+Date_Time_dpl
+</th>
+<th style="text-align:left;">
+Date_Time_rtv
+</th>
+<th style="text-align:right;">
+Month
+</th>
+<th style="text-align:right;">
+Year
+</th>
+<th style="text-align:right;">
+Day
+</th>
+<th style="text-align:left;">
+Month_Year
+</th>
+<th style="text-align:left;">
+New_Site_Key
+</th>
+<th style="text-align:right;">
+week
+</th>
+<th style="text-align:left;">
+extreme
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+RIVR
+</td>
+<td style="text-align:left;">
+BOT
+</td>
+<td style="text-align:left;">
+RIVR-001-01
+</td>
+<td style="text-align:right;">
+25.090
+</td>
+<td style="text-align:left;">
+2018-05-28 21:01:01
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+9A-2F324B41
+</td>
+<td style="text-align:left;">
+67-2F33FA41
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+74-2F11C641
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+519088
+</td>
+<td style="text-align:right;">
+5437719
+</td>
+<td style="text-align:left;">
+5/28/2018 0:00
+</td>
+<td style="text-align:left;">
+16:13
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+49.09203
+</td>
+<td style="text-align:right;">
+-110.7385
+</td>
+<td style="text-align:left;">
+Deployed
+</td>
+<td style="text-align:left;">
+2018-05-28 16:13:00
+</td>
+<td style="text-align:left;">
+2020-08-03 10:53:00
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+28
+</td>
+<td style="text-align:left;">
+5-2018
+</td>
+<td style="text-align:left;">
+RIVR-001-01-BOT
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+RIVR
+</td>
+<td style="text-align:left;">
+BOT
+</td>
+<td style="text-align:left;">
+RIVR-001-01
+</td>
+<td style="text-align:right;">
+19.587
+</td>
+<td style="text-align:left;">
+2018-05-28 23:31:01
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+9A-2F324B41
+</td>
+<td style="text-align:left;">
+67-2F33FA41
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+74-2F11C641
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+519088
+</td>
+<td style="text-align:right;">
+5437719
+</td>
+<td style="text-align:left;">
+5/28/2018 0:00
+</td>
+<td style="text-align:left;">
+16:13
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+49.09203
+</td>
+<td style="text-align:right;">
+-110.7385
+</td>
+<td style="text-align:left;">
+Deployed
+</td>
+<td style="text-align:left;">
+2018-05-28 16:13:00
+</td>
+<td style="text-align:left;">
+2020-08-03 10:53:00
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+28
+</td>
+<td style="text-align:left;">
+5-2018
+</td>
+<td style="text-align:left;">
+RIVR-001-01-BOT
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+RIVR
+</td>
+<td style="text-align:left;">
+BOT
+</td>
+<td style="text-align:left;">
+RIVR-001-01
+</td>
+<td style="text-align:right;">
+17.585
+</td>
+<td style="text-align:left;">
+2018-05-29 02:01:01
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+9A-2F324B41
+</td>
+<td style="text-align:left;">
+67-2F33FA41
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+74-2F11C641
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+519088
+</td>
+<td style="text-align:right;">
+5437719
+</td>
+<td style="text-align:left;">
+5/28/2018 0:00
+</td>
+<td style="text-align:left;">
+16:13
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+49.09203
+</td>
+<td style="text-align:right;">
+-110.7385
+</td>
+<td style="text-align:left;">
+Deployed
+</td>
+<td style="text-align:left;">
+2018-05-28 16:13:00
+</td>
+<td style="text-align:left;">
+2020-08-03 10:53:00
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+29
+</td>
+<td style="text-align:left;">
+5-2018
+</td>
+<td style="text-align:left;">
+RIVR-001-01-BOT
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+RIVR
+</td>
+<td style="text-align:left;">
+BOT
+</td>
+<td style="text-align:left;">
+RIVR-001-01
+</td>
+<td style="text-align:right;">
+17.085
+</td>
+<td style="text-align:left;">
+2018-05-29 04:31:01
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+9A-2F324B41
+</td>
+<td style="text-align:left;">
+67-2F33FA41
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+74-2F11C641
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+519088
+</td>
+<td style="text-align:right;">
+5437719
+</td>
+<td style="text-align:left;">
+5/28/2018 0:00
+</td>
+<td style="text-align:left;">
+16:13
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+49.09203
+</td>
+<td style="text-align:right;">
+-110.7385
+</td>
+<td style="text-align:left;">
+Deployed
+</td>
+<td style="text-align:left;">
+2018-05-28 16:13:00
+</td>
+<td style="text-align:left;">
+2020-08-03 10:53:00
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+29
+</td>
+<td style="text-align:left;">
+5-2018
+</td>
+<td style="text-align:left;">
+RIVR-001-01-BOT
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+RIVR
+</td>
+<td style="text-align:left;">
+BOT
+</td>
+<td style="text-align:left;">
+RIVR-001-01
+</td>
+<td style="text-align:right;">
+14.080
+</td>
+<td style="text-align:left;">
+2018-05-29 07:01:01
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+9A-2F324B41
+</td>
+<td style="text-align:left;">
+67-2F33FA41
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+74-2F11C641
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+519088
+</td>
+<td style="text-align:right;">
+5437719
+</td>
+<td style="text-align:left;">
+5/28/2018 0:00
+</td>
+<td style="text-align:left;">
+16:13
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+49.09203
+</td>
+<td style="text-align:right;">
+-110.7385
+</td>
+<td style="text-align:left;">
+Deployed
+</td>
+<td style="text-align:left;">
+2018-05-28 16:13:00
+</td>
+<td style="text-align:left;">
+2020-08-03 10:53:00
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+29
+</td>
+<td style="text-align:left;">
+5-2018
+</td>
+<td style="text-align:left;">
+RIVR-001-01-BOT
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+RIVR
+</td>
+<td style="text-align:left;">
+BOT
+</td>
+<td style="text-align:left;">
+RIVR-001-01
+</td>
+<td style="text-align:right;">
+16.083
+</td>
+<td style="text-align:left;">
+2018-05-29 09:31:01
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+9A-2F324B41
+</td>
+<td style="text-align:left;">
+67-2F33FA41
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+74-2F11C641
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+519088
+</td>
+<td style="text-align:right;">
+5437719
+</td>
+<td style="text-align:left;">
+5/28/2018 0:00
+</td>
+<td style="text-align:left;">
+16:13
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+49.09203
+</td>
+<td style="text-align:right;">
+-110.7385
+</td>
+<td style="text-align:left;">
+Deployed
+</td>
+<td style="text-align:left;">
+2018-05-28 16:13:00
+</td>
+<td style="text-align:left;">
+2020-08-03 10:53:00
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+29
+</td>
+<td style="text-align:left;">
+5-2018
+</td>
+<td style="text-align:left;">
+RIVR-001-01-BOT
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
 
-    ##   X Site Point Project iBt_type Site_StationKey  Value           Date_Time
-    ## 1 1    1     1    RIVR      BOT     RIVR-001-01 25.090 2018-05-28 21:01:01
-    ## 2 2    1     1    RIVR      BOT     RIVR-001-01 19.587 2018-05-28 23:31:01
-    ## 3 3    1     1    RIVR      BOT     RIVR-001-01 17.585 2018-05-29 02:01:01
-    ## 4 4    1     1    RIVR      BOT     RIVR-001-01 17.085 2018-05-29 04:31:01
-    ## 5 5    1     1    RIVR      BOT     RIVR-001-01 14.080 2018-05-29 07:01:01
-    ## 6 6    1     1    RIVR      BOT     RIVR-001-01 16.083 2018-05-29 09:31:01
-    ##   N_of_heat_shields_at_station old_wrong_ Top_ibutton_id Bottom_ibutton_id
-    ## 1                            2               9A-2F324B41       67-2F33FA41
-    ## 2                            2               9A-2F324B41       67-2F33FA41
-    ## 3                            2               9A-2F324B41       67-2F33FA41
-    ## 4                            2               9A-2F324B41       67-2F33FA41
-    ## 5                            2               9A-2F324B41       67-2F33FA41
-    ## 6                            2               9A-2F324B41       67-2F33FA41
-    ##   Extra_top_ibutton_id Extra_bottom_ibutton_id Zone Easting Northing
-    ## 1                                  74-2F11C641   12  519088  5437719
-    ## 2                                  74-2F11C641   12  519088  5437719
-    ## 3                                  74-2F11C641   12  519088  5437719
-    ## 4                                  74-2F11C641   12  519088  5437719
-    ## 5                                  74-2F11C641   12  519088  5437719
-    ## 6                                  74-2F11C641   12  519088  5437719
-    ##       Date_deplo Time_deplo Comments      Lat      Long   Status
-    ## 1 5/28/2018 0:00      16:13       NA 49.09203 -110.7385 Deployed
-    ## 2 5/28/2018 0:00      16:13       NA 49.09203 -110.7385 Deployed
-    ## 3 5/28/2018 0:00      16:13       NA 49.09203 -110.7385 Deployed
-    ## 4 5/28/2018 0:00      16:13       NA 49.09203 -110.7385 Deployed
-    ## 5 5/28/2018 0:00      16:13       NA 49.09203 -110.7385 Deployed
-    ## 6 5/28/2018 0:00      16:13       NA 49.09203 -110.7385 Deployed
-    ##         Date_Time_dpl       Date_Time_rtv Month Year Day Month_Year
-    ## 1 2018-05-28 16:13:00 2020-08-03 10:53:00     5 2018  28     5-2018
-    ## 2 2018-05-28 16:13:00 2020-08-03 10:53:00     5 2018  28     5-2018
-    ## 3 2018-05-28 16:13:00 2020-08-03 10:53:00     5 2018  29     5-2018
-    ## 4 2018-05-28 16:13:00 2020-08-03 10:53:00     5 2018  29     5-2018
-    ## 5 2018-05-28 16:13:00 2020-08-03 10:53:00     5 2018  29     5-2018
-    ## 6 2018-05-28 16:13:00 2020-08-03 10:53:00     5 2018  29     5-2018
-    ##      New_Site_Key week extreme
-    ## 1 RIVR-001-01-BOT   22      NA
-    ## 2 RIVR-001-01-BOT   22      NA
-    ## 3 RIVR-001-01-BOT   22      NA
-    ## 4 RIVR-001-01-BOT   22      NA
-    ## 5 RIVR-001-01-BOT   22      NA
-    ## 6 RIVR-001-01-BOT   22      NA
+#### Join iButton data frames
 
-#### Join iButton data frames {.unnumbered)
-
-### Create spatial data frame of iButton locations {.unnumbered)
+### Create spatial data frame of iButton locations
 
 #### Extract XY coordinates
 
@@ -200,6 +975,10 @@ tmap_save(m, "3_output/maps/RIVR_xy.png")
 # Covariates
 
 ## iButton deployment
+
+Extracting deployment related covariates i.e. distance between deployed
+iButtons and the ground, shielding, and damage sustained prior to
+retrieval.
 
 ## Spatial
 
