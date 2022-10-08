@@ -109,7 +109,7 @@ Download the Google Earth Engine scripts by using `git clone https://earthengine
 
 
 ### Terrain metrics {-}
-```{r child = '1_code/GEE/climate_downscaling/extract_terrain'}
+```{r child = '1_code/GEE/climate_downscaling/extract_terrain.js'}
 ```
 
 
