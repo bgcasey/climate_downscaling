@@ -108,7 +108,6 @@ Spatial covariates were extracted using Google Earth Engine's online code editor
 Download the Google Earth Engine script by using `git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling` into your working directory. 
 
 
-### Terrain metrics {-}
 ```{r child = '1_code/r_notebooks/covariates_gee_spatial.Rmd'}
 ```
 
