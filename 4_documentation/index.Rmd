@@ -105,9 +105,11 @@ Use `1_code/r_notebooks/covariates_ibutton_deployment.Rmd`
 
 Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
 
-Use `1_code/r_notebooks/covariates_gee_spatial.Rmd`.
+Download the Google Earth Engine scripts by using `git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling` into your working directory. 
 
-```{r child = '1_code/r_notebooks/covariates_gee_spatial.Rmd'}
+
+### Terrain metrics {-}
+```{r child = '1_code/GEE/climate_downscaling/extract_terrain'}
 ```
 
 
