@@ -3,7 +3,7 @@
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
-## Create spatial objects {-}
+
 
 ```{r eval=FALSE}
 library(sf)

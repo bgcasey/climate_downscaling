@@ -12,9 +12,9 @@ library(lubridate)
 library(imputeTS)
 ```
 
-## Import and clean {.unnumbered}
+### Import and clean {.unnumbered}
 
-### RIVR {.unnumbered}
+#### RIVR {.unnumbered}
 
 **Load data**
 
@@ -38,9 +38,9 @@ View data
 knitr::kable(head(RIVR), "pipe") 
 ```
 
-#### Edit data columns {.unnumbered}
+##### Edit data columns {.unnumbered}
 
-##### Format date-time string {.unnumbered}
+###### Format date-time string {.unnumbered}
 
 Convert date-time string into a `POSIXct` class. This class associates the date time string with an associated time zone. Codes for time zones can be found [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Else the `as.POSIXct` function defaults to your computer's timezone.
 
@@ -48,9 +48,9 @@ Convert date-time string into a `POSIXct` class. This class associates the date 
 RIVR$Date_Time<-as.POSIXct(RIVR$Date_Time, tz="America/Edmonton")
 ```
 
-#### Remove unusable data {.unnumbered}
+##### Remove unusable data {.unnumbered}
 
-##### Remove months with incomplete data {.unnumbered}
+###### Remove months with incomplete data {.unnumbered}
 
 Removing first month of data if it has only 20 days or less.
 
@@ -87,11 +87,11 @@ RIVR_cleaned<-RIVR_2
 save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 ```
 
-#### Remove pre-deployement data {.unnumbered}
+##### Remove pre-deployement data {.unnumbered}
 
-#### Identify and remove data from grounded iButtons {.unnumbered}
+##### Identify and remove data from grounded iButtons {.unnumbered}
 
-#### Get daily temperature summaries {.unnumbered}
+##### Get daily temperature summaries {.unnumbered}
 
 Create new calculated columns with the mean, max, and min daily temperatures.
 
@@ -112,7 +112,7 @@ load("2_pipeline/store/RIVR_dailys.rData")
 knitr::kable(head(RIVR_dailys), "pipe") 
 ```
 
-### HILL {.unnumbered}
+#### HILL {.unnumbered}
 
 **Load data**
 
@@ -136,9 +136,9 @@ View data
 knitr::kable(head(hills), "pipe") 
 ```
 
-#### Edit data columns {.unnumbered}
+##### Edit data columns {.unnumbered}
 
-##### Format date-time string {.unnumbered}
+###### Format date-time string {.unnumbered}
 
 Convert date-time string into a `POSIXct` class. This class associates the date time string with an associated time zone. Codes for time zones can be found [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Else the `as.POSIXct` function defaults to your computer's timezone.
 
@@ -146,9 +146,9 @@ Convert date-time string into a `POSIXct` class. This class associates the date 
 hills$Date.Time<-as.POSIXct(hills$Date.Time, tz="America/Edmonton")
 ```
 
-#### Remove unusable data {.unnumbered}
+##### Remove unusable data {.unnumbered}
 
-##### Remove months with incomplete data {.unnumbered}
+###### Remove months with incomplete data {.unnumbered}
 
 Remove first and last months if they have less than 21 days of data.
 
@@ -186,11 +186,11 @@ save(hills_cleaned, file="2_pipeline/tmp/hills_cleaned.rData")
 
 ```
 
-#### Remove predeployement data {.unnumbered}
+##### Remove predeployement data {.unnumbered}
 
-#### Identify and remove data from grounded iButtons {.unnumbered}
+##### Identify and remove data from grounded iButtons {.unnumbered}
 
-#### Get daily temperature summaries {.unnumbered}
+##### Get daily temperature summaries {.unnumbered}
 
 Create new calculated columns with the mean, max, and min daily temperatures.
 
@@ -211,9 +211,9 @@ load("2_pipeline/store/hills_dailys.rData")
 knitr::kable(head(hills_dailys), "pipe") 
 ```
 
-## Combine datasets {.unnumbered}
+### Combine datasets {.unnumbered}
 
-### **Bind dataframes**
+#### **Bind dataframes**
 
 ```{r eval=FALSE}
 
@@ -222,9 +222,9 @@ ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,.id="Project")
 save(ibuttons, file="2_pipeline/tmp/ibuttons.rData")
 ```
 
-## Impute missing data {.unnumbered}
+### Impute missing data {.unnumbered}
 
-### Create a dummy iButton data frame
+#### Create a dummy iButton data frame
 
 The data frame will have rows for every day during the time period the iButtons were deployed. Daily temperature columns will be filled with NA values.
 
@@ -265,7 +265,7 @@ calendar_final_f2<-calendar_final$RIVR %>% filter(Year %in% unique(ibuttons$Year
 complete_final_f3<-bind_rows(calendar_final_f1,calendar_final_f2) %>% select(!c(Month_name,iBt_type,Project))
 ```
 
-### Remove months with too many missing days {.unnumbered}
+#### Remove months with too many missing days {.unnumbered}
 
 We need to trim down the missing days for months in which up to 10 days of data are missing.
 
@@ -301,7 +301,7 @@ ib_cal<-bind_rows("Summer"=complete_data_w_missing_summer,
 
 ```
 
-### Impute missing values {.unnumbered}
+#### Impute missing values {.unnumbered}
 
 Impute NA values using a spline function based on time series imputation. The imputation is based on month per year per iButton site.
 
@@ -339,7 +339,7 @@ write.csv(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_com
 
 ```
 
-## Monthly summaries {.unnumbered}
+### Monthly summaries {.unnumbered}
 
 ```{r eval=FALSE}
 

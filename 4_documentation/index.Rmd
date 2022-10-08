@@ -72,8 +72,18 @@ library(knitr)
 
 # iButton Data
 
-```{r child = '1_code/r_notebooks/ibutton_data_clean.Rmd'}
+
+## Prepare data
+
+Use `1_code/r_notebooks/ibutton_data_prepare.Rmd`.
+
+```{r child = '1_code/r_notebooks/ibutton_data_prepare.Rmd'}
 ```
+
+
+## Create spatial objects {-}
+
+Use `1_code/r_notebooks/ibutton_data_xy.Rmd`.
 
 ```{r child = '1_code/r_notebooks/ibutton_data_xy.Rmd'}
 ```
@@ -85,16 +95,19 @@ library(knitr)
 
 Extracting deployment related covariates i.e. distance between deployed iButtons and the ground, shielding, and damage sustained prior to retrieval. 
 
-```{r child = '1_code/r_notebooks/iButton_deployment_covariates.Rmd'}
-```
+Use `1_code/r_notebooks/covariates_ibutton_deployment.Rmd`
 
+```{r child = '1_code/r_notebooks/covariates_ibutton_deployment.Rmd'}
+```
 
 
 ## Spatial
 
 Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
 
-```{r child = '1_code/r_notebooks/GEE_spatial_covariates.Rmd'}
+Use `1_code/r_notebooks/covariates_gee_spatial.Rmd`.
+
+```{r child = '1_code/r_notebooks/covariates_gee_spatial.Rmd'}
 ```
 
 
@@ -106,22 +119,31 @@ Spatial covariates were extracted using Google Earth Engine's online code editor
 
 
 ## Data exploration and visualization
-```{r child = '1_code/r_notebooks/data_exploration.Rmd'}
+
+Use `1_code/r_notebooks/modelling_data_exploration.Rmd`.
+```{r child = '1_code/r_notebooks/modelling_data_exploration.Rmd'}
 ```
 
 
 ## Model selection
-```{r child = '1_code/r_notebooks/model_selection.Rmd'}
+
+Use `1_code/r_notebooks/modelling_model_selection.Rmd`.
+```{r child = '1_code/r_notebooks/modelling_model_selection.Rmd'}
 ```
 
 
 ## Offset raster
-```{r child = '1_code/r_notebooks/offset_raster.Rmd'}
+
+Use `1_code/r_notebooks/modelling_offset_raster.Rmd`.
+```{r child = '1_code/r_notebooks/modelling_offset_raster.Rmd'}
 ```
 
 
 ## Validate
-```{r child = '1_code/r_notebooks/validate_model.Rmd'}
+
+Use `1_code/r_notebooks/modelling_validate_model.Rmd`.
+
+```{r child = '1_code/r_notebooks/modelling_validate_model.Rmd'}
 ```
 
 

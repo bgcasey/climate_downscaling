@@ -2,6 +2,10 @@
 
 # iButton Data
 
+## Prepare data
+
+Use `1_code/r_notebooks/ibutton_data_prepare.Rmd`.
+
 ``` r
 library(tidyr)
 library(plyr)
@@ -11,9 +15,9 @@ library(lubridate)
 library(imputeTS)
 ```
 
-## Import and clean
+### Import and clean
 
-### RIVR
+#### RIVR
 
 **Load data**
 
@@ -38,9 +42,9 @@ View data
 |   5 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 14.080 | 2018-05-29 07:01:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  29 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
 |   6 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 16.083 | 2018-05-29 09:31:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  29 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
 
-#### Edit data columns
+##### Edit data columns
 
-##### Format date-time string
+###### Format date-time string
 
 Convert date-time string into a `POSIXct` class. This class associates
 the date time string with an associated time zone. Codes for time zones
@@ -52,9 +56,9 @@ Else the `as.POSIXct` function defaults to your computer’s timezone.
 RIVR$Date_Time<-as.POSIXct(RIVR$Date_Time, tz="America/Edmonton")
 ```
 
-#### Remove unusable data
+##### Remove unusable data
 
-##### Remove months with incomplete data
+###### Remove months with incomplete data
 
 Removing first month of data if it has only 20 days or less.
 
@@ -91,11 +95,11 @@ RIVR_cleaned<-RIVR_2
 save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 ```
 
-#### Remove pre-deployement data
+##### Remove pre-deployement data
 
-#### Identify and remove data from grounded iButtons
+##### Identify and remove data from grounded iButtons
 
-#### Get daily temperature summaries
+##### Get daily temperature summaries
 
 Create new calculated columns with the mean, max, and min daily
 temperatures.
@@ -120,7 +124,7 @@ save(RIVR_dailys, file="2_pipeline/store/RIVR_dailys.rData")
 | RIVR-001-01     |   1 |     2 | 2019 | BOT      |    9.571 |   -8.498 | -0.2981111 |
 | RIVR-001-01     |   1 |     2 | 2019 | EXTRA    |    9.636 |   -8.498 | -0.1551111 |
 
-### HILL
+#### HILL
 
 **Load data**
 
@@ -145,9 +149,9 @@ View data
 |   5 | HL-1-01-1       | 2014-06-25 | 21:00:01 |      17.105 | 2014-06-25 21:00:01 |
 |   6 | HL-1-01-1       | 2014-06-25 | 23:30:01 |      13.096 | 2014-06-25 23:30:01 |
 
-#### Edit data columns
+##### Edit data columns
 
-##### Format date-time string
+###### Format date-time string
 
 Convert date-time string into a `POSIXct` class. This class associates
 the date time string with an associated time zone. Codes for time zones
@@ -159,9 +163,9 @@ Else the `as.POSIXct` function defaults to your computer’s timezone.
 hills$Date.Time<-as.POSIXct(hills$Date.Time, tz="America/Edmonton")
 ```
 
-#### Remove unusable data
+##### Remove unusable data
 
-##### Remove months with incomplete data
+###### Remove months with incomplete data
 
 Remove first and last months if they have less than 21 days of data.
 
@@ -198,11 +202,11 @@ hills_cleaned<-hills_1
 save(hills_cleaned, file="2_pipeline/tmp/hills_cleaned.rData")
 ```
 
-#### Remove predeployement data
+##### Remove predeployement data
 
-#### Identify and remove data from grounded iButtons
+##### Identify and remove data from grounded iButtons
 
-#### Get daily temperature summaries
+##### Get daily temperature summaries
 
 Create new calculated columns with the mean, max, and min daily
 temperatures.
@@ -227,9 +231,9 @@ save(hills_dailys, file="2_pipeline/store/hills_dailys.rData")
 | HL-1-01-1       |   1 |     5 | 2015 |   10.590 |    1.054 |   5.923200 |
 | HL-1-01-1       |   1 |     6 | 2015 |    9.085 |   -0.956 |   3.730556 |
 
-## Combine datasets
+### Combine datasets
 
-### **Bind dataframes**
+#### **Bind dataframes**
 
 ``` r
 ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,.id="Project")
@@ -237,9 +241,9 @@ ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,.id="Project")
 save(ibuttons, file="2_pipeline/tmp/ibuttons.rData")
 ```
 
-## Impute missing data
+### Impute missing data
 
-### Create a dummy iButton data frame
+#### Create a dummy iButton data frame
 
 The data frame will have rows for every day during the time period the
 iButtons were deployed. Daily temperature columns will be filled with NA
@@ -282,7 +286,7 @@ calendar_final_f2<-calendar_final$RIVR %>% filter(Year %in% unique(ibuttons$Year
 complete_final_f3<-bind_rows(calendar_final_f1,calendar_final_f2) %>% select(!c(Month_name,iBt_type,Project))
 ```
 
-### Remove months with too many missing days
+#### Remove months with too many missing days
 
 We need to trim down the missing days for months in which up to 10 days
 of data are missing.
@@ -317,7 +321,7 @@ ib_cal<-bind_rows("Summer"=complete_data_w_missing_summer,
           "Winter"=complete_data_w_missing_winter,"Fall"=complete_data_w_missing_fall,"Spring"=complete_data_w_missing_spring, .id="Season")
 ```
 
-### Impute missing values
+#### Impute missing values
 
 Impute NA values using a spline function based on time series
 imputation. The imputation is based on month per year per iButton site.
@@ -354,7 +358,7 @@ save(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_complete
 write.csv(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_complete_daily.csv")
 ```
 
-## Monthly summaries
+### Monthly summaries
 
 ``` r
 ibuttons_complete_monthly<-ibuttons_complete_daily %>%
@@ -378,6 +382,8 @@ write.csv(ibuttons_complete_monthly, file="0_data/manual/iButton_data/ibuttons_c
 | HL-1-01-1       |    12 | 2014 |  -9.672258 | -15.098323 | -12.5882631 |
 
 ## Create spatial objects
+
+Use `1_code/r_notebooks/ibutton_data_xy.Rmd`.
 
 ``` r
 library(sf)
@@ -497,11 +503,15 @@ Extracting deployment related covariates i.e. distance between deployed
 iButtons and the ground, shielding, and damage sustained prior to
 retrieval.
 
+Use `1_code/r_notebooks/covariates_ibutton_deployment.Rmd`
+
 ## Spatial
 
 Spatial covariates were extracted using Google Earth Engine’s online
 code editor at
 [code.earthengine.google.com](http://code.earthengine.google.com/).
+
+Use `1_code/r_notebooks/covariates_gee_spatial.Rmd`.
 
 ------------------------------------------------------------------------
 
@@ -509,11 +519,19 @@ code editor at
 
 ## Data exploration and visualization
 
+Use `1_code/r_notebooks/modelling_data_exploration.Rmd`.
+
 ## Model selection
+
+Use `1_code/r_notebooks/modelling_model_selection.Rmd`.
 
 ## Offset raster
 
+Use `1_code/r_notebooks/modelling_offset_raster.Rmd`.
+
 ## Validate
+
+Use `1_code/r_notebooks/modelling_validate_model.Rmd`.
 
 # References
 
