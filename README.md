@@ -1,30 +1,3 @@
--   <a href="#overview" id="toc-overview">Overview</a>
--   <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
-    -   <a href="#import-and-clean" id="toc-import-and-clean">Import and
-        clean</a>
-    -   <a href="#combine-datasets" id="toc-combine-datasets">Combine
-        datasets</a>
-    -   <a href="#impute-missing-data" id="toc-impute-missing-data">Impute
-        missing data</a>
-    -   <a href="#monthly-summaries" id="toc-monthly-summaries">Monthly
-        summaries</a>
-    -   <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
-        spatial objects</a>
-    -   <a href="#section"
-        id="toc-section"><img src="3_output/maps/RIVR_xy.png" alt="iButton locations." width="50%" /></a>
--   <a href="#covariates" id="toc-covariates">Covariates</a>
-    -   <a href="#ibutton-deployment" id="toc-ibutton-deployment">iButton
-        deployment</a>
-    -   <a href="#spatial" id="toc-spatial">Spatial</a>
--   <a href="#modelling" id="toc-modelling">Modelling</a>
-    -   <a href="#data-exploration-and-visualization"
-        id="toc-data-exploration-and-visualization">Data exploration and
-        visualization</a>
-    -   <a href="#model-selection" id="toc-model-selection">Model selection</a>
-    -   <a href="#offset-raster" id="toc-offset-raster">Offset raster</a>
-    -   <a href="#validate" id="toc-validate">Validate</a>
--   <a href="#references" id="toc-references">References</a>
-
 # Overview
 
 # iButton Data
