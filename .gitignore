@@ -39,6 +39,9 @@ vignettes/*.pdf
 0_data/external/*
 0_data/manual/*
 
+2_pipeline/tmp/*
+2_pipeline/store/*
+
 !0_data/README.md
 
 !3_output

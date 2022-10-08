@@ -1,6 +1,5 @@
 -   <a href="#overview" id="toc-overview">Overview</a>
 -   <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
-    -   <a href="#clean" id="toc-clean">Clean</a>
     -   <a href="#import-and-clean" id="toc-import-and-clean">Import and
         clean</a>
     -   <a href="#combine-datasets" id="toc-combine-datasets">Combine
@@ -9,9 +8,10 @@
         missing data</a>
     -   <a href="#monthly-summaries" id="toc-monthly-summaries">Monthly
         summaries</a>
-    -   <a href="#combine" id="toc-combine">Combine</a>
-    -   <a href="#create-spatial-object" id="toc-create-spatial-object">Create
-        spatial object</a>
+    -   <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
+        spatial objects</a>
+    -   <a href="#section"
+        id="toc-section"><img src="3_output/maps/RIVR_xy.png" alt="iButton locations." width="50%" /></a>
 -   <a href="#covariates" id="toc-covariates">Covariates</a>
     -   <a href="#ibutton-deployment" id="toc-ibutton-deployment">iButton
         deployment</a>
@@ -29,8 +29,6 @@
 
 # iButton Data
 
-## Clean
-
 ``` r
 library(tidyr)
 library(plyr)
@@ -44,7 +42,7 @@ library(imputeTS)
 
 ### RIVR
 
-#### Import iButton data
+**Load data**
 
 ``` r
 RIVR<-read.csv(file="0_data/external/iButton/RIVR/iButtons_RIVR_combined_April7_2022_no_extremes.csv")
@@ -406,11 +404,7 @@ write.csv(ibuttons_complete_monthly, file="0_data/manual/iButton_data/ibuttons_c
 | HL-1-01-1       |    11 | 2014 | -10.954000 | -15.437567 | -13.2250244 |
 | HL-1-01-1       |    12 | 2014 |  -9.672258 | -15.098323 | -12.5882631 |
 
-## Combine
-
-### Setup
-
-##### Load libraries
+## Create spatial objects
 
 ``` r
 library(sf)
@@ -420,63 +414,17 @@ library(dplyr)
 library(kableExtra)
 ```
 
-##### Import iButton data
+### RIVR
+
+**Load data**
 
 ``` r
-hills<-read.csv(file="0_data/external/iButton/Hills/Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv")
-
 RIVR<-read.csv(file="0_data/external/iButton/RIVR/iButtons_RIVR_combined_April7_2022_no_extremes.csv")
 ```
 
-### Combine iButton data
+#### Create spatial data frame of iButton locations
 
-#### Examine iButton data frames
-
-``` r
-# count unique deployments
-nrow(distinct(as.data.frame((hills$Site_StationKey))))
-```
-
-    ## [1] 152
-
-``` r
-nrow(distinct(as.data.frame((RIVR$Site_StationKey))))
-```
-
-    ## [1] 88
-
-|   X | Site_StationKey | Date       | Time     | Temperature | Date.Time           |
-|----:|:----------------|:-----------|:---------|------------:|:--------------------|
-|   1 | HL-1-01-1       | 2014-06-25 | 11:00:01 |      19.107 | 2014-06-25 11:00:01 |
-|   2 | HL-1-01-1       | 2014-06-25 | 13:30:01 |      14.600 | 2014-06-25 13:30:01 |
-|   3 | HL-1-01-1       | 2014-06-25 | 16:00:01 |      17.605 | 2014-06-25 16:00:01 |
-|   4 | HL-1-01-1       | 2014-06-25 | 18:30:01 |      18.607 | 2014-06-25 18:30:01 |
-|   5 | HL-1-01-1       | 2014-06-25 | 21:00:01 |      17.105 | 2014-06-25 21:00:01 |
-|   6 | HL-1-01-1       | 2014-06-25 | 23:30:01 |      13.096 | 2014-06-25 23:30:01 |
-
-|   X | Site | Point | Project | iBt_type | Site_StationKey |  Value | Date_Time           | N_of_heat_shields_at_station | old_wrong\_ | Top_ibutton_id | Bottom_ibutton_id | Extra_top_ibutton_id | Extra_bottom_ibutton_id | Zone | Easting | Northing | Date_deplo     | Time_deplo | Comments |      Lat |      Long | Status   | Date_Time_dpl       | Date_Time_rtv       | Month | Year | Day | Month_Year | New_Site_Key    | week | extreme |
-|----:|-----:|------:|:--------|:---------|:----------------|-------:|:--------------------|-----------------------------:|:------------|:---------------|:------------------|:---------------------|:------------------------|-----:|--------:|---------:|:---------------|:-----------|:---------|---------:|----------:|:---------|:--------------------|:--------------------|------:|-----:|----:|:-----------|:----------------|-----:|:--------|
-|   1 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 25.090 | 2018-05-28 21:01:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  28 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
-|   2 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 19.587 | 2018-05-28 23:31:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  28 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
-|   3 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 17.585 | 2018-05-29 02:01:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  29 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
-|   4 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 17.085 | 2018-05-29 04:31:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  29 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
-|   5 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 14.080 | 2018-05-29 07:01:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  29 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
-|   6 |    1 |     1 | RIVR    | BOT      | RIVR-001-01     | 16.083 | 2018-05-29 09:31:01 |                            2 |             | 9A-2F324B41    | 67-2F33FA41       |                      | 74-2F11C641             |   12 |  519088 |  5437719 | 5/28/2018 0:00 | 16:13      | NA       | 49.09203 | -110.7385 | Deployed | 2018-05-28 16:13:00 | 2020-08-03 10:53:00 |     5 | 2018 |  29 | 5-2018     | RIVR-001-01-BOT |   22 | NA      |
-
-#### Join iButton data frames
-
-**Prepare RIVR data**
-
-``` r
-temp_df_rivr_input_step1<-RIVR %>% 
-  dplyr::group_by(Site_StationKey,Day,Month,Year,iBt_type)%>%  dplyr::mutate(Temperature=Value) %>%
-  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
-  dplyr::group_by(Site_StationKey,iBt_type,Month,Year) %>% dplyr::filter(!iBt_type=="EXTRA-TOP")
-```
-
-### Create spatial data frame of iButton locations
-
-#### Extract XY coordinates
+Extract XY coordinates and save as shapefile.
 
 ``` r
 RIVR_xy<-RIVR%>%
@@ -490,16 +438,35 @@ save(RIVR_xy, file="0_data/manual/spatial/RIVR_xy.rData")
 
 # save as shapefile
 st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
+```
 
-# buffer points
-RIVR_xy_buff<-st_buffer(RIVR_xy, 100)
+### HILL
+
+**Load data**
+
+``` r
+hills<-read.csv(file="0_data/external/iButton/Hills/Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv")
+```
+
+#### Create spatial data frame of iButton locations
+
+Extract XY coordinates and save as shapefile.
+
+``` r
+hills_xy<-hills%>%
+  dplyr::select(c(Project, Site_StationKey, Date_deplo, Lat, Long))%>%
+  dplyr::distinct()
+
+hills_xy<-st_as_sf(hills_xy, coords=c("Long","Lat"), crs=4326)
 
 # save as spatial data frame
-save(RIVR_xy_buff, file="0_data/manual/spatial/RIVR_xy_buf.rData")
+save(hills_xy, file="0_data/manual/spatial/hills_xy.rData")
 
 # save as shapefile
-st_write(RIVR_xy_buff, "0_data/manual/spatial/RIVR_xy_buf.shp")
+st_write(hills_xy, "0_data/manual/spatial/hills_xy.shp")
 ```
+
+### Map study area
 
 #### Identify study area
 
@@ -547,11 +514,7 @@ m
 tmap_save(m, "3_output/maps/RIVR_xy.png")
 ```
 
-<img src="3_output/maps/RIVR_xy.png" alt="iButton locations." width="50%" />
-
-## Create spatial object
-
-------------------------------------------------------------------------
+## <img src="3_output/maps/RIVR_xy.png" alt="iButton locations." width="50%" />
 
 # Covariates
 

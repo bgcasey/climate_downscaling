@@ -1,34 +1,30 @@
-
 ```{r setup, include=FALSE, cache=FALSE}
 #Set root directory to R project root
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
-
-## Setup
-
-##### Load libraries {-}
+## Create spatial objects {-}
 
 ```{r eval=FALSE}
 library(sf)
 library(tmap)
 library(basemaps)
-
+library(dplyr)
+library(kableExtra)
 ```
 
+### RIVR {.unnumbered}
 
-##### Import ibutton data {-}
+**Load data**
 
 ```{r eval=FALSE}
-hills<-read.csv(file="0_data/external/Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv")
-
-RIVR<-read.csv(file="0_data/external/iButtons_RIVR_combined_April7_2022_no_extremes.csv")
+RIVR<-read.csv(file="0_data/external/iButton/RIVR/iButtons_RIVR_combined_April7_2022_no_extremes.csv")
 ```
 
 
-## Combine ibutton data
+#### Create spatial data frame of iButton locations {.unnumbered}
 
-##### Create spatial data frame of iButton locations {-}
+Extract XY coordinates and save as shapefile.
 
 ```{r eval=FALSE}
 RIVR_xy<-RIVR%>%
@@ -42,18 +38,42 @@ save(RIVR_xy, file="0_data/manual/spatial/RIVR_xy.rData")
 
 # save as shapefile
 st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
-
-# buffer points
-RIVR_xy_buff<-st_buffer(RIVR_xy, 100)
-
-# save as spatial data frame
-save(RIVR_xy_buff, file="0_data/manual/spatial/RIVR_xy_buf.rData")
-
-# save as shapefile
-st_write(RIVR_xy_buff, "0_data/manual/spatial/RIVR_xy_buf.shp")
 ```
 
-##### Identify study area {-}
+
+
+
+### HILL {.unnumbered}
+
+**Load data**
+
+```{r eval=FALSE}
+hills<-read.csv(file="0_data/external/iButton/Hills/Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv")
+```
+
+#### Create spatial data frame of iButton locations {.unnumbered}
+
+Extract XY coordinates and save as shapefile.
+
+```{r eval=FALSE}
+hills_xy<-hills%>%
+  dplyr::select(c(Project, Site_StationKey, Date_deplo, Lat, Long))%>%
+  dplyr::distinct()
+
+hills_xy<-st_as_sf(hills_xy, coords=c("Long","Lat"), crs=4326)
+
+# save as spatial data frame
+save(hills_xy, file="0_data/manual/spatial/hills_xy.rData")
+
+# save as shapefile
+st_write(hills_xy, "0_data/manual/spatial/hills_xy.shp")
+```
+
+
+
+### Map study area {-}
+
+#### Identify study area {.unnumbered}
 
 ```{r eval=FALSE}
 #create a bounding box around study area
@@ -77,9 +97,7 @@ st_write(study_area, "0_data/manual/spatial/study_area.shp")
 
 ```
 
-
-
-``` {r eval=FALSE}
+```{r eval=FALSE}
 # Plot
 
 # get basemap
@@ -103,13 +121,6 @@ tmap_save(m, "3_output/maps/RIVR_xy.png")
 
 ```
 
-```{r studyArea, echo=FALSE, fig.cap= "iButton locations.", out.width = '100%'}
+```{r studyArea, echo=FALSE, fig.cap= "iButton locations.", out.width = "50%"}
 knitr::include_graphics("3_output/maps/RIVR_xy.png")
 ```
-
-
-
-
-
-
-

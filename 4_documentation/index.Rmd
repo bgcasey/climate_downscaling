@@ -6,6 +6,8 @@ site: bookdown::bookdown_site
 output: 
   md_document:
     variant: gfm
+    toc: TRUE
+    toc_depth: 2
 #bibliography: library.bib
 #citation-style: ../../MendeleyBib/CitationStyles/nature.csl
 #citation-style: https://www.zotero.org/styles/elsevier-harvard
@@ -20,8 +22,16 @@ description: "This is document walks through the analyses I performed for this r
 
 # Overview
 
+```{css, echo=FALSE}
+pre {
+  max-height: 300px;
+  overflow-y: auto;
+}
 
-
+pre[class] {
+  max-height: 100px;
+}
+```
 
 
 ```{r GlobalOptions, echo=FALSE}
@@ -47,30 +57,33 @@ pre {
 }
 
 pre[class] {
-  max-height: 500px;
+  max-height: 100px;
 }
 ```
 
 
+```{r echo=FALSE, out.width = '100%'}
+library(kableExtra)
+library(knitr)
+```
 
 
 
 
 # iButton Data
 
-## Gather 
-```{r child = '1_code/r_notebooks/gather_iButton_data.Rmd'}
+```{r child = '1_code/r_notebooks/ibutton_data_clean.Rmd'}
 ```
 
-## Clean
-```{r child = '1_code/r_notebooks/clean_ibutton_data.Rmd'}
+```{r child = '1_code/r_notebooks/ibutton_data_xy.Rmd'}
 ```
-
 --- 
 
 # Covariates
 
 ## iButton deployment
+
+Extracting deployment related covariates i.e. distance between deployed iButtons and the ground, shielding, and damage sustained prior to retrieval. 
 
 ```{r child = '1_code/r_notebooks/iButton_deployment_covariates.Rmd'}
 ```
@@ -79,10 +92,11 @@ pre[class] {
 
 ## Spatial
 
+Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
+
 ```{r child = '1_code/r_notebooks/GEE_spatial_covariates.Rmd'}
 ```
 
-Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
 
 
 
