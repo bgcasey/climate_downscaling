@@ -11,6 +11,7 @@ library(tmap)
 library(basemaps)
 library(dplyr)
 library(kableExtra)
+library(readxl)
 ```
 
 ### RIVR {.unnumbered}
@@ -34,10 +35,10 @@ RIVR_xy<-RIVR%>%
 RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326)
 
 # save as spatial data frame
-save(RIVR_xy, file="0_data/manual/spatial/RIVR_xy.rData")
+save(RIVR_xy, file="0_data/manual/iButton_data/spatial/RIVR_xy.rData")
 
 # save as shapefile
-st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
+st_write(RIVR_xy, "0_data/manual/iButton_data/spatial/RIVR_xy.shp")
 ```
 
 
@@ -49,6 +50,8 @@ st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
 
 ```{r eval=FALSE}
 hills<-read.csv(file="0_data/external/iButton/Hills/Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv")
+
+hills_loc<-read_xlsx("0_data/external/iButton/Hills/SiteLocations/Hl_coordinates.xlsx")
 ```
 
 #### Create spatial data frame of iButton locations {.unnumbered}
@@ -56,17 +59,26 @@ hills<-read.csv(file="0_data/external/iButton/Hills/Hills_iButton_Data_Combined_
 Extract XY coordinates and save as shapefile.
 
 ```{r eval=FALSE}
-hills_xy<-hills%>%
-  dplyr::select(c(Project, Site_StationKey, Date_deplo, Lat, Long))%>%
+
+# create a station key column
+hills_loc$Site_StationKey<-paste(hills_loc$ProjectID, hills_loc$Cluster, hills_loc$SITE, hills_loc$STATION, sep="-")
+#check
+x<-distinct(hills_loc[c(11,9)])
+y<-distinct(hills[c(2)])
+xy<-left_join(x,y)
+
+hills_xy<-hills_loc%>%
+  dplyr::select(c(ProjectID, Site_StationKey, DEPLOY_DATE, EASTING, NORTHING))%>%
+  dplyr::rename(Project=ProjectID, Date_deplo=DEPLOY_DATE )%>%
   dplyr::distinct()
 
-hills_xy<-st_as_sf(hills_xy, coords=c("Long","Lat"), crs=4326)
+hills_xy<-st_as_sf(hills_xy, coords=c("EASTING","NORTHING"), crs=26913)
 
 # save as spatial data frame
-save(hills_xy, file="0_data/manual/spatial/hills_xy.rData")
+save(hills_xy, file="0_data/manual/iButton_data/spatial/hills_xy.rData")
 
 # save as shapefile
-st_write(hills_xy, "0_data/manual/spatial/hills_xy.shp")
+st_write(hills_xy, "0_data/manual/iButton_data/spatial/hills_xy.shp")
 ```
 
 
@@ -90,10 +102,10 @@ bb_buf<-st_as_sf(bb_buf)
 study_area<-bb_buf
 
 # save as spatial data frame
-save(study_area, file="0_data/manual/spatial/study_area.rData")
+save(study_area, file="0_data/manual/iButton_data/spatial/study_area.rData")
 
 # save as shapefile
-st_write(study_area, "0_data/manual/spatial/study_area.shp")
+st_write(study_area, "0_data/manual/iButton_data/spatial/study_area.shp")
 
 ```
 
@@ -112,7 +124,7 @@ asp <- (study_area$ymax - study_area$ymin)/(study_area$xmax - study_area$xmin)
 #   tm_legend(outside=TRUE, frame=FALSE)+
 m<-tm_shape(base)+
   tm_rgb()+
-  tm_shape(RIVR_xy)+
+  tm_shape(hills_xy)+
     tm_symbols(col = "#D00D00", border.lwd = 0, size = .3, alpha=.3, title.shape="iButton locations", legend.format = list(text.align="right", text.to.columns = TRUE))
   #tm_legend(position=c("left", "top"), frame=TRUE)
 m
