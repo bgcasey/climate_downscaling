@@ -89,6 +89,12 @@ save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 
 ##### Remove pre-deployement data {.unnumbered}
 
+```{r eval=FALSE}
+RIVR<- RIVR%>%
+  filter(Date_Time>Date_Time_dpl)%>%
+  filter(Date_Time<Date_Time_rtv)
+```
+
 ##### Identify and remove data from grounded iButtons {.unnumbered}
 
 ##### Get daily temperature summaries {.unnumbered}
