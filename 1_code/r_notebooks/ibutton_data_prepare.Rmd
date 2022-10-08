@@ -217,6 +217,18 @@ load("2_pipeline/store/hills_dailys.rData")
 knitr::kable(head(hills_dailys), "pipe") 
 ```
 
+
+### Wood et al. 
+
+Data from Wood, Wendy H; Marshall, Shawn J; Fargey, Shannon E; Whitehead, Terri L (2017): Daily temperature data from the Foothills Climate Array Mesonet, Canadian Rocky Mountains, 2005-2010. PANGAEA, https://doi.org/10.1594/PANGAEA.880611. 
+
+```{r eval=FALSE}
+wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)
+```
+
+
+
+
 ### Combine datasets {.unnumbered}
 
 #### **Bind dataframes**
