@@ -1,6 +1,14 @@
 -   <a href="#overview" id="toc-overview">Overview</a>
 -   <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
     -   <a href="#clean" id="toc-clean">Clean</a>
+    -   <a href="#import-and-clean" id="toc-import-and-clean">Import and
+        clean</a>
+    -   <a href="#combine-datasets" id="toc-combine-datasets">Combine
+        datasets</a>
+    -   <a href="#impute-missing-data" id="toc-impute-missing-data">Impute
+        missing data</a>
+    -   <a href="#monthly-summaries" id="toc-monthly-summaries">Monthly
+        summaries</a>
     -   <a href="#combine" id="toc-combine">Combine</a>
     -   <a href="#create-spatial-object" id="toc-create-spatial-object">Create
         spatial object</a>
@@ -24,13 +32,15 @@
 ## Clean
 
 ``` r
-library(sf)
-library(tmap)
-library(basemaps)
+library(tidyr)
+library(plyr)
 library(dplyr)
 library(kableExtra)
 library(lubridate)
+library(imputeTS)
 ```
+
+## Import and clean
 
 ### RIVR
 
@@ -110,17 +120,34 @@ RIVR_cleaned<-RIVR_2
 save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 ```
 
-#### Remove predeployement data
+#### Remove pre-deployement data
 
 #### Identify and remove data from grounded iButtons
 
+#### Get daily temperature summaries
+
+Create new calculated columns with the mean, max, and min daily
+temperatures.
+
 ``` r
-####RIVR Dataset####
-temp_df_rivr_input_step1<-df_rivr_step2 %>% 
+RIVR_3<-RIVR_2 %>% 
   dplyr::group_by(Site_StationKey,Day,Month,Year,iBt_type)%>%  dplyr::mutate(Temperature=Value) %>%
   dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
   dplyr::group_by(Site_StationKey,iBt_type,Month,Year) %>% dplyr::filter(!iBt_type=="EXTRA-TOP")
+
+RIVR_dailys<-RIVR_3
+
+save(RIVR_dailys, file="2_pipeline/store/RIVR_dailys.rData")
 ```
+
+| Site_StationKey | Day | Month | Year | iBt_type | Tmax_Day | Tmin_Day |   Tavg_Day |
+|:----------------|----:|------:|-----:|:---------|---------:|---------:|-----------:|
+| RIVR-001-01     |   1 |     1 | 2019 | BOT      |    1.546 |  -15.538 | -5.9883000 |
+| RIVR-001-01     |   1 |     1 | 2019 | EXTRA    |    1.588 |  -15.576 | -6.0299000 |
+| RIVR-001-01     |   1 |     1 | 2020 | BOT      |    5.058 |    0.543 |  2.7503000 |
+| RIVR-001-01     |   1 |     1 | 2020 | EXTRA    |    5.112 |    0.581 |  2.7964000 |
+| RIVR-001-01     |   1 |     2 | 2019 | BOT      |    9.571 |   -8.498 | -0.2981111 |
+| RIVR-001-01     |   1 |     2 | 2019 | EXTRA    |    9.636 |   -8.498 | -0.1551111 |
 
 ### HILL
 
@@ -194,6 +221,10 @@ hills_1<-hills %>%
     }
     
   }) %>% do.call(rbind,.) 
+
+
+hills_cleaned<-hills_1
+save(hills_cleaned, file="2_pipeline/tmp/hills_cleaned.rData")
 ```
 
 #### Remove predeployement data
@@ -202,12 +233,178 @@ hills_1<-hills %>%
 
 #### Get daily temperature summaries
 
+Create new calculated columns with the mean, max, and min daily
+temperatures.
+
 ``` r
-# %>% ####bind everything
-#   dplyr::group_by(Site_StationKey,Day,Month,Year) %>% #group by days, month and year
-#   dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
-#   dplyr::group_by(Site_StationKey,Month,Year) 
+hills_2<-hills_1 %>% 
+ dplyr::group_by(Site_StationKey,Day,Month,Year) %>% #group by days, month and year
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
+  dplyr::group_by(Site_StationKey,Month,Year) 
+
+hills_dailys<-hills_2
+
+save(hills_dailys, file="2_pipeline/store/hills_dailys.rData")
 ```
+
+| Site_StationKey | Day | Month | Year | Tmax_Day | Tmin_Day |   Tavg_Day |
+|:----------------|----:|------:|-----:|---------:|---------:|-----------:|
+| HL-1-01-1       |   1 |     1 | 2015 |  -13.032 |  -20.593 | -17.315900 |
+| HL-1-01-1       |   1 |     2 | 2015 |  -17.063 |  -22.106 | -19.180900 |
+| HL-1-01-1       |   1 |     3 | 2015 |   -2.464 |  -11.017 |  -6.991222 |
+| HL-1-01-1       |   1 |     4 | 2015 |    0.049 |   -7.494 |  -4.576400 |
+| HL-1-01-1       |   1 |     5 | 2015 |   10.590 |    1.054 |   5.923200 |
+| HL-1-01-1       |   1 |     6 | 2015 |    9.085 |   -0.956 |   3.730556 |
+
+## Combine datasets
+
+### **Bind dataframes**
+
+``` r
+ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,.id="Project")
+
+save(ibuttons, file="2_pipeline/tmp/ibuttons.rData")
+```
+
+## Impute missing data
+
+### Create a dummy iButton data frame
+
+The data frame will have rows for every day during the time period the
+iButtons were deployed. Daily temperature columns will be filled with NA
+values.
+
+Create a calendar for the time iButtons were deployed.
+
+``` r
+months <- 1:12
+
+# create a data frame with the number of days per month
+days <- days_in_month(months) %>% as.data.frame() %>% `colnames<-`("Days") %>%
+  mutate(Month=row.names(.))
+
+
+# create a list of months 
+calendar<-apply(days,MARGIN = 1,FUN=function(x){
+ seq(1:x)
+  } 
+ ) %>%
+  lapply(.,FUN = unlist)
+
+
+#create a calendar data frame with all of the days of the year for all stations. The dataframe will have columns for day, month,  and year and spans the time of the ibuttons
+calendar_step1<-calendar %>% `names<-`(days$Month) %>% unlist() %>% as.data.frame() %>%
+  `colnames<-`("Day") %>% mutate(Month_name=substr(rownames(.),1,3)) %>%
+  left_join(data.frame(Month_name=month.abb,Month=months)) %>%
+  expand_grid(.,Year=c(min(ibuttons$Year):max(ibuttons$Year)))
+```
+
+Create the dummy data frame that includes all of the days/year of the
+above calendar data frame with NA instead of temperature values.
+
+``` r
+calendar_final<-data.frame(ibuttons$Site_StationKey,ibuttons$Project) %>% unique() %>%`colnames<-` (c("Site_StationKey","Project")) %>%
+  expand_grid(.,calendar_step1) %>% mutate(iBt_type=NA,Tmax_Day=NA,Tmin_Day=NA,Tavg_Day=NA) %>% split(f = .$Project)
+
+calendar_final_f1<-calendar_final$HILLS %>% filter(Year %in% unique(ibuttons$Year[ibuttons$Project=="HILLS"])) 
+calendar_final_f2<-calendar_final$RIVR %>% filter(Year %in% unique(ibuttons$Year[ibuttons$Project=="RIVR"]))
+complete_final_f3<-bind_rows(calendar_final_f1,calendar_final_f2) %>% select(!c(Month_name,iBt_type,Project))
+```
+
+### Remove months with too many missing days
+
+We need to trim down the missing days for months in which up to 10 days
+of data are missing.
+
+``` r
+# create a data frame of days with missing data
+missing_days<-anti_join(complete_final_f3 %>% ungroup,
+          ibuttons %>% ungroup() %>% select(!c(iBt_type,Project)),
+          by=c("Site_StationKey","Day","Month","Year"))
+
+
+
+# count the number of missing days and remove iButton months that are missing over 10 days of data
+missing_of_importance<-missing_days %>% group_by(Site_StationKey,Month,Year) %>%
+  summarize(count=n()) %>% filter(count<11) %>% mutate(keep="TRUE")
+
+missing_days_final<-left_join(missing_days,missing_of_importance,by=c("Site_StationKey","Month","Year")) %>%
+  filter(keep=="TRUE") %>% select(-c(count,keep))
+
+#### Final iButton data frame with missing days {-}
+
+complete_data_w_missing<-ibuttons %>% ungroup() %>% select(!c(iBt_type,Project)) %>%
+  bind_rows(missing_days_final)
+
+# create a column with the season
+complete_data_w_missing_summer<- complete_data_w_missing %>% filter(Month %in% c(6,7,8))
+complete_data_w_missing_winter<- complete_data_w_missing %>% filter(Month %in% c(12,1,2))
+complete_data_w_missing_fall<- complete_data_w_missing %>% filter(Month %in% c(9,10,11))
+complete_data_w_missing_spring<- complete_data_w_missing %>% filter(Month %in% c(3,4,5))
+
+ib_cal<-bind_rows("Summer"=complete_data_w_missing_summer,
+          "Winter"=complete_data_w_missing_winter,"Fall"=complete_data_w_missing_fall,"Spring"=complete_data_w_missing_spring, .id="Season")
+```
+
+### Impute missing values
+
+Impute NA values using a spline function based on time series
+imputation. The imputation is based on month per year per iButton site.
+
+``` r
+inputted_summer<-ddply(complete_data_w_missing_summer,.(Site_StationKey,Month,Year),.fun = 
+        function(x){
+          na_interpolation(x,option="spline")
+        })
+
+
+inputted_winter<-ddply(complete_data_w_missing_winter,.(Site_StationKey,Month,Year),.fun = 
+                         function(x){
+                           na_interpolation(x,option="spline")
+                         })
+inputted_fall<-ddply(complete_data_w_missing_fall,.(Site_StationKey,Month,Year),.fun = 
+                         function(x){
+                           na_interpolation(x,option="spline")
+                         })
+
+
+inputted_spring<-ddply(complete_data_w_missing_spring,.(Site_StationKey,Month,Year),.fun = 
+                         function(x){
+                           na_interpolation(x,option="spline")
+                         })
+
+
+complete_data<-bind_rows(inputted_summer,inputted_winter,inputted_fall,inputted_spring)
+
+#save
+ibuttons_complete_daily<-complete_data
+save(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_complete_daily.rData")
+
+write.csv(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_complete_daily.csv")
+```
+
+## Monthly summaries
+
+``` r
+ibuttons_complete_monthly<-ibuttons_complete_daily %>%
+        group_by(Site_StationKey,Month,Year)%>%
+        select(-Day)%>%
+        summarise_all(list(mean))%>%
+        arrange(Site_StationKey, Year, Month)
+  
+save(ibuttons_complete_monthly, file="0_data/manual/iButton_data/ibuttons_complete_monthly.rData")
+
+write.csv(ibuttons_complete_monthly, file="0_data/manual/iButton_data/ibuttons_complete_monthly.csv")
+```
+
+| Site_StationKey | Month | Year |   Tmax_Day |   Tmin_Day |    Tavg_Day |
+|:----------------|------:|-----:|-----------:|-----------:|------------:|
+| HL-1-01-1       |     7 | 2014 |  22.092774 |  12.966516 |  17.2760068 |
+| HL-1-01-1       |     8 | 2014 |  20.090000 |  10.507000 |  15.1851448 |
+| HL-1-01-1       |     9 | 2014 |  10.988233 |   4.215733 |   7.3967259 |
+| HL-1-01-1       |    10 | 2014 |   2.769000 |  -0.989871 |   0.7119638 |
+| HL-1-01-1       |    11 | 2014 | -10.954000 | -15.437567 | -13.2250244 |
+| HL-1-01-1       |    12 | 2014 |  -9.672258 | -15.098323 | -12.5882631 |
 
 ## Combine
 
