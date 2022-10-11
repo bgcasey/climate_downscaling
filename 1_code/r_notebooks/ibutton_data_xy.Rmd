@@ -29,7 +29,10 @@ Extract XY coordinates and save as shapefile.
 
 ```{r eval=FALSE}
 RIVR_xy<-RIVR%>%
-  dplyr::select(c(Project, Site_StationKey, Lat, Long))%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(Year))%>%
+  mutate(max_year=max(Year))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
   dplyr::distinct()
 
 RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326)
@@ -99,7 +102,10 @@ Extract XY coordinates and save as shapefile.
 wood_xy<-wood%>%
   mutate(Site_StationKey=Station..FCAID.)%>%
   mutate(Project="WOOD")%>%
-  dplyr::select(c(Project, Site_StationKey, Latitude, Longitude))%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(year(Date.Time)))%>%
+  mutate(max_year=max(year(Date.Time)))%>%
+  dplyr::select(c(Project, Site_StationKey, Latitude, Longitude, min_year, max_year))%>%
   rename(c(Lat=Latitude, Long=Longitude))%>%
   dplyr::distinct()
 
