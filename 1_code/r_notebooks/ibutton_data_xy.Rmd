@@ -29,7 +29,7 @@ Extract XY coordinates and save as shapefile.
 
 ```{r eval=FALSE}
 RIVR_xy<-RIVR%>%
-  dplyr::select(c(Project, Site_StationKey, Date_deplo, Lat, Long))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long))%>%
   dplyr::distinct()
 
 RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326)
@@ -82,6 +82,48 @@ st_write(hills_xy, "0_data/manual/iButton_data/spatial/hills_xy.shp")
 ```
 
 
+### Wood {.unnumbered}
+
+**Load data**
+
+```{r eval=FALSE}
+wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)
+
+```
+
+#### Create spatial data frame of iButton locations {.unnumbered}
+
+Extract XY coordinates and save as shapefile.
+
+```{r eval=FALSE}
+wood_xy<-wood%>%
+  mutate(Site_StationKey=Station..FCAID.)%>%
+  mutate(Project="WOOD")%>%
+  dplyr::select(c(Project, Site_StationKey, Latitude, Longitude))%>%
+  rename(c(Lat=Latitude, Long=Longitude))%>%
+  dplyr::distinct()
+
+wood_xy<-st_as_sf(wood_xy, coords=c("Long","Lat"), crs=4326)
+
+# save as spatial data frame
+save(wood_xy, file="0_data/manual/iButton_data/spatial/wood_xy.rData")
+
+# save as shapefile
+st_write(wood_xy, "0_data/manual/iButton_data/spatial/wood_xy.shp")
+```
+
+### All projects {-}
+
+```{r eval=FALSE}
+ss_xy<-rbind(RIVR_xy, wood_xy)
+
+# save as spatial data frame
+save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")
+
+# save as shapefile
+st_write(ss_xy, "0_data/manual/iButton_data/spatial/ss_xy.shp")
+```
+
 
 ### Map study area {-}
 
@@ -89,7 +131,7 @@ st_write(hills_xy, "0_data/manual/iButton_data/spatial/hills_xy.shp")
 
 ```{r eval=FALSE}
 #create a bounding box around study area
-bb<-st_bbox(RIVR_xy)
+bb<-st_bbox(ss_xy)
 
 #Get aspect ratio of bounding box
 bb<-st_as_sfc(bb)
@@ -113,26 +155,36 @@ st_write(study_area, "0_data/manual/iButton_data/spatial/study_area.shp")
 # Plot
 
 # get basemap
-base<-basemap_raster(study_area, map_service = "esri", map_type = "delorme_world_base_map")
+# base<-basemap_raster(study_area, map_service = "esri", map_type = "delorme_world_base_map")
+# base<-basemap_raster(study_area, map_service = "osm", map_type = "topographic")
+# base<-basemap_raster(study_area, map_service = "osm_stamen", map_type = "terrain_bg")
+# base<-basemap_raster(study_area, map_service = "esri", map_type = "world_shaded_relief")
+base<-basemap_raster(study_area, map_service = "esri", map_type = "world_physical_map")
 
-# get aspect ratio of the study area
-asp <- (study_area$ymax - study_area$ymin)/(study_area$xmax - study_area$xmin)
 
+
+# get aspect ratio of the study area (for inset map)
+#asp <- (study_area$ymax - study_area$ymin)/(study_area$xmax - study_area$xmin)
+
+mypal= c('#984ea3','#ff7f00')
 # m<-tm_shape(alberta)+tm_borders()+tm_fill(col = "#fddadd")+
 #   #tm_polygons(col=NA, border.col="black")+
 #   tm_layout(frame=FALSE)+
 #   tm_legend(outside=TRUE, frame=FALSE)+
 m<-tm_shape(base)+
   tm_rgb()+
-  tm_shape(hills_xy)+
-    tm_symbols(col = "#D00D00", border.lwd = 0, size = .3, alpha=.3, title.shape="iButton locations", legend.format = list(text.align="right", text.to.columns = TRUE))
+  tm_shape(ss_xy)+
+    tm_symbols(col = "Project", palette = mypal, border.lwd = 0, size = .2, alpha=.8, legend.format = list(text.align="right"),
+               legend.hist = TRUE)+
+  tm_layout(title.size = 0.6,legend.outside = TRUE)+
+tm_graticules(lines=FALSE)
   #tm_legend(position=c("left", "top"), frame=TRUE)
 m
 
-tmap_save(m, "3_output/maps/RIVR_xy.png")
+tmap_save(m, "3_output/maps/ss_xy.png", width = 5, height=5)
 
 ```
 
 ```{r studyArea, echo=FALSE, fig.cap= "iButton locations.", out.width = "50%"}
-knitr::include_graphics("3_output/maps/RIVR_xy.png")
+knitr::include_graphics("3_output/maps/ss_xy.png")
 ```
