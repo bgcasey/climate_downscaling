@@ -35,7 +35,7 @@ RIVR_xy<-RIVR%>%
   dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
   dplyr::distinct()
 
-RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326)
+RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326, remove=FALSE)
 
 # save as spatial data frame
 save(RIVR_xy, file="0_data/manual/iButton_data/spatial/RIVR_xy.rData")
@@ -109,7 +109,7 @@ wood_xy<-wood%>%
   rename(c(Lat=Latitude, Long=Longitude))%>%
   dplyr::distinct()
 
-wood_xy<-st_as_sf(wood_xy, coords=c("Long","Lat"), crs=4326)
+wood_xy<-st_as_sf(wood_xy, coords=c("Long","Lat"), crs=4326, remove=FALSE)
 
 # save as spatial data frame
 save(wood_xy, file="0_data/manual/iButton_data/spatial/wood_xy.rData")

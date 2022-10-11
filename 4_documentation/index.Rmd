@@ -87,6 +87,17 @@ Use `1_code/r_notebooks/ibutton_data_xy.Rmd`.
 
 ```{r child = '1_code/r_notebooks/ibutton_data_xy.Rmd'}
 ```
+
+--- 
+
+# ClimateNA
+
+Use `1_code/r_notebooks/get_climateNA.Rmd`
+
+```{r child = '1_code/r_notebooks/get_climateNA.Rmd'}
+```
+
+
 --- 
 
 # Covariates
