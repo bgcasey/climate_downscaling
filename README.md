@@ -97,6 +97,12 @@ save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 
 ##### Remove pre-deployement data
 
+``` r
+RIVR<- RIVR%>%
+  filter(Date_Time>Date_Time_dpl)%>%
+  filter(Date_Time<Date_Time_rtv)
+```
+
 ##### Identify and remove data from grounded iButtons
 
 ##### Get daily temperature summaries
@@ -230,6 +236,17 @@ save(hills_dailys, file="2_pipeline/store/hills_dailys.rData")
 | HL-1-01-1       |   1 |     4 | 2015 |    0.049 |   -7.494 |  -4.576400 |
 | HL-1-01-1       |   1 |     5 | 2015 |   10.590 |    1.054 |   5.923200 |
 | HL-1-01-1       |   1 |     6 | 2015 |    9.085 |   -0.956 |   3.730556 |
+
+### Wood
+
+Data from Wood, Wendy H; Marshall, Shawn J; Fargey, Shannon E;
+Whitehead, Terri L (2017): Daily temperature data from the Foothills
+Climate Array Mesonet, Canadian Rocky Mountains, 2005-2010. PANGAEA,
+<https://doi.org/10.1594/PANGAEA.880611>.
+
+``` r
+wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)
+```
 
 ### Combine datasets
 
@@ -391,6 +408,7 @@ library(tmap)
 library(basemaps)
 library(dplyr)
 library(kableExtra)
+library(readxl)
 ```
 
 ### RIVR
@@ -407,16 +425,19 @@ Extract XY coordinates and save as shapefile.
 
 ``` r
 RIVR_xy<-RIVR%>%
-  dplyr::select(c(Project, Site_StationKey, Date_deplo, Lat, Long))%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(Year))%>%
+  mutate(max_year=max(Year))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
   dplyr::distinct()
 
-RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326)
+RIVR_xy<-st_as_sf(RIVR_xy, coords=c("Long","Lat"), crs=4326, remove=FALSE)
 
 # save as spatial data frame
-save(RIVR_xy, file="0_data/manual/spatial/RIVR_xy.rData")
+save(RIVR_xy, file="0_data/manual/iButton_data/spatial/RIVR_xy.rData")
 
 # save as shapefile
-st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
+st_write(RIVR_xy, "0_data/manual/iButton_data/spatial/RIVR_xy.shp")
 ```
 
 ### HILL
@@ -425,6 +446,8 @@ st_write(RIVR_xy, "0_data/manual/spatial/RIVR_xy.shp")
 
 ``` r
 hills<-read.csv(file="0_data/external/iButton/Hills/Hills_iButton_Data_Combined_Corrected_for_Deployment_no_extremes_Apr_27.csv")
+
+hills_loc<-read_xlsx("0_data/external/iButton/Hills/SiteLocations/Hl_coordinates.xlsx")
 ```
 
 #### Create spatial data frame of iButton locations
@@ -432,17 +455,69 @@ hills<-read.csv(file="0_data/external/iButton/Hills/Hills_iButton_Data_Combined_
 Extract XY coordinates and save as shapefile.
 
 ``` r
-hills_xy<-hills%>%
-  dplyr::select(c(Project, Site_StationKey, Date_deplo, Lat, Long))%>%
+# create a station key column
+hills_loc$Site_StationKey<-paste(hills_loc$ProjectID, hills_loc$Cluster, hills_loc$SITE, hills_loc$STATION, sep="-")
+#check
+x<-distinct(hills_loc[c(11,9)])
+y<-distinct(hills[c(2)])
+xy<-left_join(x,y)
+
+hills_xy<-hills_loc%>%
+  dplyr::select(c(ProjectID, Site_StationKey, DEPLOY_DATE, EASTING, NORTHING))%>%
+  dplyr::rename(Project=ProjectID, Date_deplo=DEPLOY_DATE )%>%
   dplyr::distinct()
 
-hills_xy<-st_as_sf(hills_xy, coords=c("Long","Lat"), crs=4326)
+hills_xy<-st_as_sf(hills_xy, coords=c("EASTING","NORTHING"), crs=26913)
 
 # save as spatial data frame
-save(hills_xy, file="0_data/manual/spatial/hills_xy.rData")
+save(hills_xy, file="0_data/manual/iButton_data/spatial/hills_xy.rData")
 
 # save as shapefile
-st_write(hills_xy, "0_data/manual/spatial/hills_xy.shp")
+st_write(hills_xy, "0_data/manual/iButton_data/spatial/hills_xy.shp")
+```
+
+### Wood
+
+**Load data**
+
+``` r
+wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)
+```
+
+#### Create spatial data frame of iButton locations
+
+Extract XY coordinates and save as shapefile.
+
+``` r
+wood_xy<-wood%>%
+  mutate(Site_StationKey=Station..FCAID.)%>%
+  mutate(Project="WOOD")%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(year(Date.Time)))%>%
+  mutate(max_year=max(year(Date.Time)))%>%
+  dplyr::select(c(Project, Site_StationKey, Latitude, Longitude, min_year, max_year))%>%
+  rename(c(Lat=Latitude, Long=Longitude))%>%
+  dplyr::distinct()
+
+wood_xy<-st_as_sf(wood_xy, coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+# save as spatial data frame
+save(wood_xy, file="0_data/manual/iButton_data/spatial/wood_xy.rData")
+
+# save as shapefile
+st_write(wood_xy, "0_data/manual/iButton_data/spatial/wood_xy.shp")
+```
+
+### All projects
+
+``` r
+ss_xy<-rbind(RIVR_xy, wood_xy)
+
+# save as spatial data frame
+save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")
+
+# save as shapefile
+st_write(ss_xy, "0_data/manual/iButton_data/spatial/ss_xy.shp")
 ```
 
 ### Map study area
@@ -451,7 +526,7 @@ st_write(hills_xy, "0_data/manual/spatial/hills_xy.shp")
 
 ``` r
 #create a bounding box around study area
-bb<-st_bbox(RIVR_xy)
+bb<-st_bbox(ss_xy)
 
 #Get aspect ratio of bounding box
 bb<-st_as_sfc(bb)
@@ -464,36 +539,241 @@ bb_buf<-st_as_sf(bb_buf)
 study_area<-bb_buf
 
 # save as spatial data frame
-save(study_area, file="0_data/manual/spatial/study_area.rData")
+save(study_area, file="0_data/manual/iButton_data/spatial/study_area.rData")
 
 # save as shapefile
-st_write(study_area, "0_data/manual/spatial/study_area.shp")
+st_write(study_area, "0_data/manual/iButton_data/spatial/study_area.shp")
 ```
 
 ``` r
 # Plot
 
 # get basemap
-base<-basemap_raster(study_area, map_service = "esri", map_type = "delorme_world_base_map")
+# base<-basemap_raster(study_area, map_service = "esri", map_type = "delorme_world_base_map")
+# base<-basemap_raster(study_area, map_service = "osm", map_type = "topographic")
+# base<-basemap_raster(study_area, map_service = "osm_stamen", map_type = "terrain_bg")
+# base<-basemap_raster(study_area, map_service = "esri", map_type = "world_shaded_relief")
+base<-basemap_raster(study_area, map_service = "esri", map_type = "world_physical_map")
 
-# get aspect ratio of the study area
-asp <- (study_area$ymax - study_area$ymin)/(study_area$xmax - study_area$xmin)
 
+
+# get aspect ratio of the study area (for inset map)
+#asp <- (study_area$ymax - study_area$ymin)/(study_area$xmax - study_area$xmin)
+
+mypal= c('#984ea3','#ff7f00')
 # m<-tm_shape(alberta)+tm_borders()+tm_fill(col = "#fddadd")+
 #   #tm_polygons(col=NA, border.col="black")+
 #   tm_layout(frame=FALSE)+
 #   tm_legend(outside=TRUE, frame=FALSE)+
 m<-tm_shape(base)+
   tm_rgb()+
-  tm_shape(RIVR_xy)+
-    tm_symbols(col = "#D00D00", border.lwd = 0, size = .3, alpha=.3, title.shape="iButton locations", legend.format = list(text.align="right", text.to.columns = TRUE))
+  tm_shape(ss_xy)+
+    tm_symbols(col = "Project", palette = mypal, border.lwd = 0, size = .2, alpha=.8, legend.format = list(text.align="right"),
+               legend.hist = TRUE)+
+  tm_layout(title.size = 0.6,legend.outside = TRUE)+
+tm_graticules(lines=FALSE)
   #tm_legend(position=c("left", "top"), frame=TRUE)
 m
 
-tmap_save(m, "3_output/maps/RIVR_xy.png")
+tmap_save(m, "3_output/maps/ss_xy.png", width = 5, height=5)
 ```
 
-## <img src="3_output/maps/RIVR_xy.png" alt="iButton locations." width="50%" />
+<img src="3_output/maps/ss_xy.png" alt="iButton locations." width="50%" />
+
+------------------------------------------------------------------------
+
+# ClimateNA
+
+Use `1_code/r_notebooks/get_climateNA.Rmd`
+
+## Setup
+
+**Install `ClimateNAr`**
+
+Get the latest ClimateBC/NA r package by registering at a
+<https://register.climatena.ca/>. Follow the instructions to install the
+`ClimateNAr` package.
+
+``` r
+library(ClimateNAr)
+library(dplyr)
+library(sf)
+library(tidyr)
+```
+
+## Create input file
+
+ClimateNAr requires a properly formatted .csv input file that includes
+the lat, long, and elevation of each station.
+
+1.  Bring in iButton data\*\*
+
+``` r
+# load("0_data/manual/iButton_data/ibuttons_complete_monthly.rData")
+load("0_data/manual/iButton_data/spatial/ss_xy.rData")
+
+# add month and year columns to the ibutton spatial dataframe
+# ibutton<-ss_xy%>%
+#       left_join(ibuttons_complete_monthly)%>%
+#       select(Project, Site_StationKey, Month, Year)
+```
+
+2.  Bring in the elevation data extracted via Google Earth Engine.
+
+``` r
+elev<-read.csv("0_data/manual/gee_tables/ibutton_terrain.csv")
+```
+
+3.  Join elevation data to the iButton spatial data frame.
+
+``` r
+climateNA_input<- ss_xy%>%
+    left_join(elev, by=c('Site_StationKey'='St_SttK'))%>%
+    as.data.frame()%>%
+    select(Site_StationKey, Lat, Long, elevation)%>%
+    drop_na()
+
+write.csv(climateNA_input, file="0_data/manual/iButton_data/climateNA_input.csv")  
+```
+
+## Extract CLimateNA monthly summaries
+
+Due to throttling, ClimateNAr’s server allows no more than 100 entries
+(locations). Break the data into mulyiple smaller files if necessary.
+
+``` r
+#test with only one location
+latLonEl<- c(49.09203,-110.7385, 882)
+
+clm_1 <- ClimateNA_API(ClimateBC_NA='NA',
+latLonEl,period=2008,MSY='M');
+
+clm_2 <- ClimateNA_API(ClimateBC_NA='NA',
+latLonEl,period=2015,MSY='M');
+
+clm <- ClimateNA_API2 (ClimateBC_NA='NA', inputFile="0_data/manual/iButton_data/climateNA_input.csv",
+period='Normal_1961_1990.nrm',MSY='Y');
+
+
+test<-function(exe ="ClimateNA_v7.30.exe", wkDir="climateNA/", period =
+'Normal_1961_1990.nrm', MSY = 'Y', inputFile="0_data/manual/iButton_data/climateNA_input.csv",outputFile= "0_data/manual/iButton_data/climateNA_output.csv")
+
+  
+library(ClimateNAr, lib.loc="library")
+wkDir = 'library/ClimateNAr'
+#exe <- "ClimateNA_v7.30.exe"
+inputFile = "0_data/manual/iButton_data/climateNA_input.csv"
+outputFile = "0_data/manual/iButton_data/climateNA_output.csv"
+period = 'Normal_1961_1990.nrm'
+ClimateNA_cmdLine(exe="ClimateNA_v7.30.exe", wkDir='library/ClimateNAr', period='Normal_1961_1990.nrm', MSY='Y',inputFile="0_data/manual/iButton_data/climateNA_input.csv", outputFile="0_data/manual/iButton_data/climateNA_output.csv")
+
+
+
+inputFile = 'C:\\Climatena_v730\\InputFiles\\na50k.asc'
+outputFile = 'C:\\Climatena_v730\\test\\'
+period = 'Normal_1961_1990.nrm'
+ClimateNA_cmdLine(exe,wkDir,period,MSY='SY',inputFile, outputFile)  
+  
+  
+  
+  
+  
+  
+
+#Define min and max year
+maxYear<-2018
+minYear<-2020
+
+
+
+for (y in seq(minYear,maxYear)){
+  #loop through for each year# it must be the home directory of ClimateNA
+  exe <- c
+  #inputFile = paste0(data,"temp_input.csv") #find way to change exported file location earlier into format needed here?
+  #outputFile = paste0(data,"temp_input_Year_",y,"MP.csv")
+  # input = "0_data/manual/iButton_data/climateNA_input.csv" 
+  #outputFile = paste0("0_data/climateNA/temp_input_Year_",y,"MP.csv")
+  yearPeriod = paste0('\"Year_',y,'.ann\"')
+  paste0("clm_", y)<-ClimateNA_API2(ClimateBC_NA='NA',  inputFile="0_data/manual/iButton_data/climateNA_input.csv" , period=yearPeriod, MSY='Y') 
+  #dat <- read.csv('C:/Users/kimorris/ClimateNA_v730/ibutton/temp_output.csv'); head(dat) 
+}
+  
+
+
+
+#Inputs
+#ClimateNA executable
+c<-"ClimateNA_v7.30.exe"
+#input directory
+#e.g."/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\\"
+#data<-'/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\'
+
+
+maxYear<-2018
+minYear<-2020
+
+
+for (y in seq(minYear,maxYear)){
+  #loop through for each year
+  setwd(climNA_dir);getwd() # it must be the home directory of ClimateNA
+  exe <- c
+  #inputFile = paste0(data,"temp_input.csv") #find way to change exported file location earlier into format needed here?
+  #outputFile = paste0(data,"temp_input_Year_",y,"MP.csv")
+  inputFile = paste0("/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\temp_input.csv") #find way to change exported file location earlier into format needed here?
+  outputFile = paste0("/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\temp_input.csv","temp_input_Year_",y,"MP.csv")
+  yearPeriod = paste0('/Year_',y,'.ann')
+  system2(exe,args= c('/Y', yearPeriod, inputFile, outputFile)) 
+  #dat <- read.csv('C:/Users/kimorris/ClimateNA_v730/ibutton/temp_output.csv'); head(dat) 
+}
+
+
+
+
+
+
+
+
+
+y=2020
+yearPeriod = paste0('\"Year_',y,'.ann\"')
+
+paste0("clm_", y)<-ClimateNA_API2(ClimateBC_NA='NA', MSY='Y', inputFile=input, period=yearPeriod, inputFile=input)
+
+
+ib_clim<-NULL
+for (y in seq(minYear,maxYear)){
+  file<-paste0("/0_data/climateNA/","temp_input_Year_",y,"MP.csv")
+  print(file)
+  t<-read.csv(file)
+  print(head(t))
+  tt<-subset(t,select=c("ID1","ID2","Latitude","Longitude","Elevation", "Tmax01","Tmax02","Tmax03","Tmax04","Tmax05","Tmax06","Tmax07","Tmax08","Tmax09","Tmax10","Tmax11","Tmax12"))
+  print(head(tt))
+  t_long <- melt(setDT(tt), id.vars = c("ID1","ID2","Latitude","Longitude","Elevation"), variable.name = "month")
+  print(head(t_long))
+  #select only needed columns
+  t_long2<-subset(t_long,select=c("ID1","month","value"))
+  #parse month from Tmax01 etc
+  t_long2$month<-str_sub(t_long2$month, start= -2)
+  #name value column ClimNATmax
+  colnames(t_long2)<-c("group","month","climNA_tmax")
+  #remove leading 0's on month
+  t_long2$month<-sub("^0+", "",t_long2$month)
+  #head(t_long2)
+  #table(t_long2$month)
+  #merge with tmax2
+  t_tmax<-subset(tmax2,year==y)
+  #table(t_tmax$month)
+  t_tmax2<-merge(t_tmax,t_long2,by=c("group","month"))
+  #head(t_tmax2)
+  #table(t_tmax2$month)
+  #nrow(t_tmax2)
+  #nrow(t_tmax)
+  ##merge years as it loops through them
+  ib_clim<-rbind(ib_clim,t_tmax2)
+}
+```
+
+------------------------------------------------------------------------
 
 # Covariates
 
@@ -515,124 +795,7 @@ Download the Google Earth Engine script by using
 `git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling`
 into your working directory.
 
-### Terrain metrics
-
-### Terrain metrics
-
-``` js
-//########################################################################################################
-//##### INPUTS ##### 
-//########################################################################################################
- 
-// import ibutton xy locations and  and the study area.
-var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/RIVR_xy"),
-    aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
-
-print(ibuttons, "ibuttons")
-
-// import the Canadian Digital Elevation Model
-
-// keep in mind that extracting slope and aspect requires a fixed projection,
-// so we will need to reproject the dem. 
-// First, define new projection:
-var CRS = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR")
-        .filterBounds(aoi).first().projection()
-
-var dem = ee.ImageCollection('NRCan/CDEM')
-  .mosaic()//combine the tiled image collection into a single image
-  .clip(aoi)// clip to the study area
-  .setDefaultProjection(CRS) // set the projection to the fixed projection defined above
-
-var elevationScale = dem.projection().nominalScale();
-
-//########################################################################################################
-// // ### Calculate terrain metrics ###
-//########################################################################################################
-
-// Slope. Units are degrees, range is [0,90).
-var slope = ee.Terrain.slope(dem);
-
-// Aspect. Units are degrees where 0=N, 90=E, 180=S, 270=W.
-var aspect = ee.Terrain.aspect(dem);
-
-
-// TPI
-var calculateNeighborhoodMean = function(image, kernelRadius) {
-      
-      return image.reduceNeighborhood({
-        reducer: ee.Reducer.mean(),
-        kernel: ee.Kernel.square(kernelRadius,'pixels',false),
-        optimization: 'boxcar',
-      });
-    }
-
-var calculateTPI = function(image, meanImage) {
-      return image.subtract(meanImage).rename('tpi')
-    }
-
-var kernelRadius = 180 // define kernal radius
-
-var demMean = calculateNeighborhoodMean(dem, kernelRadius);
-var TPI = calculateTPI(dem, demMean);
-
-
-// Heat load index
-var hli_f = require('users/bgcasey/climate_downscaling:HLI');
-var HLI = hli_f.hli(dem);
-
-
-// create a multiband image with all of the terrain metrics
-var terrain = dem.addBands([slope, aspect, TPI, HLI])
-print(terrain, "terrain")
-
-
-//########################################################################################################
-// // ### Map ###
-//########################################################################################################
-
-Map.addLayer(slope, {min: 0, max: 89.99}, 'Slope');
-Map.addLayer(aspect, {min: 0, max: 359.99}, 'Aspect');
-Map.addLayer(dem, {min:-300, max:3500}, "dem")
-Map.addLayer(TPI, {min:-2000, max:3500}, "tpi_270")
-Map.addLayer(HLI, {}, "HLI")
-Map.centerObject(aoi, 6) // center the map on the study area
-
-// add ibutton locations
-Map.addLayer(ibuttons,{color: 'bf1b29'}, "iButtons")
-
-
-//########################################################################################################
-// // ### Extract the terrain metrics to each ibutton location ###
-//########################################################################################################
-
-var pts_terrain = terrain.reduceRegions({
-  collection: ibuttons,
-  reducer: ee.Reducer.first()
-})
-print(pts_terrain.limit(10), 'pts_terrain')
-
-
-//########################################################################################################
-// // ### Save/export elevation data ###
-//########################################################################################################
-
-// Export elevation data to a csv
-Export.table.toDrive({
-  folder: 'google_earth_engine_tables',
-  collection: pts_terrain,
-  description:'ibutton_terrain',
-  fileFormat: 'csv',
-    selectors: [ // choose properties to include in export table
-                  'Project', 
-                  'St_SttK',
-                  'elevation',
-                  'slope',
-                  'aspect',
-                  'HLI',
-                  'TPI'
-                  ] 
-});
-```
+Use `1_code/r_notebooks/covariates_gee_spatial.Rmd`.
 
 ------------------------------------------------------------------------
 
