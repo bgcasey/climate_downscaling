@@ -601,6 +601,26 @@ library(sf)
 library(tidyr)
 ```
 
+Download the ClimateNA desktop application and r package here:
+<https://register.climatena.ca/>
+
+Instructions on how use the ClimateNA application can be found here:
+<https://pressbooks.bccampus.ca/fode010notebook/chapter/topic-3-2-the-use-of-climatena-ap-to-generate-point-and-spatial-climate-data/>
+
+The climateNA desktop application was designed for PC, but can be used
+on Mac by using Wine. To get climateNA working on my machine I used a
+Wineskin (<https://github.com/Gcenx/WineskinServer>) to create an
+application wrapper. The wrapper used the WS10Wine64Bit5.20 wine engine.
+I also installed `vb6run` with winetricks to get the application
+working. The the wine wrapper should contain the entire `climateNA_v730`
+folder directory, not just the `ClimateNA_v7.30.exe` file.
+
+While climateNA can be run via commandline using R, I was not able to
+get this working on my Mac. I included code for integrating climateNA
+into the R workflow on PC’s ([Extract CLimateNA monthly summaries with
+R](#extract-climatena-monthly-summaries-with-r)). However, the R code is
+untested.
+
 ## Create input file
 
 ClimateNAr requires a properly formatted .csv input file that includes
@@ -636,142 +656,11 @@ climateNA_input<- ss_xy%>%
 write.csv(climateNA_input, file="0_data/manual/iButton_data/climateNA_input.csv")  
 ```
 
-## Extract CLimateNA monthly summaries
+## Extract CLimateNA monthly summaries with R
 
-Due to throttling, ClimateNAr’s server allows no more than 100 entries
-(locations). Break the data into mulyiple smaller files if necessary.
+Instructions can be found here:
 
-``` r
-#test with only one location
-latLonEl<- c(49.09203,-110.7385, 882)
-
-clm_1 <- ClimateNA_API(ClimateBC_NA='NA',
-latLonEl,period=2008,MSY='M');
-
-clm_2 <- ClimateNA_API(ClimateBC_NA='NA',
-latLonEl,period=2015,MSY='M');
-
-clm <- ClimateNA_API2 (ClimateBC_NA='NA', inputFile="0_data/manual/iButton_data/climateNA_input.csv",
-period='Normal_1961_1990.nrm',MSY='Y');
-
-
-test<-function(exe ="ClimateNA_v7.30.exe", wkDir="climateNA/", period =
-'Normal_1961_1990.nrm', MSY = 'Y', inputFile="0_data/manual/iButton_data/climateNA_input.csv",outputFile= "0_data/manual/iButton_data/climateNA_output.csv")
-
-  
-library(ClimateNAr, lib.loc="library")
-wkDir = 'library/ClimateNAr'
-#exe <- "ClimateNA_v7.30.exe"
-inputFile = "0_data/manual/iButton_data/climateNA_input.csv"
-outputFile = "0_data/manual/iButton_data/climateNA_output.csv"
-period = 'Normal_1961_1990.nrm'
-ClimateNA_cmdLine(exe="ClimateNA_v7.30.exe", wkDir='library/ClimateNAr', period='Normal_1961_1990.nrm', MSY='Y',inputFile="0_data/manual/iButton_data/climateNA_input.csv", outputFile="0_data/manual/iButton_data/climateNA_output.csv")
-
-
-
-inputFile = 'C:\\Climatena_v730\\InputFiles\\na50k.asc'
-outputFile = 'C:\\Climatena_v730\\test\\'
-period = 'Normal_1961_1990.nrm'
-ClimateNA_cmdLine(exe,wkDir,period,MSY='SY',inputFile, outputFile)  
-  
-  
-  
-  
-  
-  
-
-#Define min and max year
-maxYear<-2018
-minYear<-2020
-
-
-
-for (y in seq(minYear,maxYear)){
-  #loop through for each year# it must be the home directory of ClimateNA
-  exe <- c
-  #inputFile = paste0(data,"temp_input.csv") #find way to change exported file location earlier into format needed here?
-  #outputFile = paste0(data,"temp_input_Year_",y,"MP.csv")
-  # input = "0_data/manual/iButton_data/climateNA_input.csv" 
-  #outputFile = paste0("0_data/climateNA/temp_input_Year_",y,"MP.csv")
-  yearPeriod = paste0('\"Year_',y,'.ann\"')
-  paste0("clm_", y)<-ClimateNA_API2(ClimateBC_NA='NA',  inputFile="0_data/manual/iButton_data/climateNA_input.csv" , period=yearPeriod, MSY='Y') 
-  #dat <- read.csv('C:/Users/kimorris/ClimateNA_v730/ibutton/temp_output.csv'); head(dat) 
-}
-  
-
-
-
-#Inputs
-#ClimateNA executable
-c<-"ClimateNA_v7.30.exe"
-#input directory
-#e.g."/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\\"
-#data<-'/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\'
-
-
-maxYear<-2018
-minYear<-2020
-
-
-for (y in seq(minYear,maxYear)){
-  #loop through for each year
-  setwd(climNA_dir);getwd() # it must be the home directory of ClimateNA
-  exe <- c
-  #inputFile = paste0(data,"temp_input.csv") #find way to change exported file location earlier into format needed here?
-  #outputFile = paste0(data,"temp_input_Year_",y,"MP.csv")
-  inputFile = paste0("/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\temp_input.csv") #find way to change exported file location earlier into format needed here?
-  outputFile = paste0("/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\temp_input.csv","temp_input_Year_",y,"MP.csv")
-  yearPeriod = paste0('/Year_',y,'.ann')
-  system2(exe,args= c('/Y', yearPeriod, inputFile, outputFile)) 
-  #dat <- read.csv('C:/Users/kimorris/ClimateNA_v730/ibutton/temp_output.csv'); head(dat) 
-}
-
-
-
-
-
-
-
-
-
-y=2020
-yearPeriod = paste0('\"Year_',y,'.ann\"')
-
-paste0("clm_", y)<-ClimateNA_API2(ClimateBC_NA='NA', MSY='Y', inputFile=input, period=yearPeriod, inputFile=input)
-
-
-ib_clim<-NULL
-for (y in seq(minYear,maxYear)){
-  file<-paste0("/0_data/climateNA/","temp_input_Year_",y,"MP.csv")
-  print(file)
-  t<-read.csv(file)
-  print(head(t))
-  tt<-subset(t,select=c("ID1","ID2","Latitude","Longitude","Elevation", "Tmax01","Tmax02","Tmax03","Tmax04","Tmax05","Tmax06","Tmax07","Tmax08","Tmax09","Tmax10","Tmax11","Tmax12"))
-  print(head(tt))
-  t_long <- melt(setDT(tt), id.vars = c("ID1","ID2","Latitude","Longitude","Elevation"), variable.name = "month")
-  print(head(t_long))
-  #select only needed columns
-  t_long2<-subset(t_long,select=c("ID1","month","value"))
-  #parse month from Tmax01 etc
-  t_long2$month<-str_sub(t_long2$month, start= -2)
-  #name value column ClimNATmax
-  colnames(t_long2)<-c("group","month","climNA_tmax")
-  #remove leading 0's on month
-  t_long2$month<-sub("^0+", "",t_long2$month)
-  #head(t_long2)
-  #table(t_long2$month)
-  #merge with tmax2
-  t_tmax<-subset(tmax2,year==y)
-  #table(t_tmax$month)
-  t_tmax2<-merge(t_tmax,t_long2,by=c("group","month"))
-  #head(t_tmax2)
-  #table(t_tmax2$month)
-  #nrow(t_tmax2)
-  #nrow(t_tmax)
-  ##merge years as it loops through them
-  ib_clim<-rbind(ib_clim,t_tmax2)
-}
-```
+## Test
 
 ------------------------------------------------------------------------
 
