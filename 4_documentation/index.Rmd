@@ -6,8 +6,8 @@ site: bookdown::bookdown_site
 output: 
   md_document:
     variant: gfm
-    # toc: TRUE
-    # toc_depth: 2
+    toc: TRUE
+    toc_depth: 2
 #bibliography: library.bib
 #citation-style: ../../MendeleyBib/CitationStyles/nature.csl
 #citation-style: https://www.zotero.org/styles/elsevier-harvard

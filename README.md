@@ -1,8 +1,28 @@
 -   <a href="#overview" id="toc-overview">Overview</a>
 -   <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
+    -   <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
+    -   <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
+        spatial objects</a>
 -   <a href="#climatena" id="toc-climatena">ClimateNA</a>
+    -   <a href="#setup" id="toc-setup">Setup</a>
+    -   <a href="#create-input-file" id="toc-create-input-file">Create input
+        file</a>
+    -   <a href="#extract-climatena-summaries"
+        id="toc-extract-climatena-summaries">Extract ClimateNA summaries</a>
+    -   <a href="#extract-climatena-monthly-summaries-with-r"
+        id="toc-extract-climatena-monthly-summaries-with-r">Extract CLimateNA
+        monthly summaries with R</a>
 -   <a href="#covariates" id="toc-covariates">Covariates</a>
+    -   <a href="#ibutton-deployment" id="toc-ibutton-deployment">iButton
+        deployment</a>
+    -   <a href="#spatial" id="toc-spatial">Spatial</a>
 -   <a href="#modelling" id="toc-modelling">Modelling</a>
+    -   <a href="#data-exploration-and-visualization"
+        id="toc-data-exploration-and-visualization">Data exploration and
+        visualization</a>
+    -   <a href="#model-selection" id="toc-model-selection">Model selection</a>
+    -   <a href="#offset-raster" id="toc-offset-raster">Offset raster</a>
+    -   <a href="#validate" id="toc-validate">Validate</a>
 -   <a href="#references" id="toc-references">References</a>
 
 # Overview
@@ -631,7 +651,7 @@ untested.
 ## Create input file
 
 ClimateNAr requires a properly formatted .csv input file that includes
-the lat, long, and elevation of each station.
+the following headers: ID1, ID2, lat, long, el
 
 1.  Bring in iButton data\*\*
 
@@ -655,19 +675,86 @@ elev<-read.csv("0_data/manual/gee_tables/ibutton_terrain.csv")
 
 ``` r
 climateNA_input<- ss_xy%>%
-    left_join(elev, by=c('Site_StationKey'='St_SttK'))%>%
+    left_join(elev, by=c('Project'='Project', 'Site_StationKey'='St_SttK'))%>%
     as.data.frame()%>%
-    select(Site_StationKey, Lat, Long, elevation)%>%
+    select(Project, Site_StationKey, Lat, Long, elevation)%>%
+    rename(c(ID1=Project, ID2=Site_StationKey, lat=Lat, long=Long, el=elevation))%>%
     drop_na()
 
-write.csv(climateNA_input, file="0_data/manual/iButton_data/climateNA_input.csv")  
+write.csv(climateNA_input, file="0_data/manual/climateNA/input/climateNA_input.csv", row.names = FALSE)  
 ```
+
+## Extract ClimateNA summaries
+
+I used the ClimateNA GUI to extract monthly climate summaries. There is
+a weird bug on my mac ClimateNA application where I need to open and
+save the input .csv in excel before ClimateNA can read it.
+
+In the desktop application I selected a `Historical Time Series` of
+`Monthly primary variables (60)`
+
+Climate data is exported back into the rProject as a .csv file in
+`0_data/manual/climateNA/output/`
+
+### Read in the ClimateNA summaries
+
+``` r
+cna<-read.csv(file="0_data/manual/climateNA/output/climateNA_input_2015-2021MP.csv")
+  
+cNA_month_summaries<-cna%>%
+  rename(c(Project=ID1, Site_StationKey=ID2))%>%
+  dplyr::select(c(Year:Tave12))%>%
+  gather(key="Month_a", value="cNA_Tmax", "Tmax01":"Tmax12")%>%
+  mutate(Month_a=(gsub("[^0-9.-]", "", Month_a))) %>%
+  gather(key="Month_b", value="cNA_Tmin", "Tmin01":"Tmin12")%>%
+  mutate(Month_b=(gsub("[^0-9.-]", "", Month_b))) %>%
+  gather(key="Month_c", value="cNA_Tave", "Tave01":"Tave12")%>%
+  mutate(Month_c=(gsub("[^0-9.-]", "", Month_c))) %>%
+  filter(Month_a==Month_b & Month_b==Month_c)%>%
+  dplyr::select(Project, Site_StationKey, Year, Month_a, cNA_Tmax, cNA_Tmin, cNA_Tave)%>%
+  rename(Month=Month_a)%>%
+  arrange(Site_StationKey, Year, Month)
+
+save(cNA_month_summaries, file="0_data/manual/climateNA/processed/cNA_month_summaries.rData")
+write.csv(cNA_month_summaries, file="0_data/manual/climateNA/processed/cNA_month_summaries.csv")
+```
+
+``` r
+load("0_data/manual/climateNA/processed/cNA_month_summaries.rData")
+knitr::kable(head(cNA_month_summaries), "pipe") 
+```
+
+| Project | Site_StationKey | Year | Month | cNA_Tmax | cNA_Tmin | cNA_Tave |
+|:--------|:----------------|-----:|:------|---------:|---------:|---------:|
+| RIVR    | RIVR-001-01     | 2015 | 01    |      0.1 |    -11.5 |     -5.7 |
+| RIVR    | RIVR-001-01     | 2015 | 02    |      1.5 |    -10.7 |     -4.6 |
+| RIVR    | RIVR-001-01     | 2015 | 03    |     11.4 |     -3.3 |      4.0 |
+| RIVR    | RIVR-001-01     | 2015 | 04    |     14.7 |     -1.6 |      6.6 |
+| RIVR    | RIVR-001-01     | 2015 | 05    |     18.0 |      1.9 |      9.9 |
+| RIVR    | RIVR-001-01     | 2015 | 06    |     26.8 |      8.9 |     17.8 |
 
 ## Extract CLimateNA monthly summaries with R
 
-Instructions can be found here:
+I have not been able to get this working on my Mac, but it should work
+on PC’s (untested).
 
-## Test
+``` r
+library(ClimateNAr)
+wkDir = '/Applications'
+exe <- "ClimateNA_v7_30.app"
+inputFile = '0_data/manual/climateNA/input/climateNA_input.csv'
+outputFile = '0_data/manual/climateNA/output/climateNA_output.csv'
+period = 'Normal_1961_1990.nrm'
+ClimateNA_cmdLine(exe, wkDir, period, MSY='Y',inputFile, outputFile)
+
+
+
+
+inputFile = 'C:\\Climatena_v730\\InputFiles\\na50k.asc'
+outputFile = 'C:\\Climatena_v730\\test\\'
+period = 'Normal_1961_1990.nrm'
+ClimateNA_cmdLine(exe,wkDir,period,MSY='SY',inputFile, outputFile)
+```
 
 ------------------------------------------------------------------------
 
