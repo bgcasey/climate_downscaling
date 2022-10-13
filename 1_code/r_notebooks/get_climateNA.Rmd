@@ -73,14 +73,27 @@ period='Normal_1961_1990.nrm',MSY='Y');
 test<-function(exe ="ClimateNA_v7.30.exe", wkDir="climateNA/", period =
 'Normal_1961_1990.nrm', MSY = 'Y', inputFile="0_data/manual/iButton_data/climateNA_input.csv",outputFile= "0_data/manual/iButton_data/climateNA_output.csv")
 
+
+  
+list.files(path = "/Applications")  
+  
   
 library(ClimateNAr, lib.loc="library")
-wkDir = 'library/ClimateNAr'
-#exe <- "ClimateNA_v7.30.exe"
-inputFile = "0_data/manual/iButton_data/climateNA_input.csv"
-outputFile = "0_data/manual/iButton_data/climateNA_output.csv"
+wkDir = '/Applications/ClimateNA_v730/'
+
+wkDir = "/Applications"
+
+
+exe = "ClimateNA_v7_30.app"
+#   wkDir = '/Applications/ClimateNA_v730/'
+# exe <- "ClimateNA_v7.30.exe"
+# inputFile = "/Applications/ClimateNA_v730/inputFiles/input_test.csv"
+# outputFile = "/Applications/ClimateNA_v730/test/test_Normal_1961_1990.csv"
+inputFile = "/Applications/inputFiles/input_test.csv"
+outputFile = "/Applications/inputFiles/test_Normal_1961_1990_a.csv"
 period = 'Normal_1961_1990.nrm'
-ClimateNA_cmdLine(exe="ClimateNA_v7.30.exe", wkDir='library/ClimateNAr', period='Normal_1961_1990.nrm', MSY='Y',inputFile="0_data/manual/iButton_data/climateNA_input.csv", outputFile="0_data/manual/iButton_data/climateNA_output.csv")
+MSY='M'
+ClimateNA_cmdLine(exe,wkDir,period,MSY,inputFile, outputFile)
 
 
 
@@ -88,10 +101,15 @@ inputFile = 'C:\\Climatena_v730\\InputFiles\\na50k.asc'
 outputFile = 'C:\\Climatena_v730\\test\\'
 period = 'Normal_1961_1990.nrm'
 ClimateNA_cmdLine(exe,wkDir,period,MSY='SY',inputFile, outputFile)  
+
+
+
+yearPeriod='Normal_1961_1990.nrm'
+  
+system2(exe,args= c('/Y', yearPeriod, inputFile, outputFile)) 
   
   
-  
-  
+  /Applications/ClimateNA_v730/ClimateNA_v7.30.exe
   
   
 
@@ -191,3 +209,84 @@ for (y in seq(minYear,maxYear)){
 
 
 ```
+
+
+```{r}
+#Inputs
+#ClimateNA executable
+c<-"ClimateNA_v7_30.app"
+
+
+climNA_dir<-"../../Macintosh\ HD/Users/Users/brendancasey/.wine/dosdevices/z:/Applications/ClimateNA_v730/" #where exe is stored
+climNA_dir<-"/Applications" #where exe is stored
+working_dir<-"/Applications/InputFiles" #file where all outputs will go
+
+
+#input directory
+#e.g."/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\\"
+#data<-'/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\'
+#Automated
+maxYear<-max(2018)
+minYear<-min(2019)
+for (y in seq(minYear,maxYear)){
+  #loop through for each year
+  setwd(climNA_dir);getwd() # it must be the home directory of ClimateNA
+  exe <- c
+  inputFile = paste0(data,"temp_input.csv") #find way to change exported file location earlier into format needed here?
+  outputFile = paste0(data,"temp_input_Year_",y,"MP.csv")
+  inputFile = paste0("input_test.csv") #find way to change exported file location earlier into format needed here?
+  outputFile = paste0("temp_input_Year_",y,"MP.csv")
+  yearPeriod = paste0('/Year_',y,'.ann')
+  system2(exe,args= c('/Y', yearPeriod, inputFile, outputFile)) 
+  #dat <- read.csv('C:/Users/kimorris/ClimateNA_v730/ibutton/temp_output.csv'); head(dat) 
+}
+
+system2(exe,args= c('/Y', yearPeriod, inputFile, outputFile)) 
+
+
+
+system2("ClimateNA_v7_30.app", args=c('open') )
+
+
+../../Macintosh\ HD/Users/Users/brendancasey/.wine/dosdevices/z:/Applications/ClimateNA_v730/
+
+/Volumes/Projects/ClimateNAr
+/Users
+inputFile = "input_test.csv"
+outputFile = "test/test_Normal_1961_1990.csv"
+
+
+
+
+
+
+c:\windows\system32\wineconsole.exe
+```
+
+```{r}
+working_dir<-"/Applications" 
+setwd(working_dir)
+command<- "open app/ClimateNA_v7_30.app "
+system(command)
+
+ClimateNA_v7_30.app/Y /Normal_1961_1990.nrm /1_test.csv /test_normal.csv
+
+
+setwd("app/"); # set the ClimateNA root directory as the working directory
+exe <- "ClimateNA_v7_30.app"
+
+inputFile = '/InputFiles/test.csv'
+outputFile = '/InputFiles/test_normal.csv'
+yearPeriod = '/Normal_1961_1990.nrm'
+system2(exe,args= c('/Y', yearPeriod, inputFile, outputFile),wait=TRUE)
+
+dat <- read.csv(' C:/ClimateNA_data/test_normal.csv'); head(dat)
+
+
+
+
+```
+
+Instructions can be found here:
+https://pressbooks.bccampus.ca/fode010notebook/chapter/topic-3-2-the-use-of-climatena-ap-to-generate-point-and-spatial-climate-data/
+
