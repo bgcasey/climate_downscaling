@@ -360,12 +360,13 @@ write.csv(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_com
 ### Monthly summaries {.unnumbered}
 
 ```{r eval=FALSE}
-
+load("0_data/manual/iButton_data/ibuttons_complete_daily.rData")
 ibuttons_complete_monthly<-ibuttons_complete_daily %>%
         group_by(Site_StationKey,Month,Year)%>%
         select(-Day)%>%
         summarise_all(list(mean))%>%
-        arrange(Site_StationKey, Year, Month)
+        arrange(Site_StationKey, Year, Month)%>%
+        rename(c(Tmax_Month=Tmax_Day, Tmin_Month=Tmin_Day, Tavg_Month=Tavg_Day))
   
 save(ibuttons_complete_monthly, file="0_data/manual/iButton_data/ibuttons_complete_monthly.rData")
 

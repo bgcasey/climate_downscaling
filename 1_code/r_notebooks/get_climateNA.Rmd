@@ -14,6 +14,7 @@ library(ClimateNAr)
 library(dplyr)
 library(sf)
 library(tidyr)
+library(stringr)
 ```
 
 Download the ClimateNA desktop application and r package here: https://register.climatena.ca/
@@ -78,15 +79,16 @@ cna<-read.csv(file="0_data/manual/climateNA/output/climateNA_input_2015-2021MP.c
 cNA_month_summaries<-cna%>%
   rename(c(Project=ID1, Site_StationKey=ID2))%>%
   dplyr::select(c(Year:Tave12))%>%
-  gather(key="Month_a", value="cNA_Tmax", "Tmax01":"Tmax12")%>%
+  gather(key="Month_a", value="Tmax_cNA", "Tmax01":"Tmax12")%>%
   mutate(Month_a=(gsub("[^0-9.-]", "", Month_a))) %>%
-  gather(key="Month_b", value="cNA_Tmin", "Tmin01":"Tmin12")%>%
+  gather(key="Month_b", value="Tmin_cNA", "Tmin01":"Tmin12")%>%
   mutate(Month_b=(gsub("[^0-9.-]", "", Month_b))) %>%
-  gather(key="Month_c", value="cNA_Tave", "Tave01":"Tave12")%>%
+  gather(key="Month_c", value="Tavg_cNA", "Tave01":"Tave12")%>%
   mutate(Month_c=(gsub("[^0-9.-]", "", Month_c))) %>%
   filter(Month_a==Month_b & Month_b==Month_c)%>%
-  dplyr::select(Project, Site_StationKey, Year, Month_a, cNA_Tmax, cNA_Tmin, cNA_Tave)%>%
+  dplyr::select(Project, Site_StationKey, Year, Month_a, Tmax_cNA, Tmin_cNA, Tavg_cNA)%>%
   rename(Month=Month_a)%>%
+  mutate(Month=as.numeric(str_remove(Month, "^0+")))%>%
   arrange(Site_StationKey, Year, Month)
 
 save(cNA_month_summaries, file="0_data/manual/climateNA/processed/cNA_month_summaries.rData")
@@ -100,26 +102,114 @@ knitr::kable(head(cNA_month_summaries), "pipe")
 
 
 
-## Extract CLimateNA monthly summaries with R {-}
+### Extract ClimateNA monthly summaries directly with R {-}
 
 I have not been able to get this working on my Mac, but it should work on PC's (untested).
 
 
 ```{r eval=FALSE}
 library(ClimateNAr)
-wkDir = '/Applications'
-exe <- "ClimateNA_v7_30.app"
-inputFile = '0_data/manual/climateNA/input/climateNA_input.csv'
-outputFile = '0_data/manual/climateNA/output/climateNA_output.csv'
-period = 'Normal_1961_1990.nrm'
-ClimateNA_cmdLine(exe, wkDir, period, MSY='Y',inputFile, outputFile)
+#Inputs
+#ClimateNA executable
+c<-"ClimateNA_v7.30.exe"
+#input directory
+#e.g."/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\\"
+#data<-'/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\'
+#Automated
+maxYear<-max(tmax2$year)
+minYear<-min(tmax2$year)
+for (y in seq(minYear,maxYear)){
+  #loop through for each year
+  setwd(climNA_dir);getwd() # it must be the home directory of ClimateNA
+  exe <- c
+  #inputFile = paste0(data,"temp_input.csv") #find way to change exported file location earlier into format needed here?
+  #outputFile = paste0(data,"temp_input_Year_",y,"MP.csv")
+  inputFile = paste0("/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\temp_input.csv") #find way to change exported file location earlier into format needed here?
+  outputFile = paste0("/C:\\Users\\kimorris\\ClimateNA_v730\\ibutton\temp_input.csv","temp_input_Year_",y,"MP.csv")
+  yearPeriod = paste0('/Year_',y,'.ann')
+  system2(exe,args= c('/Y', yearPeriod, inputFile, outputFile)) 
+  #dat <- read.csv('C:/Users/kimorris/ClimateNA_v730/ibutton/temp_output.csv'); head(dat) 
+}
 
-
-
-
-inputFile = 'C:\\Climatena_v730\\InputFiles\\na50k.asc'
-outputFile = 'C:\\Climatena_v730\\test\\'
-period = 'Normal_1961_1990.nrm'
-ClimateNA_cmdLine(exe,wkDir,period,MSY='SY',inputFile, outputFile)
+maxYear<-max(tmax2$year)
+minYear<-min(tmax2$year)
+ib_clim<-NULL
+for (y in seq(minYear,maxYear)){
+  file<-paste0(working_dir,"temp_input_Year_",y,"MP.csv")
+  print(file)
+  t<-read.csv(file)
+  print(head(t))
+  tt<-subset(t,select=c("ID1","ID2","Latitude","Longitude","Elevation", "Tmax01","Tmax02","Tmax03","Tmax04","Tmax05","Tmax06","Tmax07","Tmax08","Tmax09","Tmax10","Tmax11","Tmax12"))
+  print(head(tt))
+  t_long <- melt(setDT(tt), id.vars = c("ID1","ID2","Latitude","Longitude","Elevation"), variable.name = "month")
+  print(head(t_long))
+  #select only needed columns
+  t_long2<-subset(t_long,select=c("ID1","month","value"))
+  #parse month from Tmax01 etc
+  t_long2$month<-str_sub(t_long2$month, start= -2)
+  #name value column ClimNATmax
+  colnames(t_long2)<-c("group","month","climNA_tmax")
+  #remove leading 0's on month
+  t_long2$month<-sub("^0+", "",t_long2$month)
+  #head(t_long2)
+  #table(t_long2$month)
+  #merge with tmax2
+  t_tmax<-subset(tmax2,year==y)
+  #table(t_tmax$month)
+  t_tmax2<-merge(t_tmax,t_long2,by=c("group","month"))
+  #head(t_tmax2)
+  #table(t_tmax2$month)
+  #nrow(t_tmax2)
+  #nrow(t_tmax)
+  ##merge years as it loops through them
+  ib_clim<-rbind(ib_clim,t_tmax2)
+}
 ```
+
+## Calculate difference between iButton and ClimateNA summaries {-}
+
+```{r eval=FALSE}
+# ClimateNA monthly summaries
+load("0_data/manual/climateNA/processed/cNA_month_summaries.rData")
+
+# ibBtton monthly summaries
+load("0_data/manual/iButton_data/ibuttons_complete_monthly.rData")
+
+iButton_cNA_diff<-ibuttons_complete_monthly%>%
+  left_join(cNA_month_summaries, by=c("Site_StationKey", "Year", "Month"))%>%
+  mutate(Tmax_diff=round(Tmax_cNA-Tmax_Month, 2))%>%
+  mutate(Tmin_diff=round(Tmin_cNA-Tmin_Month, 2))%>%
+  mutate(Tavg_diff=round(Tavg_cNA-Tavg_Month, 2))%>%
+  na.omit
+
+# Plot 
+iButton_cNA_diff%>%
+  ggplot(aes(x=Tavg_cNA, y=Tavg_Month)) +
+  geom_point(alpha=.5)
+
+iButton_cNA_diff%>%
+  ggplot(aes(x=Tavg_diff)) +
+  geom_histogram(aes(y=..density..), colour="black", fill="white", binwidth = .5)+
+   geom_density(alpha=.2, fill="#FF6666") 
+
+#over time
+test<-iButton_cNA_diff %>%
+  gather(Month,  Tavg_diff, -Year) %>%
+
+    mutate(date = lubridate::ymd(paste(Year, Month, 15))) 
+
+
+%>%
+  ggplot(aes(date, Tavg_diff)) + 
+  geom_line()
+
+
+#Flag outliers
+
+# Save 
+iButton_cNA_diff<-iButton_cNA_diff%>%
+  dplyr::select("Project","Site_StationKey","Month","Year", "Tmax_diff", "Tmin_diff", "Tavg_diff" )
+
+```
+
 
