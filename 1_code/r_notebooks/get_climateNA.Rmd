@@ -192,24 +192,24 @@ iButton_cNA_diff%>%
   geom_histogram(aes(y=..density..), colour="black", fill="white", binwidth = .5)+
    geom_density(alpha=.2, fill="#FF6666") 
 
-#over time
-test<-iButton_cNA_diff %>%
-  gather(Month,  Tavg_diff, -Year) %>%
-
-    mutate(date = lubridate::ymd(paste(Year, Month, 15))) 
-
-
-%>%
-  ggplot(aes(date, Tavg_diff)) + 
-  geom_line()
-
+# over time
+iButton_cNA_diff %>%
+    mutate(date = lubridate::ymd(paste(Year, Month, 1)))%>%
+  filter(Tavg_diff>-5)%>%
+  ggplot(aes(date, Tmax_Month, group=Site_StationKey)) +
+  geom_line(alpha=0.2) +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5), 
+        panel.grid.minor = element_blank())
 
 #Flag outliers
 
 # Save 
-iButton_cNA_diff<-iButton_cNA_diff%>%
-  dplyr::select("Project","Site_StationKey","Month","Year", "Tmax_diff", "Tmin_diff", "Tavg_diff" )
+# iButton_cNA_diff<-iButton_cNA_diff%>%
+#   dplyr::select("Project","Site_StationKey","Month","Year", "Tmax_diff", "Tmin_diff", "Tavg_diff" )
 
+save(iButton_cNA_diff, file="0_data/manual/iButton_data/iButton_cNA_diff.rData")
 ```
 
 
