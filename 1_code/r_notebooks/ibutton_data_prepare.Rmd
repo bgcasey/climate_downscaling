@@ -89,6 +89,12 @@ save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 
 ##### Remove pre-deployement data {.unnumbered}
 
+```{r eval=FALSE}
+RIVR<- RIVR%>%
+  filter(Date_Time>Date_Time_dpl)%>%
+  filter(Date_Time<Date_Time_rtv)
+```
+
 ##### Identify and remove data from grounded iButtons {.unnumbered}
 
 ##### Get daily temperature summaries {.unnumbered}
@@ -210,6 +216,18 @@ load("2_pipeline/store/hills_dailys.rData")
 
 knitr::kable(head(hills_dailys), "pipe") 
 ```
+
+
+### Wood 
+
+Data from Wood, Wendy H; Marshall, Shawn J; Fargey, Shannon E; Whitehead, Terri L (2017): Daily temperature data from the Foothills Climate Array Mesonet, Canadian Rocky Mountains, 2005-2010. PANGAEA, https://doi.org/10.1594/PANGAEA.880611. 
+
+```{r eval=FALSE}
+wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)
+```
+
+
+
 
 ### Combine datasets {.unnumbered}
 
@@ -342,12 +360,13 @@ write.csv(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_com
 ### Monthly summaries {.unnumbered}
 
 ```{r eval=FALSE}
-
+load("0_data/manual/iButton_data/ibuttons_complete_daily.rData")
 ibuttons_complete_monthly<-ibuttons_complete_daily %>%
         group_by(Site_StationKey,Month,Year)%>%
         select(-Day)%>%
         summarise_all(list(mean))%>%
-        arrange(Site_StationKey, Year, Month)
+        arrange(Site_StationKey, Year, Month)%>%
+        rename(c(Tmax_Month=Tmax_Day, Tmin_Month=Tmin_Day, Tavg_Month=Tavg_Day))
   
 save(ibuttons_complete_monthly, file="0_data/manual/iButton_data/ibuttons_complete_monthly.rData")
 

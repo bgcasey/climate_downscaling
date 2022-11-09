@@ -6,8 +6,8 @@ site: bookdown::bookdown_site
 output: 
   md_document:
     variant: gfm
-    # toc: TRUE
-    # toc_depth: 2
+    toc: TRUE
+    toc_depth: 2
 #bibliography: library.bib
 #citation-style: ../../MendeleyBib/CitationStyles/nature.csl
 #citation-style: https://www.zotero.org/styles/elsevier-harvard
@@ -87,6 +87,17 @@ Use `1_code/r_notebooks/ibutton_data_xy.Rmd`.
 
 ```{r child = '1_code/r_notebooks/ibutton_data_xy.Rmd'}
 ```
+
+--- 
+
+# ClimateNA
+
+Use `1_code/r_notebooks/get_climateNA.Rmd`
+
+```{r child = '1_code/r_notebooks/get_climateNA.Rmd'}
+```
+
+
 --- 
 
 # Covariates
@@ -105,13 +116,9 @@ Use `1_code/r_notebooks/covariates_ibutton_deployment.Rmd`
 
 Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
 
-Download the Google Earth Engine scripts by using `git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling` into your working directory. 
+Download the Google Earth Engine script by using `git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling` into your working directory. 
 
-
-### Terrain metrics {-}
-```{r child = '1_code/GEE/climate_downscaling/extract_terrain'}
-```
-
+Use `1_code/r_notebooks/covariates_gee_spatial.Rmd`.
 
 
 
