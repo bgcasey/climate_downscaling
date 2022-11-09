@@ -126,6 +126,12 @@ Use `1_code/r_notebooks/covariates_gee_spatial.Rmd`.
 
 # Modelling
 
+## Prepare data
+Use `1_code/r_notebooks/modelling_prepare_data.Rmd`.
+```{r child = '1_code/r_notebooks/modelling_prepare_data.Rmd'}
+```
+
+
 
 ## Data exploration and visualization
 

@@ -1,0 +1,74 @@
+### Identify spikes {-}
+
+```{r}
+## packages
+library(TSA)
+library(tsoutliers)
+library(expsmooth)
+library(fma)
+```
+
+
+```{r eval=FALSE}
+test
+
+test<-hills_cleaned%>%
+  filter(Site_StationKey=="HL-3-67-1")
+
+
+%>%
+  filter(Date=="2015-08-13")
+  
+
+g<-grubbs.test(test$Temperature, opposite = TRUE)
+
+group_by(Site_StationKey)
+
+ts_test<-ts(test$Temperature)
+
+
+tso(ts_test,types = c("AO","LS","TC"),maxit.iloop=10)
+
+autoplot(ts_test)
+
+test2<-tsclean(ts_test)
+
+autoplot(tsclean(ts_test), series="clean", color='red', lwd=0.9) +
+     autolayer(ts_test, series="original", color='gray', lwd=1) +
+     geom_point(data = tsoutliers(ts_test) %>% as.data.frame(),
+                aes(x=index, y=replacements), col='blue') +
+     labs(x = "Day", y = "ts_test price ($US)")
+
+
+
+```
+
+
+#### differences
+
+Difference between a value and a previous value
+
+
+```{r}
+test<-hills_cleaned%>%
+  filter(Site_StationKey=="HL-3-67-1")
+
+tseries<-ts(test$Temperature)
+tseries_diff1<-diff(tseries, lag=1)
+
+tm <- cbind(tseries, tseries_diff1)
+
+plot.ts(tm)
+```
+
+
+#### moving average
+
+```{r}
+tseries_ma5fore <- ma(tseries, order = 20)
+
+plot.ts(tseries_ma5fore)
+```
+
+
+

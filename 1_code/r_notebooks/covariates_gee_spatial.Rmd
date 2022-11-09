@@ -7,6 +7,5 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ### Terrain metrics {-}
 
 ```{js, file='1_code/GEE/climate_downscaling/extract_terrain.js', eval=FALSE}
-
 ```
 

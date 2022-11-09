@@ -83,40 +83,50 @@ RIVR_2<-RIVR_1 %>% lapply(FUN=function(x){
   
 }) %>% do.call(rbind,.) #working
 
-RIVR_cleaned<-RIVR_2
-save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 ```
 
 ##### Remove pre-deployement data {.unnumbered}
 
 ```{r eval=FALSE}
-RIVR<- RIVR%>%
+RIVR_3<- RIVR_2%>%
   filter(Date_Time>Date_Time_dpl)%>%
   filter(Date_Time<Date_Time_rtv)
+
+RIVR_cleaned<-RIVR_3
+save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 ```
+
 
 ##### Identify and remove data from grounded iButtons {.unnumbered}
 
 ##### Get daily temperature summaries {.unnumbered}
 
-Create new calculated columns with the mean, max, and min daily temperatures.
+Create new calculated columns with the mean, max, and min daily temperatures and diurnal range. 
 
 ```{r eval=FALSE}
-RIVR_3<-RIVR_2 %>% 
-  dplyr::group_by(Site_StationKey,Day,Month,Year,iBt_type)%>%  dplyr::mutate(Temperature=Value) %>%
-  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
-  dplyr::group_by(Site_StationKey,iBt_type,Month,Year) %>% dplyr::filter(!iBt_type=="EXTRA-TOP")
+RIVR_3<-RIVR_cleaned %>% 
+  mutate(Date=date(Date_Time))%>%
+  dplyr::group_by(Site_StationKey,Day,Month,Year,Date, iBt_type)%>%  dplyr::mutate(Temperature=Value) %>%
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature), T_diurnal=max(Temperature)-min(Temperature))%>% 
+  dplyr::group_by(Site_StationKey,iBt_type,Month,Year) %>% dplyr::filter(!iBt_type=="EXTRA-TOP")%>%
+  arrange(Site_StationKey, Date)
 
 RIVR_dailys<-RIVR_3
 
 save(RIVR_dailys, file="2_pipeline/store/RIVR_dailys.rData")
 ```
 
+
+
 ```{r echo=FALSE, message = FALSE, results="asis"}
 load("2_pipeline/store/RIVR_dailys.rData")
 
 knitr::kable(head(RIVR_dailys), "pipe") 
 ```
+
+
+
+
 
 #### HILL {.unnumbered}
 
@@ -194,8 +204,6 @@ save(hills_cleaned, file="2_pipeline/tmp/hills_cleaned.rData")
 
 ##### Remove predeployement data {.unnumbered}
 
-##### Identify and remove data from grounded iButtons {.unnumbered}
-
 ##### Get daily temperature summaries {.unnumbered}
 
 Create new calculated columns with the mean, max, and min daily temperatures.
@@ -218,7 +226,7 @@ knitr::kable(head(hills_dailys), "pipe")
 ```
 
 
-### Wood 
+#### Wood {-} 
 
 Data from Wood, Wendy H; Marshall, Shawn J; Fargey, Shannon E; Whitehead, Terri L (2017): Daily temperature data from the Foothills Climate Array Mesonet, Canadian Rocky Mountains, 2005-2010. PANGAEA, https://doi.org/10.1594/PANGAEA.880611. 
 
@@ -319,6 +327,7 @@ ib_cal<-bind_rows("Summer"=complete_data_w_missing_summer,
 
 ```
 
+
 #### Impute missing values {.unnumbered}
 
 Impute NA values using a spline function based on time series imputation. The imputation is based on month per year per iButton site.
@@ -356,6 +365,13 @@ save(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_complete
 write.csv(ibuttons_complete_daily, file="0_data/manual/iButton_data/ibuttons_complete_daily.csv")
 
 ```
+
+
+
+
+
+
+
 
 ### Monthly summaries {.unnumbered}
 

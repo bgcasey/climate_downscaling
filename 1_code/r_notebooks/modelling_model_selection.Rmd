@@ -1,0 +1,186 @@
+```{r eval=FALSE}
+load("0_data/manual/for_models/model_df.rData")
+
+test_df<-filter(model_df, Tmax_diff>-5)%>%
+  drop_na()
+
+
+
+## random effects
+
+
+
+m1<-lmer(Tmax_diff ~ 
+           scale(NDVI_mean) +              
+scale(NDMI_mean) +               
+scale(EVI_mean) +               
+scale(SAVI_mean) +               
+scale(BSI_mean) +               
+scale(SI_mean) +                 
+scale(LAI_mean) +               
+#scale(logTWI) +                  
+scale(TWI) +                    
+scale(elevation) +               
+scale(slope) +                  
+scale(aspect) +                  
+scale(HLI) +                    
+scale(tpi) +         
+           + (1|Site_StationKey), data=test_df, na.action=na.fail)
+
+d_m<-d_in_1<-MuMIn::dredge(m1, extra = c(r2=function(x) round(r.squaredGLMM(x)[1,c(1,2)],3)))
+
+## try month as a random effect
+m4<-lmer(Tmax_diff ~ 
+           scale(NDVI_mean) +              
+scale(NDMI_mean) +               
+scale(EVI_mean) +               
+scale(SAVI_mean) +               
+           
+scale(SI_mean) +                 
+               
+#scale(logTWI) +                  
+scale(TWI) +                    
+         
+                
+                  
+scale(HLI) +                    
+        
+           + (1|Month/Site_StationKey), data=test_df, na.action=na.fail)
+
+
+
+
+m2<-lmer(Tmax_diff ~ scaleTWI + (1|Site_StationKey), data=test_df)
+m3<-lmer(Tmax_diff ~ LAI + (1|Site_StationKey), data=test_df)
+m0<-lmer(Tmax_diff ~ 1 + (1|Site_StationKey), data=test_df)
+
+m1<-lm(Tmax_diff ~ HLI, data=test_df)
+
+summary(m1)
+anova(m0, m1)
+
+
+ggplot(test_df, aes(x = HLI, y = Tmax_diff)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+
+
+```
+
+#### Evaluate random effects {-}
+
+```{r eval=FALSE}
+# get seasons
+test_df<-model_df %>%
+  mutate(
+    season = case_when(
+      Month %in%  9:11 ~ "Fall",
+      Month %in%  c(12, 1, 2)  ~ "Winter",
+      Month %in%  3:5  ~ "Spring",
+      TRUE ~ "Summer"))
+
+
+
+m0<-lmer(Tmax_diff ~ 1 + (1|Site_StationKey), data=test_df)
+m1<-lmer(Tmax_diff ~ 1 + (1|Month/Site_StationKey), data=test_df)
+m2<-lmer(Tmax_diff ~ 1 + (1|Month), data=test_df)
+m3<-lmer(Tmax_diff ~ 1 + (1|Year/Site_StationKey), data=test_df)
+m4<-lmer(Tmax_diff ~ 1 + (1|Site_StationKey/Month), data=test_df)
+m5<-lmer(Tmax_diff ~ 1 + (1|Site_StationKey/season), data=test_df)
+m6<-lmer(Tmax_diff ~ 1 + (1|Site_StationKey)+(1|season), data=test_df)
+
+
+
+m0a<-lmer(Tmax_diff ~ elevation + (1+ season_4|Site_StationKey), data=test_df)
+m0b<-lmer(Tmax_diff ~ elevation + (1|Site_StationKey) + (season_4-1|Site_StationKey), 
+     data=test_df)
+
+m0<-glm(OCC ~ 1, data=d3, subset=SS_lidar_timelag==0, family = binomial, offset = OFF,  na.action = na.exclude)
+
+m1<-lme4::glmer(OCC ~ 1 + (1|SS), data=d3, subset=SS_lidar_timelag==0, family = binomial, offset = OFF,  na.action = na.exclude)
+
+m2<-lme4::glmer(OCC ~ 1 + (1|SS) + (1|ss_year), data=d3, subset=SS_lidar_timelag==0, family = binomial, offset = OFF,  na.action = na.exclude)
+
+m3<-lme4::glmer(OCC ~ 1 + (1|ss_year/SS), data=d3, subset=SS_lidar_timelag==0, family = binomial, offset = OFF,  na.action = na.exclude)
+```
+
+
+## Explore effects by season
+
+Make season specific plots to visualize
+
+```{r eval=FALSE}
+
+test_df<-filter(model_df, Tmax_diff>-5)%>%
+  drop_na()
+
+test_df<-test_df %>%
+  mutate(
+    season_4 = case_when(
+      Month %in%  9:11 ~ "Fall",
+      Month %in%  c(12, 1, 2)  ~ "Winter",
+      Month %in%  3:5  ~ "Spring",
+      TRUE ~ "Summer"))%>%
+  mutate(  
+  season_2 = case_when(
+      Month %in%  c(10:12, 1, 2,3) ~ "Winter",
+      TRUE ~ "Summer"))
+
+
+
+ggplot(test_df, aes(y = Tmax_diff, x = NDVI_mean)) +
+  geom_point() +
+  xlab("NDVI") +
+  ylab("Tmax_diff)") +
+  theme_classic(base_size = 15) +
+  stat_smooth(method = "lm", formula = 'y ~ x', se=F,fullrange = T) +
+  facet_wrap(~season_4)
+
+
+ggplot(test_df, aes(y = Tmax_diff, x = HLI)) +
+  geom_point() +
+  xlab("HLI") +
+  ylab("Tmax_diff)") +
+  theme_classic(base_size = 15) +
+  stat_smooth(method = "lm", formula = 'y ~ x', se=F,fullrange = T) +
+  facet_wrap(~season_4)
+
+
+ggplot(test_df, aes(y = Tmax_diff, x = aspect)) +
+  geom_point() +
+  xlab("aspect") +
+  ylab("Tmax_diff)") +
+  theme_classic(base_size = 15) +
+  stat_smooth(method = "lm", formula = 'y ~ x', se=F,fullrange = T) +
+  facet_wrap(~season_4)
+
+ggplot(test_df, aes(y = Tmax_diff, x = tpi)) +
+  geom_point() +
+  xlab("tpi") +
+  ylab("Tmax_diff)") +
+  theme_classic(base_size = 15) +
+  stat_smooth(method = "lm", formula = 'y ~ x', se=F,fullrange = T) +
+  facet_wrap(~season_2)
+
+
+
+ggplot(test_df, aes(y = Tmax_diff, x = elevation)) +
+  geom_point() +
+  xlab("elevation") +
+  ylab("Tmax_diff)") +
+  theme_classic(base_size = 15) +
+  stat_smooth(method = "lm", formula = 'y ~ x', se=F,fullrange = T) +
+  facet_wrap(~season_4)
+
+
+
+ggplot(test_df, aes(y = Tmax_diff, x = snow)) +
+  geom_point() +
+  xlab("SI") +
+  ylab("Tmax_diff)") +
+  theme_classic(base_size = 15) +
+  stat_smooth(method = "lm", formula = 'y ~ x', se=F,fullrange = T) +
+  facet_wrap(~season_4)
+
+```
+
