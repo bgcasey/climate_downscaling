@@ -1,6 +1,8 @@
 ```{r setup, include=FALSE, cache=FALSE}
 #Set root directory to R project root
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+# setwd(rprojroot::find_rstudio_root_file())
 ```
 
 ```{r eval=FALSE}
@@ -10,6 +12,7 @@ library(dplyr)
 library(kableExtra)
 library(lubridate)
 library(imputeTS)
+library(readr)
 ```
 
 ### Import and clean {.unnumbered}
@@ -235,6 +238,83 @@ wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  he
 ```
 
 
+#### Alex {-}
+
+```{r eval=FALSE}
+
+# read csvs
+alex_2019<-read.csv(file="0_data/external/iButton/alex/combined/Combined2019TempData.csv")
+alex_2020_2021<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
+
+
+# need to add a time column to alex_2020_2021
+## read and rbind csvs
+# read in the individidual 2020-2021 csvs
+filenames=list.files(path="0_data/external/iButton/alex/individual/2020_2021", full.names=TRUE)
+myMergedData <- 
+    read_csv(filenames) %>% 
+    bind_rows()
+colnames(myMergedData)[1] <- "date_time"
+
+# fix date and time fields 
+mdf<-myMergedData%>%
+  mutate(date_time=gsub("\\.","",myMergedData$date_time))%>%
+  drop_na(c(date_time, date_time_deployed))%>%
+  mutate(date_time_2=dmy_hm(date_time))%>%
+  # mutate(date_time_3=replace_na(list(date_time_2), 0))%>%
+  mutate(date_time_3 = ifelse(is.na(date_time_2), dmy_hms(date_time), date_time_2))%>%
+  mutate(date_time_corrected= as_datetime(date_time_3))%>%
+  # mutate(date_time_all=coalesce(date_time_2, date_time_3))%>%
+  select(-c(date_time_2, date_time_3))%>%
+  mutate(month=month(date_time_corrected))%>%
+  mutate(day=day(date_time_corrected))%>%
+  mutate(year=year(date_time_corrected))%>%
+  mutate(date_time_deployed_1=dmy_hm(date_time_deployed))%>%
+  mutate(date_time_deployed_2 = ifelse(is.na(date_time_deployed_1), dmy_hms(date_time_deployed), date_time_deployed_1))%>%
+  mutate(date_time_deployed_corrected= as_datetime(date_time_deployed_2))%>%
+  select(-c(date_time_deployed_2, date_time_deployed_1))%>%
+  # mutate(date_time_deployed_1=dmy_hms(date_time_deployed))%>%
+  arrange(temp_id, date_time_deployed_corrected)%>%
+  filter(date_time_deployed_corrected<date_time_corrected)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+tj<-left_join(alex_2020_2021, mdf, by=c("temp_id", "month", "day", "year", "Value"))
+
+
+test<-left_join(alex_2020_2021, mdf, by=c("temp_id", "month", "day", "year", "Value"))%>% distinct()
+
+
+#rename columns so column names match and combine
+
+
+
+  
+
+ans = rbindlist(lapply(filenames, fread))
+
+
+
+/Volumes/Projects/climate_downscaling/0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv
+/Volumes/Projects/climate_downscaling/0_data/external/iButton/alex/combined_2019_2020_2021/Combined2019TempData.csv
+
+```
 
 
 ### Combine datasets {.unnumbered}
