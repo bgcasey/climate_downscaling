@@ -243,12 +243,15 @@ wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  he
 ```{r eval=FALSE}
 
 # read csvs
-alex_2019<-read.csv(file="0_data/external/iButton/alex/combined/Combined2019TempData.csv")
-alex_2020_2021<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
+alex_2019<-read_csv(file="0_data/external/iButton/alex/combined/Combined2019TempData.csv")
+# alex_2020_2021<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
 
 
 # need to add a time column to alex_2020_2021
 ## read and rbind csvs
+
+
+
 # read in the individidual 2020-2021 csvs
 filenames=list.files(path="0_data/external/iButton/alex/individual/2020_2021", full.names=TRUE)
 myMergedData <- 
@@ -257,8 +260,10 @@ myMergedData <-
 colnames(myMergedData)[1] <- "date_time"
 
 # fix date and time fields 
-mdf<-myMergedData%>%
+alex_2020_2021<-myMergedData%>%
   mutate(date_time=gsub("\\.","",myMergedData$date_time))%>%
+  mutate(site_id=sub("\\(.*","",myMergedData$site_id))%>%
+  mutate(site_id=sub(" *","_",myMergedData$site_id))%>%
   drop_na(c(date_time, date_time_deployed))%>%
   mutate(date_time_2=dmy_hm(date_time))%>%
   # mutate(date_time_3=replace_na(list(date_time_2), 0))%>%
@@ -276,44 +281,20 @@ mdf<-myMergedData%>%
   # mutate(date_time_deployed_1=dmy_hms(date_time_deployed))%>%
   arrange(temp_id, date_time_deployed_corrected)%>%
   filter(date_time_deployed_corrected<date_time_corrected)
+ 
+unique(alex_2020_2021$site_id)
+# there are a lot more site id's here than on Alexs plot locations spreadsheet. 557 vs 97. Missing somthing? Some of the ids in the locations and elevations spreadsheet are missing from the data (e.g. 1_WA, 3_C)
 
 
+alex_2020_2021_fin<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-tj<-left_join(alex_2020_2021, mdf, by=c("temp_id", "month", "day", "year", "Value"))
-
-
-test<-left_join(alex_2020_2021, mdf, by=c("temp_id", "month", "day", "year", "Value"))%>% distinct()
-
-
-#rename columns so column names match and combine
-
-
-
-  
-
-ans = rbindlist(lapply(filenames, fread))
-
-
-
-/Volumes/Projects/climate_downscaling/0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv
-/Volumes/Projects/climate_downscaling/0_data/external/iButton/alex/combined_2019_2020_2021/Combined2019TempData.csv
-
+test<-alex_2020_2021[c(4:5)]%>%distinct()
+test2<-alex_2020_2021_fin%>%
+  select(site_id, plot_id)%>%distinct()
+test3<-alex_2019%>%
+      select(8)%>%
+      distinct()
 ```
 
 
