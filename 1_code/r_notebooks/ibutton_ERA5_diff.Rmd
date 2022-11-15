@@ -1,0 +1,267 @@
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+#setwd(rprojroot::find_rstudio_root_file())
+```
+
+```{r eval=FALSE}
+library(dplyr)
+library(readr)
+```
+
+```{r eval=FALSE}
+ERA5_d<-read_csv("0_data/manual/gee_tables/ibutton_timeSeries_ERA5_daily.csv")
+
+# convert kelvin to celsius
+
+ERA5_d2<-ERA5_d%>%
+  mutate(ERA5_temp_mean= mean_2m_air_temperature-273.15)%>%
+  mutate(ERA5_temp_max= maximum_2m_air_temperature-273.15)%>%
+  mutate(ERA5_temp_min= minimum_2m_air_temperature-273.15)%>%
+  rename(c(Year=year, Month=month, Day=day, Site_StationKey=St_SttK))%>%
+  select(Site_StationKey, Year, Month, Day, ERA5_temp_max, ERA5_temp_min, ERA5_temp_mean)
+
+```
+
+```{r eval=FALSE}
+# load ibutton daily summaries
+load("2_pipeline/tmp/ibuttons.rData")
+
+
+#calculate difference between ibuttion and ERA5 temperatures
+ibuttons_ERA5<-ibuttons%>%
+  left_join(ERA5_d2, by = c("Site_StationKey", "Day", "Month", "Year"))%>%
+  mutate(Tmax_dif=ERA5_temp_max-Tmax_Day)%>%
+  mutate(Tmean_dif=ERA5_temp_mean-Tavg_Day)%>%
+  mutate(Tmin_dif=ERA5_temp_min-Tmin_Day)%>%
+  filter(is.na(iBt_type)|iBt_type!="BOT")%>%
+  drop_na(ERA5_temp_max)
+
+```
+
+
+```{r}
+d<-ibuttons_ERA5%>%
+  filter(Project=="RIVR")%>%
+  filter(abs(Tmean_dif)>5)%>%
+  group_by(Site_StationKey)%>%
+  mutate(consecutive_day_flag = if_else(Date == (lag(Date) + days(1)), 1, 0))%>%
+  select(Site_StationKey,Year, Month, Day, Tavg_Day, ERA5_temp_mean, Tmean_dif)%>%
+  arrange(Site_StationKey, iBt_type, Year, Month, Day)
+
+
+  
+  %>% # flag consecutive days
+  mutate(snow_burial=rep(rle(consecutive_day_flag)$length>=25,rle(consecutive_day_flag)$length))%>% #flag dates that are a part of >25 sequence
+  filter(snow_burial==TRUE)
+
+%>%
+  right_join(ibuttons_ERA)%>% # join back with the original data frame
+  mutate(snow_burial=replace_na(snow_burial, "FALSE"))%>%
+  select(-consecutive_day_flag)%>%
+  arrange(Site_StationKey, iBt_type, Year, Month, Day)%>%
+  filter(snow_burial==TRUE)
+
+
+
+# see if its specific iButtons caysing the issue
+d1<-ibuttons_ERA5%>%
+  filter(Project=="RIVR")%>%
+  filter(Tmax_dif>15)
+
+#  [1] "RIVR-001-01" "RIVR-001-05" "RIVR-001-07" "RIVR-002-01" "RIVR-002-02"
+#  [6] "RIVR-002-05" "RIVR-003-02" "RIVR-003-03" "RIVR-003-04" "RIVR-003-05"
+# [11] "RIVR-003-10" "RIVR-003-12" "RIVR-003-13" "RIVR-004-01" "RIVR-004-02"
+# [16] "RIVR-004-03" "RIVR-004-06" "RIVR-004-07" "RIVR-004-09" "RIVR-004-19"
+# [21] "RIVR-004-20" "RIVR-004-30" "RIVR-004-31" "RIVR-004-32" "RIVR-006-08"
+# [26] "RIVR-006-11" "RIVR-012-04" "RIVR-013-04"
+
+
+d2<-ibuttons_ERA5%>%
+  filter(Project=="RIVR")%>%
+  filter(Tmean_dif>10)
+# [1] "RIVR-001-05" "RIVR-001-07" "RIVR-002-05" "RIVR-003-10" "RIVR-004-09"
+# [6] "RIVR-006-08" "RIVR-010-05" "RIVR-011-05" "RIVR-013-04"
+
+
+
+d2<-ibuttons_ERA5%>%
+  filter(Site_StationKey=="RIVR-006-08")
+
+
+```
+
+
+
+```{r eval=FALSE}
+
+# remove outliers based on interquartile range
+da<-ibuttons_ERA5%>%
+  filter(Tmax_dif< -10)
+
+
+hist(da$Month)
+
+# all data (ungrouped)
+d<-ibuttons_ERA5
+hist(d$Tmean_dif)
+
+Q1 <- quantile(d$Tmax_dif, .25, na.rm = FALSE)
+Q3 <- quantile(d$Tmax_dif, .75, na.rm = FALSE)
+IQR <- IQR(d$Tmax_dif, na.rm = FALSE)
+d1 <- subset(d, d$Tmax_dif > (Q1 - 1.5*IQR) & d$Tmax_dif< (Q3 + 1.5*IQR))
+boxplot(d1[c(13:15)])
+
+Q1 <- quantile(d1$Tmin_dif, .25, na.rm = FALSE)
+Q3 <- quantile(d1$Tmin_dif, .75, na.rm = FALSE)
+IQR <- IQR(d1$Tmin_dif, na.rm = FALSE)
+d2 <- subset(d1, d1$Tmin_dif > (Q1 - 1.5*IQR) & d1$Tmin_dif< (Q3 + 1.5*IQR))
+boxplot(d2[c(13:15)])
+
+Q1 <- quantile(d2$Tmean_dif, .25, na.rm = FALSE)
+Q3 <- quantile(d2$Tmean_dif, .75, na.rm = FALSE)
+IQR <- IQR(d2$Tmean_dif, na.rm = FALSE)
+d3 <- subset(d2, d2$Tmean_dif > (Q1 - 1.5*IQR) & d2$Tmean_dif< (Q3 + 1.5*IQR))
+boxplot(d3[c(13:15)])
+
+nrow(d3%>%
+  filter(Project=="RIVR"))
+
+# grouped by station
+d4<-d %>%
+    group_by(Site_StationKey) %>% 
+    filter(between(Tmax_dif, quantile(Tmax_dif, .25)-(1.5*IQR(Tmax_dif)), quantile(Tmax_dif, .75)+(1.5*IQR(Tmax_dif))))%>%
+    filter(between(Tmin_dif, quantile(Tmin_dif, .25)-(1.5*IQR(Tmin_dif)), quantile(Tmin_dif, .75)+(1.5*IQR(Tmin_dif))))%>%
+    filter(between(Tmean_dif, quantile(Tmean_dif, .25)-(1.5*IQR(Tmean_dif)), quantile(Tmean_dif, .75)+(1.5*IQR(Tmean_dif))))
+
+
+
+# try outside 3 x the interquartile range
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Identify spikes {-}
+
+```{r}
+## packages
+library(TSA)
+library(tsoutliers)
+library(expsmooth)
+library(fma)
+```
+
+
+```{r eval=FALSE}
+test
+
+test<-ibuttons_ERA5%>%
+  filter(Site_StationKey=="HL-3-67-1")
+
+
+%>%
+  filter(Date=="2015-08-13")
+  
+
+g<-grubbs.test(test$Tmean_dif, type=20)
+
+group_by(Site_StationKey)
+
+ts_test<-ts(test$Tmean_dif)
+
+
+tso(ts_test,types = c("AO","LS","TC"),maxit.iloop=10)
+
+autoplot(ts_test)
+
+test2<-tsclean(ts_test)
+
+autoplot(tsclean(ts_test), series="clean", color='red', lwd=0.9) +
+     autolayer(ts_test, series="original", color='gray', lwd=1) +
+     geom_point(data = tsoutliers(ts_test) %>% as.data.frame(),
+                aes(x=index, y=replacements), col='blue') +
+     labs(x = "Day", y = "ts_test price ($US)")
+
+
+```
+
+
+#### differences
+
+Difference between a value and a previous value
+
+
+```{r}
+test<-ibuttons_ERA5%>%
+  filter(Site_StationKey=="HL-3-67-1")
+
+tseries<-ts(test$Tavg_Day)
+tseries_diff1<-diff(tseries, lag=1)
+
+tm <- cbind(tseries, tseries_diff1)
+
+plot.ts(tm)
+```
+
+
+#### moving average
+
+```{r}
+tseries_ma5fore <- ma(tseries, order = 20)
+
+plot.ts(tseries_ma5fore)
+```
+
+
+
+
+```{r}
+a<-ibuttons_ERA5_2%>%
+  filter(Project=="RIVR")%>%
+  subset(is.na(ERA5_temp_max))
+  
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

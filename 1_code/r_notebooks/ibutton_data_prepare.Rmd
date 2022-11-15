@@ -212,10 +212,14 @@ save(hills_cleaned, file="2_pipeline/tmp/hills_cleaned.rData")
 Create new calculated columns with the mean, max, and min daily temperatures.
 
 ```{r eval=FALSE}
-hills_2<-hills_1 %>% 
- dplyr::group_by(Site_StationKey,Day,Month,Year) %>% #group by days, month and year
-  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
-  dplyr::group_by(Site_StationKey,Month,Year) 
+hills_2<-hills_1 %>%
+  mutate(Date=date(Date_Time))%>%
+  dplyr::group_by(Site_StationKey,Date) %>% #group by days, month and year
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(Day=day(Date))%>%
+  dplyr::group_by(Site_StationKey,Date) 
 
 hills_dailys<-hills_2
 
