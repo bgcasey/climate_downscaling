@@ -2,7 +2,7 @@
 #Set root directory to R project root
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
-# setwd(rprojroot::find_rstudio_root_file())
+setwd(rprojroot::find_rstudio_root_file())
 ```
 
 ```{r eval=FALSE}
@@ -248,7 +248,7 @@ wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  he
 
 # read csvs
 alex_2019<-read_csv(file="0_data/external/iButton/alex/combined/Combined2019TempData.csv")
-# alex_2020_2021<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
+alex_2020_2021<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
 
 
 # need to add a time column to alex_2020_2021
@@ -264,10 +264,11 @@ myMergedData <-
 colnames(myMergedData)[1] <- "date_time"
 
 # fix date and time fields 
-alex_2020_2021<-myMergedData%>%
+alex_2020_2021a<-myMergedData%>%
   mutate(date_time=gsub("\\.","",myMergedData$date_time))%>%
-  mutate(site_id=sub("\\(.*","",myMergedData$site_id))%>%
-  mutate(site_id=sub(" *","_",myMergedData$site_id))%>%
+  mutate(site_id=sub("\\(.*","",myMergedData$site_id))%>% # remove entore string after (
+  mutate(site_id=gsub(" ", "", site_id, fixed = TRUE))%>% # remove white space
+  mutate(site_id=gsub("(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)", "_", site_id, perl = TRUE)) %>% # add _ between digits and letters
   drop_na(c(date_time, date_time_deployed))%>%
   mutate(date_time_2=dmy_hm(date_time))%>%
   # mutate(date_time_3=replace_na(list(date_time_2), 0))%>%
@@ -284,7 +285,8 @@ alex_2020_2021<-myMergedData%>%
   select(-c(date_time_deployed_2, date_time_deployed_1))%>%
   # mutate(date_time_deployed_1=dmy_hms(date_time_deployed))%>%
   arrange(temp_id, date_time_deployed_corrected)%>%
-  filter(date_time_deployed_corrected<date_time_corrected)
+  filter(date_time_deployed_corrected<date_time_corrected)%>%
+  distinct()
  
 unique(alex_2020_2021$site_id)
 # there are a lot more site id's here than on Alexs plot locations spreadsheet. 557 vs 97. Missing somthing? Some of the ids in the locations and elevations spreadsheet are missing from the data (e.g. 1_WA, 3_C)
