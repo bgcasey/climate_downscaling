@@ -245,28 +245,40 @@ wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  he
 #### Alex {-}
 
 ```{r eval=FALSE}
-
-# read csvs
-alex_2019<-read_csv(file="0_data/external/iButton/alex/combined/Combined2019TempData.csv")
-alex_2020_2021<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
-
-
-# need to add a time column to alex_2020_2021
-## read and rbind csvs
-
-
-
 # read in the individidual 2020-2021 csvs
 filenames=list.files(path="0_data/external/iButton/alex/individual/2020_2021", full.names=TRUE)
-myMergedData <- 
-    read_csv(filenames) %>% 
-    bind_rows()
-colnames(myMergedData)[1] <- "date_time"
+
+library(data.table)
+myMergedData <- rbindlist(sapply(filenames, fread,simplify = FALSE), idcol = 'filename')
+colnames(myMergedData)[2] <- "date_time"
+
+# check the number of site_ids per file
+n_site_id<-myMergedData %>%
+  group_by(filename) %>%
+  mutate(n_id= n_distinct(site_id))%>%
+  select(filename, n_id)%>%
+  distinct()%>%
+  filter(n_id== 1)
+
+# there is a problem with a coupe of the files:
+# filename	                                # of site_id's
+# 4D0000006E19FA41_101321_Sept20_12PM.csv	  2
+# F60000006E206641_101421_Sept23_10AM.csv	  497
+# FC0000006E203941_101321_Sept23_10AM.csv	  164
+
+# I'll exclude these for now. 
+myMergedData_2<-myMergedData %>%
+    group_by(filename) %>%
+    mutate(n_id= n_distinct(site_id))%>%
+    ungroup()%>%
+    filter(n_id == 1)%>%
+    select(-n_id)%>%
+    select(-filename)
 
 # fix date and time fields 
-alex_2020_2021a<-myMergedData%>%
-  mutate(date_time=gsub("\\.","",myMergedData$date_time))%>%
-  mutate(site_id=sub("\\(.*","",myMergedData$site_id))%>% # remove entore string after (
+alex_2020_2021a<-myMergedData_2%>%
+  mutate(date_time=gsub("\\.","",myMergedData_2$date_time))%>%
+  mutate(site_id=sub("\\(.*","",myMergedData_2$site_id))%>% # remove entore string after (
   mutate(site_id=gsub(" ", "", site_id, fixed = TRUE))%>% # remove white space
   mutate(site_id=gsub("(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)", "_", site_id, perl = TRUE)) %>% # add _ between digits and letters
   drop_na(c(date_time, date_time_deployed))%>%
@@ -288,20 +300,44 @@ alex_2020_2021a<-myMergedData%>%
   filter(date_time_deployed_corrected<date_time_corrected)%>%
   distinct()
  
-unique(alex_2020_2021$site_id)
-# there are a lot more site id's here than on Alexs plot locations spreadsheet. 557 vs 97. Missing somthing? Some of the ids in the locations and elevations spreadsheet are missing from the data (e.g. 1_WA, 3_C)
+# bring in xy data
+alex_xy<-read_csv(file="0_data/external/iButton/alex/2019_and_2020_2021_plot_locations_and_elevations.csv")
+
+xy<-alex_xy%>%
+  mutate(site_id=paste(site, plot, sep="_"))
+
+alex_2020_2021_xy<-alex_2020_2021a%>%
+  inner_join(xy)
 
 
-alex_2020_2021_fin<-read_csv(file="0_data/external/iButton/alex/combined/Combined2020_2021TempData.csv")
+# # view locations that we don't have xy coordinates for:
+# missing<-alex_2020_2021a%>%
+#   anti_join(xy)%>%
+#   select(site_id)%>%
+#   distinct()
+# 
+# #missing xy coordinates for "3_W"  "12_C" "11_T" "18_T" "16_C" "15_C" "14_T". 
+# 
 
 
-test<-alex_2020_2021[c(4:5)]%>%distinct()
-test2<-alex_2020_2021_fin%>%
-  select(site_id, plot_id)%>%distinct()
-test3<-alex_2019%>%
-      select(8)%>%
-      distinct()
+# format dataframe
+
+# "X"               "Site_StationKey" "Date"           
+#  [4] "Time"            "Temperature"     "Date.Time"      
+#  [7] "Value"           "Month"           "Day"            
+# [10] "Year"            "Date_Time"      
+
+alex<-alex_2020_2021a%>%
+  select(-date+)
+  rename(c(Temperature=Value, Year=year, Day=day, Month=month, Date_Time=date_time, )
+  
+
 ```
+
+
+
+
+##### Get daily temperature summaries {.unnumbered}
 
 
 ### Combine datasets {.unnumbered}
