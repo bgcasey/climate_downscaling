@@ -51,70 +51,26 @@ Convert date-time string into a `POSIXct` class. This class associates the date 
 RIVR$Date_Time<-as.POSIXct(RIVR$Date_Time, tz="America/Edmonton")
 ```
 
-##### Remove unusable data {.unnumbered}
-
-###### Remove months with incomplete data {.unnumbered}
-
-Removing first month of data if it has only 20 days or less.
-
-```{r eval=FALSE}
-RIVR_1<- RIVR%>% split(f=.$New_Site_Key) %>% lapply(FUN=function(x){
-  if (x %>% filter(month(Date_Time)==month(min(Date_Time))& year(Date_Time)==min(year(Date_Time))) %>%
-      summarize(max(Day)-min(Day)) %>% c () < 20 ){
-    y<-x %>% filter(month(Date_Time)>month(min(Date_Time))| year(Date_Time)> min(year(Date_Time)))    
-    
-    return(y)
-  }else{
-    return(x)
-  }
-}) 
-```
-
-Removing last month of data if it has only 20 days or less.
-
-```{r eval=FALSE}
-RIVR_2<-RIVR_1 %>% lapply(FUN=function(x){
-  if (x %>% filter(month(Date_Time)==month(max(Date_Time))& year(Date_Time)==max(year(Date_Time))) %>% 
-      summarize(max(Day)-min(Day)) %>% c () < 20 ){
-    y<-x %>% filter(month(Date_Time)<month(max(Date_Time))| year(Date_Time)< max(year(Date_Time)))    
-    
-    #y<-x[!(month(x$Date_Time)==month(min(x$Date_Time) & year(x$Date_Time)==min(year(x$Date_Time)))),]
-    return(y)
-  }else{
-    return(x)
-  }
-  
-}) %>% do.call(rbind,.) #working
-
-```
-
 ##### Remove pre-deployement data {.unnumbered}
 
 ```{r eval=FALSE}
-RIVR_3<- RIVR_2%>%
+RIVR_2<- RIVR%>%
   filter(Date_Time>Date_Time_dpl)%>%
   filter(Date_Time<Date_Time_rtv)
-
-RIVR_cleaned<-RIVR_3
-save(RIVR_cleaned, file="2_pipeline/tmp/RIVR_cleaned.rData")
 ```
 
-
-##### Identify and remove data from grounded iButtons {.unnumbered}
 
 ##### Get daily temperature summaries {.unnumbered}
 
 Create new calculated columns with the mean, max, and min daily temperatures and diurnal range. 
 
 ```{r eval=FALSE}
-RIVR_3<-RIVR_cleaned %>% 
+RIVR_dailys<-RIVR_2 %>% 
   mutate(Date=date(Date_Time))%>%
   dplyr::group_by(Site_StationKey,Day,Month,Year,Date, iBt_type)%>%  dplyr::mutate(Temperature=Value) %>%
-  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature), T_diurnal=max(Temperature)-min(Temperature))%>% 
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>%
   dplyr::group_by(Site_StationKey,iBt_type,Month,Year) %>% dplyr::filter(!iBt_type=="EXTRA-TOP")%>%
   arrange(Site_StationKey, Date)
-
-RIVR_dailys<-RIVR_3
 
 save(RIVR_dailys, file="2_pipeline/store/RIVR_dailys.rData")
 ```
@@ -126,9 +82,6 @@ load("2_pipeline/store/RIVR_dailys.rData")
 
 knitr::kable(head(RIVR_dailys), "pipe") 
 ```
-
-
-
 
 
 #### HILL {.unnumbered}
@@ -165,54 +118,23 @@ Convert date-time string into a `POSIXct` class. This class associates the date 
 hills$Date.Time<-as.POSIXct(hills$Date.Time, tz="America/Edmonton")
 ```
 
-##### Remove unusable data {.unnumbered}
-
-###### Remove months with incomplete data {.unnumbered}
-
-Remove first and last months if they have less than 21 days of data.
 
 ```{r eval=FALSE}
 hills_1<-hills %>%
   mutate(Value=Temperature,Month=month(Date.Time),Day=day(Date.Time),Year=year(Date.Time),
-                Date_Time=Date.Time) %>%  
-  ###Split per site_stationkey and remove first and last month if they have less than 20 days
-  split(f=.$Site_StationKey) %>% lapply(FUN=function(x){
-    if (x %>% filter(month(Date_Time)==month(min(Date_Time))& year(Date_Time)==min(year(Date_Time))) %>%
-        summarize(max(Day)-min(Day)) %>% c () < 20 ){
-      y<-x %>% filter(month(Date_Time)>month(min(Date_Time))| year(Date_Time)> min(year(Date_Time)))    
-      
-      return(y)
-    }else{
-      return(x)
-    }
-    
-  }) %>% lapply(FUN=function(x){
-    if (x %>% filter(month(Date_Time)==month(max(Date_Time))& year(Date_Time)==max(year(Date_Time))) %>% 
-        summarize(max(Day)-min(Day)) %>% c () < 20 ){
-      y<-x %>% filter(month(Date_Time)<month(max(Date_Time))| year(Date_Time)< max(year(Date_Time)))    
-      
-      #y<-x[!(month(x$Date_Time)==month(min(x$Date_Time) & year(x$Date_Time)==min(year(x$Date_Time)))),]
-      return(y)
-    }else{
-      return(x)
-    }
-    
-  }) %>% do.call(rbind,.) 
-
-
-hills_cleaned<-hills_1
-save(hills_cleaned, file="2_pipeline/tmp/hills_cleaned.rData")
+                Date_Time=Date.Time) 
 
 ```
 
-##### Remove predeployement data {.unnumbered}
 
 ##### Get daily temperature summaries {.unnumbered}
 
 Create new calculated columns with the mean, max, and min daily temperatures.
 
 ```{r eval=FALSE}
-hills_2<-hills_1 %>%
+hills_dailys<-hills %>%
+   mutate(Value=Temperature,Month=month(Date.Time),Day=day(Date.Time),Year=year(Date.Time),
+                Date_Time=Date.Time) %>%
   mutate(Date=date(Date_Time))%>%
   dplyr::group_by(Site_StationKey,Date) %>% #group by days, month and year
   dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>%
@@ -220,8 +142,6 @@ hills_2<-hills_1 %>%
   mutate(Month=month(Date))%>%
   mutate(Day=day(Date))%>%
   dplyr::group_by(Site_StationKey,Date) 
-
-hills_dailys<-hills_2
 
 save(hills_dailys, file="2_pipeline/store/hills_dailys.rData")
 ```
@@ -238,11 +158,22 @@ knitr::kable(head(hills_dailys), "pipe")
 Data from Wood, Wendy H; Marshall, Shawn J; Fargey, Shannon E; Whitehead, Terri L (2017): Daily temperature data from the Foothills Climate Array Mesonet, Canadian Rocky Mountains, 2005-2010. PANGAEA, https://doi.org/10.1594/PANGAEA.880611. 
 
 ```{r eval=FALSE}
-wood<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)
+wood_dailys<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)%>%
+  rename(c(Site_StationKey=Station..FCAID., Date_Time=Date.Time, Tmin_Day=TnTnTn.day.min...C., Tmax_Day=TxTxTx.day.max...C., Tavg_Day=TTT.daily.m...C.))%>%
+  select(Site_StationKey, Date_Time, Tmin_Day, Tmax_Day)%>%
+  mutate(Date=date(Date_Time))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(Day=day(Date))%>%
+  select(-Date_Time)
+
+save(wood_dailys, file="2_pipeline/store/wood_dailys.rData")
 ```
 
 
 #### Alex {-}
+
+##### Clean data {-}
 
 ```{r eval=FALSE}
 # read in the individidual 2020-2021 csvs
@@ -298,8 +229,17 @@ alex_2020_2021a<-myMergedData_2%>%
   # mutate(date_time_deployed_1=dmy_hms(date_time_deployed))%>%
   arrange(temp_id, date_time_deployed_corrected)%>%
   filter(date_time_deployed_corrected<date_time_corrected)%>%
-  distinct()
+  distinct()%>%
+  select(-c(date_time_deployed, date_time, temp_id, serial_number, location))%>%
+  rename(c(Temperature=Value, Year=year, Day=day, Month=month, Date_Time=date_time_corrected,  Date_Time_dpl=date_time_deployed_corrected, Site_StationKey=site_id ))%>%
+  mutate(Date=date(Date_Time))%>%
+  mutate(Project="alex")
  
+
+alex_cleaned<-alex_2020_2021a
+save(alex_cleaned, file="2_pipeline/tmp/alex_cleaned.rData")
+
+
 # bring in xy data
 alex_xy<-read_csv(file="0_data/external/iButton/alex/2019_and_2020_2021_plot_locations_and_elevations.csv")
 
@@ -310,34 +250,22 @@ alex_2020_2021_xy<-alex_2020_2021a%>%
   inner_join(xy)
 
 
-# # view locations that we don't have xy coordinates for:
-# missing<-alex_2020_2021a%>%
-#   anti_join(xy)%>%
-#   select(site_id)%>%
-#   distinct()
-# 
-# #missing xy coordinates for "3_W"  "12_C" "11_T" "18_T" "16_C" "15_C" "14_T". 
-# 
-
-
-# format dataframe
-
-# "X"               "Site_StationKey" "Date"           
-#  [4] "Time"            "Temperature"     "Date.Time"      
-#  [7] "Value"           "Month"           "Day"            
-# [10] "Year"            "Date_Time"      
-
-alex<-alex_2020_2021a%>%
-  select(-date+)
-  rename(c(Temperature=Value, Year=year, Day=day, Month=month, Date_Time=date_time, )
-  
-
 ```
 
 
-
-
 ##### Get daily temperature summaries {.unnumbered}
+
+Create new calculated columns with the mean, max, and min daily temperatures. 
+
+```{r eval=FALSE}
+alex_dailys<-alex_cleaned %>% 
+  dplyr::group_by(Site_StationKey,Day,Month,Year,Date)%>%
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
+  dplyr::group_by(Site_StationKey,Month,Year) %>% 
+  arrange(Site_StationKey, Date)
+
+save(alex_dailys, file="2_pipeline/store/alex_dailys.rData")
+```
 
 
 ### Combine datasets {.unnumbered}
@@ -346,7 +274,7 @@ alex<-alex_2020_2021a%>%
 
 ```{r eval=FALSE}
 
-ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,.id="Project")
+ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys, "alex"=alex_dailys, "wood"=wood_dailys, .id="Project")
 
 save(ibuttons, file="2_pipeline/tmp/ibuttons.rData")
 ```
