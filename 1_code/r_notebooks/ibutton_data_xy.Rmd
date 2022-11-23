@@ -124,10 +124,48 @@ save(wood_xy, file="0_data/manual/iButton_data/spatial/wood_xy.rData")
 st_write(wood_xy, "0_data/manual/iButton_data/spatial/wood_xy.shp")
 ```
 
+### Alex {.unnumbered}
+
+**Load data**
+
+```{r eval=FALSE}
+load("2_pipeline/store/alex_dailys.rData")
+
+# bring in xy data
+alex_loc<-read_csv(file="0_data/external/iButton/alex/2019_and_2020_2021_plot_locations_and_elevations.csv")
+```
+
+
+
+#### Create spatial data frame of iButton locations {.unnumbered}
+
+Extract XY coordinates and save as shapefile.
+
+```{r eval=FALSE}
+alex_xy<-alex_loc%>%
+  mutate(Site_StationKey=paste(site, plot, sep="_"))%>%
+  inner_join(alex_dailys)%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(Year))%>%
+  mutate(max_year=max(Year))%>%
+  mutate(Project="alex")%>%
+  dplyr::select(c(Project, Site_StationKey, lat, long, min_year, max_year))%>%
+  rename(c(Lat=lat, Long=long))%>%
+  dplyr::distinct()
+
+alex_xy<-st_as_sf(alex_xy, coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+# save as spatial data frame
+save(alex_xy, file="0_data/manual/iButton_data/spatial/alex_xy.rData")
+
+# save as shapefile
+st_write(alex_xy, "0_data/manual/iButton_data/spatial/alex_xy.shp")
+```
+
 ### All projects {-}
 
 ```{r eval=FALSE}
-ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy)
+ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy)
 
 # save as spatial data frame
 save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")
@@ -181,7 +219,7 @@ alberta<-st_read("0_data/external/Alberta/Alberta.shp")%>%st_transform(crs=st_cr
 # get aspect ratio of the study area (for inset map)
 #asp <- (study_area$ymax - study_area$ymin)/(study_area$xmax - study_area$xmin)
 
-mypal= c('#984ea3','#ff7f00', "#e7298a")
+mypal= c('#1b9e77','#d95f02','#7570b3','#e7298a')
 # m<-tm_shape(alberta)+tm_borders()+tm_fill(col = "#fddadd")+
 #   #tm_polygons(col=NA, border.col="black")+
 #   tm_layout(frame=FALSE)+
