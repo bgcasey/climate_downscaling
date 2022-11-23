@@ -11,6 +11,48 @@ library(readr)
 library(stringr)
 ```
 
+```{r eval=FALSE}
+# load ibutton daily summaries
+load("2_pipeline/tmp/ibuttons.rData")
+```
+
+
+### Remove months with incomplete data {.unnumbered}
+
+Removing first month of data if it has only 20 days or less.
+
+```{r eval=FALSE}
+ibuttons_1<- ibuttons%>% ungroup()%>%split(f=.$Site_StationKey) %>% lapply(FUN=function(x){
+  if (x %>% filter(month(Date)==month(min(Date))& year(Date)==min(year(Date))) %>%
+      summarize(max(Day)-min(Day)) %>% c () < 20 ){
+    y<-x %>% filter(month(Date)>month(min(Date))| year(Date)> min(year(Date)))    
+    
+    return(y)
+  }else{
+    return(x)
+  }
+}) 
+```
+
+Removing last month of data if it has only 20 days or less.
+
+```{r eval=FALSE}
+ibuttons_2<-ibuttons_1 %>% lapply(FUN=function(x){
+  if (x %>% filter(month(Date)==month(max(Date))& year(Date)==max(year(Date))) %>% 
+      summarize(max(Day)-min(Day)) %>% c () < 20 ){
+    y<-x %>% filter(month(Date)<month(max(Date))| year(Date)< max(year(Date)))    
+    
+    #y<-x[!(month(x$Date)==month(min(x$Date) & year(x$Date)==min(year(x$Date)))),]
+    return(y)
+  }else{
+    return(x)
+  }
+  
+}) %>% do.call(rbind,.) #working
+
+```
+
+
 ### Calculate the difference bewteen ERA5 andiButton temps {.unnumbered}
 
 Import ERA 5 daily summaries calculated in google earth engine.
@@ -30,12 +72,8 @@ ERA5_d2<-ERA5_d%>%
 ```
 
 ```{r eval=FALSE}
-# load ibutton daily summaries
-load("2_pipeline/tmp/ibuttons.rData")
-
-
 #calculate difference between ibuttion and ERA5 temperatures
-ibuttons_ERA5<-ibuttons%>%
+ibuttons_ERA5<-ibuttons_2%>%
   left_join(ERA5_d2, by = c("Site_StationKey", "Day", "Month", "Year"))%>%
   mutate(Tmax_dif=ERA5_temp_max-Tmax_Day)%>%
   mutate(Tavg_dif=ERA5_temp_mean-Tavg_Day)%>%
