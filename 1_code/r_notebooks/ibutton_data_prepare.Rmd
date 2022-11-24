@@ -160,7 +160,7 @@ Data from Wood, Wendy H; Marshall, Shawn J; Fargey, Shannon E; Whitehead, Terri 
 ```{r eval=FALSE}
 wood_dailys<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.tab",  header=T, sep="\t", skip = 23)%>%
   rename(c(Site_StationKey=Station..FCAID., Date_Time=Date.Time, Tmin_Day=TnTnTn.day.min...C., Tmax_Day=TxTxTx.day.max...C., Tavg_Day=TTT.daily.m...C.))%>%
-  select(Site_StationKey, Date_Time, Tmin_Day, Tmax_Day)%>%
+  select(Site_StationKey, Date_Time, Tmin_Day, Tmax_Day, Tavg_Day)%>%
   mutate(Date=date(Date_Time))%>%
   mutate(Year=year(Date))%>%
   mutate(Month=month(Date))%>%
@@ -233,22 +233,12 @@ alex_2020_2021a<-myMergedData_2%>%
   select(-c(date_time_deployed, date_time, temp_id, serial_number, location))%>%
   rename(c(Temperature=Value, Year=year, Day=day, Month=month, Date_Time=date_time_corrected,  Date_Time_dpl=date_time_deployed_corrected, Site_StationKey=site_id ))%>%
   mutate(Date=date(Date_Time))%>%
-  mutate(Project="alex")
+  mutate(Project="alex")%>%
+  filter(placement=="tree (@ dbh)")
  
 
 alex_cleaned<-alex_2020_2021a
 save(alex_cleaned, file="2_pipeline/tmp/alex_cleaned.rData")
-
-
-# bring in xy data
-alex_xy<-read_csv(file="0_data/external/iButton/alex/2019_and_2020_2021_plot_locations_and_elevations.csv")
-
-xy<-alex_xy%>%
-  mutate(site_id=paste(site, plot, sep="_"))
-
-alex_2020_2021_xy<-alex_2020_2021a%>%
-  inner_join(xy)
-
 
 ```
 
@@ -273,6 +263,11 @@ save(alex_dailys, file="2_pipeline/store/alex_dailys.rData")
 #### **Bind dataframes**
 
 ```{r eval=FALSE}
+
+load("2_pipeline/store/alex_dailys.rData")
+load("2_pipeline/store/hills_dailys.rData")
+load("2_pipeline/store/RIVR_dailys.rData")
+load("2_pipeline/store/wood_dailys.rData")
 
 ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys, "alex"=alex_dailys, "wood"=wood_dailys, .id="Project")
 

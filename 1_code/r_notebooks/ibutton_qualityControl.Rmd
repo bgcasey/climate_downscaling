@@ -79,7 +79,18 @@ ibuttons_ERA5<-ibuttons_2%>%
   mutate(Tavg_dif=ERA5_temp_mean-Tavg_Day)%>%
   mutate(Tmin_dif=ERA5_temp_min-Tmin_Day)%>%
   filter(is.na(iBt_type)|iBt_type!="BOT")%>%
-  drop_na(ERA5_temp_max)
+  # add season columns
+  mutate(season_4 = case_when(
+      Month %in%  9:11 ~ "Fall",
+      Month %in%  c(12, 1, 2)  ~ "Winter",
+      Month %in%  3:5  ~ "Spring",
+      TRUE ~ "Summer"))%>%
+  mutate( season_2 = case_when(
+      Month %in%  c(10:12, 1, 2,3) ~ "Winter",
+      TRUE ~ "Summer"))
+# %>%
+#   drop_na(ERA5_temp_max)
+
 ```
 
 
@@ -89,26 +100,36 @@ ibuttons_ERA5<-ibuttons_2%>%
 
 # remove outliers based on interquartile range
 
-d<-ibuttons_ERA5
-hist(d$Tavg_dif)
+d<-ibuttons_ERA5%>%
+  filter(Tmax_Day< 50)
+
 
 d1<-d %>%
-    group_by(Site_StationKey,Month) %>%
-    filter(between(Tmax_Day, quantile(Tmax_Day, .25)-(3*IQR(Tmax_Day)), quantile(Tmax_Day, .75)+(3*IQR(Tmax_Day))))%>%
-    filter(between(Tmin_Day, quantile(Tmin_Day, .25)-(3*IQR(Tmin_Day)), quantile(Tmin_Day, .75)+(3*IQR(Tmin_Day))))%>%
-    filter(between(Tavg_Day, quantile(Tavg_Day, .25)-(3*IQR(Tavg_Day)), quantile(Tavg_Day, .75)+(3*IQR(Tavg_Day))))%>%
+    group_by(Site_StationKey, season_2) %>%
+    filter(between(Tmax_Day, quantile(Tmax_Day, .25, )-(3*IQR(Tmax_Day)), quantile(Tmax_Day, .75, )+(3*IQR(Tmax_Day))))%>%
+    filter(between(Tmin_Day, quantile(Tmin_Day, .25, )-(3*IQR(Tmin_Day)), quantile(Tmin_Day, .75, )+(3*IQR(Tmin_Day))))%>%
+    filter(between(Tavg_Day, quantile(Tavg_Day, .25, )-(3*IQR(Tavg_Day)), quantile(Tavg_Day, .75, )+(3*IQR(Tavg_Day))))%>%
     ungroup()%>%
-    filter(between(Tmax_dif, quantile(Tmax_dif, .25)-(3*IQR(Tmax_dif)), quantile(Tmax_dif, .75)+(3*IQR(Tmax_dif))))%>%
-    filter(between(Tmin_dif, quantile(Tmin_dif, .25)-(3*IQR(Tmin_dif)), quantile(Tmin_dif, .75)+(3*IQR(Tmin_dif))))%>%
-    filter(between(Tavg_dif, quantile(Tavg_dif, .25)-(3*IQR(Tavg_dif)), quantile(Tavg_dif, .75)+(3*IQR(Tavg_dif))))
+    filter(is.na(Tmax_dif)|between(Tmax_dif, quantile(Tmax_dif, .25, na.rm=TRUE)-(3*IQR(Tmax_dif, na.rm=TRUE)), quantile(Tmax_dif, .75, na.rm=TRUE)+(3*IQR(Tmax_dif, na.rm=TRUE))))%>%
+filter(is.na(Tmin_dif)|between(Tmin_dif, quantile(Tmin_dif, .25, na.rm=TRUE)-(3*IQR(Tmin_dif, na.rm=TRUE)), quantile(Tmin_dif, .75, na.rm=TRUE)+(3*IQR(Tmin_dif, na.rm=TRUE))))%>%
+filter(is.na(Tavg_dif)|between(Tavg_dif, quantile(Tavg_dif, .25, na.rm=TRUE)-(3*IQR(Tavg_dif, na.rm=TRUE)), quantile(Tavg_dif, .75, na.rm=TRUE)+(3*IQR(Tavg_dif, na.rm=TRUE))))
 
+  
 
+#via sd
+t<-d %>%
+  filter(between(Tmax_Day, mean(Tmax_Day, na.rm=TRUE) - (3 * sd(Tmax_Day, na.rm=TRUE)), 
+                     mean(Tmax_Day, na.rm=TRUE) + (3 * sd(Tmax_Day, na.rm=TRUE))))
 
-# check if outliers vary by season. (may indicate that they are caused by snow burial
-da<-d1%>%
-  filter(Tmax_dif< -10)
-
-hist(da$Month)
+d2<-d %>%
+    group_by(Site_StationKey, season_2) %>%
+    filter(between(Tmax_Day, mean(Tmax_Day)-(3*sd(Tmax_Day)), mean(Tmax_Day)+(3*sd(Tmax_Day))))%>%
+    filter(between(Tmin_Day, mean(Tmin_Day)-(3*sd(Tmin_Day)), mean(Tmin_Day)+(3*sd(Tmin_Day))))%>%
+    filter(between(Tavg_Day, mean(Tavg_Day)-(3*sd(Tavg_Day)), mean(Tavg_Day)+(3*sd(Tavg_Day))))%>%
+    ungroup()%>%
+    filter(is.na(Tmax_dif)|between(Tmax_dif, mean(Tmax_dif,  na.rm=TRUE)-(3*sd(Tmax_dif, na.rm=TRUE)), mean(Tmax_dif,  na.rm=TRUE)+(3*sd(Tmax_dif, na.rm=TRUE))))%>%
+filter(is.na(Tmin_dif)|between(Tmin_dif, mean(Tmin_dif,  na.rm=TRUE)-(3*sd(Tmin_dif, na.rm=TRUE)), mean(Tmin_dif,  na.rm=TRUE)+(3*sd(Tmin_dif, na.rm=TRUE))))%>%
+filter(is.na(Tavg_dif)|between(Tavg_dif, mean(Tavg_dif,  na.rm=TRUE)-(3*sd(Tavg_dif, na.rm=TRUE)), mean(Tavg_dif,  na.rm=TRUE)+(3*sd(Tavg_dif, na.rm=TRUE))))
 
 ```
 
@@ -122,7 +143,7 @@ The data frame will have rows for every day during the time period the iButtons 
 Create a calendar for the time iButtons were deployed.
 
 ```{r eval=FALSE}
-ibuttons<-d1%>%
+ibuttons<-d2%>%
   mutate(project_year=str_c(Project, "_", Year))%>%
   select("Project","Site_StationKey", "Day", "Month","Year", "project_year", "Date", "iBt_type",  "Tmax_Day","Tmin_Day",  "Tavg_Day")
         
@@ -254,7 +275,15 @@ ibuttons_ERA5_2<-ibuttons_complete_daily%>%
   mutate(Tavg_dif=ERA5_temp_mean-Tavg_Day)%>%
   mutate(Tmin_dif=ERA5_temp_min-Tmin_Day)%>%
   mutate(T_diurnal=Tmax_Day-Tmin_Day)%>%
-  mutate(Date = make_date(Year, Month, Day))
+  mutate(Date = make_date(Year, Month, Day))%>%
+  mutate(season_4 = case_when(
+      Month %in%  9:11 ~ "Fall",
+      Month %in%  c(12, 1, 2)  ~ "Winter",
+      Month %in%  3:5  ~ "Spring",
+      TRUE ~ "Summer"))%>%
+  mutate( season_2 = case_when(
+      Month %in%  c(10:12, 1, 2,3) ~ "Winter",
+      TRUE ~ "Summer"))
 
 ```
  
@@ -279,17 +308,18 @@ d<-ibuttons_ERA5_2%>%
   # filter(snow_burial==TRUE)%>%
   right_join(ibuttons_ERA5_2)%>% # join back with the original data frame
   mutate(snow_burial=replace_na(snow_burial, "FALSE"))%>%
-  select(-consecutive_day_flag, lag_date)%>%
+  select(-c(consecutive_day_flag, lag_date))%>%
   # arrange(Site_StationKey, Date)%>%
   # filter(snow_burial==FALSE)%>%
-    # select(c(Site_StationKey, Date, T_diurnal, lag_date, consecutive_day_flag))%>%
-  arrange(Site_StationKey, Date)
+  # select(c(Site_StationKey, Date, T_diurnal, lag_date, consecutive_day_flag))%>%
+  arrange(Site_StationKey, Date)%>%
+  filter(snow_burial=="FALSE")
 
 # remove difference outliers
 d1<-d %>%
-    filter(between(Tmax_dif, quantile(Tmax_dif, .25)-(3*IQR(Tmax_dif)), quantile(Tmax_dif, .75)+(3*IQR(Tmax_dif))))%>%
-    filter(between(Tmin_dif, quantile(Tmin_dif, .25)-(3*IQR(Tmin_dif)), quantile(Tmin_dif, .75)+(3*IQR(Tmin_dif))))%>%
-    filter(between(Tavg_dif, quantile(Tavg_dif, .25)-(3*IQR(Tavg_dif)), quantile(Tavg_dif, .75)+(3*IQR(Tavg_dif))))
+filter(is.na(Tmax_dif)|between(Tmax_dif, quantile(Tmax_dif, .25, na.rm=TRUE)-(3*IQR(Tmax_dif, na.rm=TRUE)), quantile(Tmax_dif, .75, na.rm=TRUE)+(3*IQR(Tmax_dif, na.rm=TRUE))))%>%
+filter(is.na(Tmin_dif)|between(Tmin_dif, quantile(Tmin_dif, .25, na.rm=TRUE)-(3*IQR(Tmin_dif, na.rm=TRUE)), quantile(Tmin_dif, .75, na.rm=TRUE)+(3*IQR(Tmin_dif, na.rm=TRUE))))%>%
+filter(is.na(Tavg_dif)|between(Tavg_dif, quantile(Tavg_dif, .25, na.rm=TRUE)-(3*IQR(Tavg_dif, na.rm=TRUE)), quantile(Tavg_dif, .75, na.rm=TRUE)+(3*IQR(Tavg_dif, na.rm=TRUE))))
 
 ibuttons_complete_daily_noSnow<-d1
 
