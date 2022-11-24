@@ -70,7 +70,7 @@ Extract XY coordinates and save as shapefile.
 # create a station key column and convert to spatial object
 hills_xy<-hills_loc%>%
       mutate(Site_StationKey=paste(hills_loc$ProjectID, hills_loc$Cluster, hills_loc$SITE, hills_loc$STATION, sep="-"))%>%
-      left_join(hills_dailys)%>%
+      inner_join(hills_dailys)%>%
       dplyr::rename(Project=ProjectID, Date_deplo=DEPLOY_DATE)%>%
       group_by(Site_StationKey)%>%
       mutate(min_year=min(Year))%>%
@@ -87,7 +87,7 @@ hills_xy<-hills_loc%>%
 save(hills_xy, file="0_data/manual/iButton_data/spatial/hills_xy.rData")
 
 # save as shapefile
-st_write(hills_xy, "0_data/manual/iButton_data/spatial/hills_xy.shp")
+st_write(hills_xy, "0_data/manual/iButton_data/spatial/hills_xy.shp", delete_dsn = TRUE)
 ```
 
 
@@ -171,7 +171,7 @@ ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy)
 save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")
 
 # save as shapefile
-st_write(ss_xy, "0_data/manual/iButton_data/spatial/ss_xy.shp")
+st_write(ss_xy, "0_data/manual/iButton_data/spatial/ss_xy.shp", delete_dsn = TRUE)
 ```
 
 
@@ -197,7 +197,7 @@ study_area<-bb_buf
 save(study_area, file="0_data/manual/iButton_data/spatial/study_area.rData")
 
 # save as shapefile
-st_write(study_area, "0_data/manual/iButton_data/spatial/study_area.shp")
+st_write(study_area, "0_data/manual/iButton_data/spatial/study_area.shp", delete_dsn = TRUE)
 
 ```
 
