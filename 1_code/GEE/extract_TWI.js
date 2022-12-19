@@ -3,10 +3,28 @@
 //########################################################################################################
  
 // import ibutton xy locations and  and the study area.
-var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/RIVR_xy"),
-    aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
+var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/ss_xy");
+    // aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
 
 print(ibuttons, "ibuttons")
+
+
+var buf=30
+
+// for zonal stats create buffer around points
+var ibuttons_buff= ibuttons.map(function(pt){
+    return pt.buffer(buf);
+  });
+
+//define study area
+var aoi = ibuttons.geometry().bounds().buffer(10000).bounds();
+// var region_t = ibuttons.getInfo()
+print(aoi, "aoi")
+
+// convert the geometry to a feature to get the batch.Download.ImageCollection.toDrive function to work
+var aoi1=ee.FeatureCollection(aoi)
+print(aoi1, "aoi1")
+
 
 //########################################################################################################
 // // ### TWI ###

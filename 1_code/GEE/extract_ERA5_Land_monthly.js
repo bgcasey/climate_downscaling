@@ -3,11 +3,28 @@
 //########################################################################################################
  
 // import ibutton xy locations and  and the study area.
-var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/RIVR_xy_buf"),
-    aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
+var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/ss_xy");
+    //aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
 
 // Import image collection. Here we are using the ERA5 monthly summaries
 var era5_complete = ee.ImageCollection("ECMWF/ERA5_LAND/MONTHLY");                       
+
+// define a buffer size around point locations (for zonal stats)
+var buf=30
+
+// for zonal stats create buffer around points
+var ibuttons_buff= ibuttons.map(function(pt){
+    return pt.buffer(buf);
+  });
+  
+//define study area
+var aoi = ibuttons.geometry().bounds().buffer(10000).bounds();
+// var region_t = ibuttons.getInfo()
+print(aoi, "aoi")
+
+// convert the geometry to a feature to get the batch.Download.ImageCollection.toDrive function to work
+var aoi1=ee.FeatureCollection(aoi)
+print(aoi1, "aoi1")
 
 
 //########################################################################################################
@@ -41,7 +58,7 @@ Map.addLayer(ibuttons,{color: 'bf1b29'}, "iButtons")
 print(era5_aoi, 'era5_aoi')
 
 //filter to specifc years and summer months only
-var era5_filterYr = era5_aoi.filter(ee.Filter.calendarRange(2015,2022,'year'));
+var era5_filterYr = era5_aoi.filter(ee.Filter.calendarRange(2005,2022,'year'));
 //.filter(ee.Filter.calendarRange(6,8,'month'));
 print(era5_filterYr, 'era5_filterYr')
 

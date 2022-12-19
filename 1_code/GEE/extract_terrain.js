@@ -3,10 +3,28 @@
 //########################################################################################################
  
 // import ibutton xy locations and  and the study area.
-var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/RIVR_xy"),
-    aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
+var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/ss_xy")
+    //aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
 
 print(ibuttons, "ibuttons")
+
+
+
+var buf=30
+
+// for zonal stats create buffer around points
+var ibuttons_buff= ibuttons.map(function(pt){
+    return pt.buffer(buf);
+  });
+
+//define study area
+var aoi = ibuttons.geometry().bounds().buffer(10000).bounds();
+// var region_t = ibuttons.getInfo()
+print("aoi", aoi)
+
+// convert the geometry to a feature to get the batch.Download.ImageCollection.toDrive function to work
+var aoi1=ee.FeatureCollection(aoi)
+print("aoi1", aoi1)
 
 // import the Canadian Digital Elevation Model
 
@@ -15,6 +33,7 @@ print(ibuttons, "ibuttons")
 // First, define new projection:
 var CRS = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR")
         .filterBounds(aoi).first().projection()
+
 
 var dem = ee.ImageCollection('NRCan/CDEM')
   .mosaic()//combine the tiled image collection into a single image
@@ -33,10 +52,13 @@ var slope = ee.Terrain.slope(dem);
 // Aspect. Units are degrees where 0=N, 90=E, 180=S, 270=W.
 var aspect = ee.Terrain.aspect(dem);
 
+//////////
+//// TPI
+//////////
 
-// TPI
+
+// function to calculate neighborhood metrics for elevation
 var calculateNeighborhoodMean = function(image, kernelRadius) {
-      
       return image.reduceNeighborhood({
         reducer: ee.Reducer.mean(),
         kernel: ee.Kernel.square(kernelRadius,'pixels',false),
@@ -44,17 +66,23 @@ var calculateNeighborhoodMean = function(image, kernelRadius) {
       });
     }
 
+// function to calculate TPI
 var calculateTPI = function(image, meanImage) {
       return image.subtract(meanImage).rename('tpi')
     }
 
+// define a kernal radius for the neighborhood function
 var kernelRadius = 180 // define kernal radius
 
+// create an elevation neighborhood raster
 var demMean = calculateNeighborhoodMean(dem, kernelRadius);
+
+// calculate TPI usimng the dem and neighborhood dem.
 var TPI = calculateTPI(dem, demMean);
 
-
+//////////
 // Heat load index
+////////////
 var hli_f = require('users/bgcasey/climate_downscaling:HLI');
 var HLI = hli_f.hli(dem);
 

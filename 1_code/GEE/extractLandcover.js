@@ -3,7 +3,7 @@
 //########################################################################################################
  
 // import ibutton xy locations and  and the study area.
-var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/RIVR_xy"),
+var ibuttons = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/ss_xy"),
     aoi = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
 
 print(ibuttons, "ibuttons")
@@ -37,7 +37,7 @@ Map.addLayer(ibuttons,{color: 'bf1b29'}, "iButtons")
 var pts_LC = LC.reduceRegions({
   collection: ibuttons,
   reducer: ee.Reducer.first(),
-  scale: 100
+  scale: 30
 })
 print(pts_LC.limit(10), 'pts_LC')
 
