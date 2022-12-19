@@ -1,11 +1,105 @@
 ```{r setup, include=FALSE, cache=FALSE}
 #Set root directory to R project root
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+setwd(rprojroot::find_rstudio_root_file())
+
+```
+
+```{r eval=FALSE}
+library(dplyr)
+library(readr)
 ```
 
 
-### Terrain metrics {-}
+### GEE scripts {-}
 
-```{js, file='1_code/GEE/climate_downscaling/extract_terrain.js', eval=FALSE}
+Bring GEE scripts into the current rProject by cloning the GEE git and copying over the .js files.  
+
+```{bash engine.opts='-l'}
+# set directory to clone GEE git into (should be empty)
+cd 1_code/GEE
+
+# delete all .js files in directory
+rm *.js
+
+# clone gee scripts
+git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling
+
+
+# add the .js file extention to files
+find climate_downscaling -type f -not -name "*.*" -exec mv "{}" "{}".js \;
+
+# move .js files up a directory
+mv -v climate_downscaling/*.js .
+
+# delete .git folder
+rm -r climate_downscaling/
 ```
+
+
+
+### Import GEE covariates {-}
+
+```{r eval=FALSE}
+# tbl <-list.files(path="0_data/manual/gee_tables/", pattern = "*.csv", full.names = TRUE) 
+cloud<-read_csv("0_data/manual/gee_tables/ibutton_noaa_cloud_monthly.csv")
+# terra climate variables. Selected windspeed and downward surface shortwave radiation.
+terra<-read_csv("0_data/manual/gee_tables/ibutton_terra_monthly.csv")%>%
+  select(year, month, Project, St_SttK, srad, vs)
+snow<-read_csv("0_data/manual/gee_tables/ibutton_snow_indices.csv")
+terrain<-read_csv("0_data/manual/gee_tables/ibutton_terrain.csv")
+canopy<-read_csv("0_data/manual/gee_tables/ibutton_canopy.csv")
+TWI<-read_csv("0_data/manual/gee_tables/ibutton_TWI.csv")
+landCover<-read_csv("0_data/manual/gee_tables/ibutton_landCover.csv", col_types=c("forest_type"="factor", "discrete_classification"="factor"))
+
+landsat<-read_csv("0_data/manual/gee_tables/ibutton_landsat_indices.csv")
+
+ERA5_m<-read_csv("0_data/manual/gee_tables/ibutton_timeSeries_ERA5_monthly.csv")%>%
+  mutate(ERA5_wind_speed=sqrt(u_component_of_wind_10m^2 + v_component_of_wind_10m^2))%>%
+  mutate(ERA5_temp_mean= mean_2m_air_temperature-273.15)%>%
+  mutate(ERA5_temp_max= maximum_2m_air_temperature-273.15)%>%
+  mutate(ERA5_temp_min= minimum_2m_air_temperature-273.15)%>%
+  select(year, month, Project, St_SttK, ERA5_temp_max, ERA5_temp_min, ERA5_temp_mean, ERA5_wind_speed)
+
+
+# join into a single covariate data frame
+gee_cov_all<-landsat%>%
+  full_join(TWI)%>%
+  full_join(terrain)%>%
+  full_join(snow)%>%
+  full_join(terra)%>%
+  full_join(canopy)%>%
+  full_join(ERA5_m)%>%
+  full_join(landCover)%>%
+  rename(c(Month=month, Year=year, Site_StationKey=St_SttK))%>%
+  as.data.frame()
+
+save(gee_cov_all, file="0_data/manual/gee_tables/gee_cov_all.rData")
+
+write_csv(gee_cov_all, file="0_data/manual/gee_tables/gee_cov_all.csv")     
+
+# scale covariates
+
+gee_cov_scale<-gee_cov_all%>%
+  mutate(across(c(6:29), scale, center=TRUE, scale=TRUE))
+
+save(gee_cov_scale, file="0_data/manual/gee_tables/gee_cov_scale.rData")
+
+```
+
+### Join with response variable {-}
+
+```{r eval=FALSE}
+load("0_data/manual/iButton_data/iButton_cNA_diff.rData")
+
+model_df<-left_join(iButton_cNA_diff, gee_cov_scale, by=c("Project", "Site_StationKey", "Month", "Year"))%>%
+  dplyr::select(Project, Site_StationKey, Month, Year, Tmax_Month:tree_coverfraction, -date)
+
+save(model_df, file="0_data/manual/for_models/model_df.rData")
+```
+
+
+
+
 
