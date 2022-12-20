@@ -75,6 +75,7 @@ hills_xy<-hills_loc%>%
       group_by(Site_StationKey)%>%
       mutate(min_year=min(Year))%>%
       mutate(max_year=max(Year))%>%
+      mutate(Project="HILLS")%>%
       dplyr::select(c(Project, Site_StationKey, min_year, max_year, EASTING, NORTHING))%>%
       distinct()%>%
       st_as_sf(coords=c("EASTING","NORTHING"), crs=26911)%>% #NAD83 / UTM zone 11N
@@ -107,7 +108,7 @@ Extract XY coordinates and save as shapefile.
 ```{r eval=FALSE}
 wood_xy<-wood%>%
   mutate(Site_StationKey=Station..FCAID.)%>%
-  mutate(Project="WOOD")%>%
+  mutate(Project="wood")%>%
   group_by(Site_StationKey)%>%
   mutate(min_year=min(year(Date.Time)))%>%
   mutate(max_year=max(year(Date.Time)))%>%

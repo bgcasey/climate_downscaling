@@ -48,11 +48,16 @@ load("0_data/manual/iButton_data/spatial/ss_xy.rData")
 
 ```{r eval=FALSE}
 elev<-read.csv("0_data/manual/gee_tables/ibutton_terrain.csv")
+elev$Project[elev$Project== "WOOD"] <- "wood"
+elev$Project[elev$Project== "HL"] <- "HILLS"
+
 ```
 
 3.  Join elevation data to the iButton spatial data frame.
 
 ```{r eval=FALSE}
+load("0_data/manual/iButton_data/spatial/ss_xy.rData")
+
 climateNA_input<- ss_xy%>%
     left_join(elev, by=c('Project'='Project', 'Site_StationKey'='St_SttK'))%>%
     as.data.frame()%>%
@@ -74,7 +79,7 @@ Climate data is exported back into the rProject as a .csv file in `0_data/manual
 ### Read in the ClimateNA summaries {-}
 
 ```{r eval =FALSE}
-cna<-read.csv(file="0_data/manual/climateNA/output/climateNA_input_2015-2021MP.csv")
+cna<-read.csv(file="0_data/manual/climateNA/output/climateNA_input_2005-2021MP.csv")
   
 cNA_month_summaries<-cna%>%
   rename(c(Project=ID1, Site_StationKey=ID2))%>%
@@ -176,7 +181,7 @@ load("0_data/manual/climateNA/processed/cNA_month_summaries.rData")
 load("0_data/manual/iButton_data/ibuttons_complete_monthly.rData")
 
 iButton_cNA_diff<-ibuttons_complete_monthly%>%
-  left_join(cNA_month_summaries, by=c("Site_StationKey", "Year", "Month"))%>%
+  left_join(cNA_month_summaries, by=c("Project", "Site_StationKey", "Year", "Month"))%>%
   mutate(Tmax_diff=round(Tmax_cNA-Tmax_Month, 2))%>%
   mutate(Tmin_diff=round(Tmin_cNA-Tmin_Month, 2))%>%
   mutate(Tavg_diff=round(Tavg_cNA-Tavg_Month, 2))%>%
@@ -202,8 +207,6 @@ iButton_cNA_diff %>%
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, vjust=0.5), 
         panel.grid.minor = element_blank())
-
-#Flag outliers
 
 # Save 
 # iButton_cNA_diff<-iButton_cNA_diff%>%

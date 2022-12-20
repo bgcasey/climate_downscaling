@@ -51,7 +51,8 @@ snow<-read_csv("0_data/manual/gee_tables/ibutton_snow_indices.csv")
 terrain<-read_csv("0_data/manual/gee_tables/ibutton_terrain.csv")
 canopy<-read_csv("0_data/manual/gee_tables/ibutton_canopy.csv")
 TWI<-read_csv("0_data/manual/gee_tables/ibutton_TWI.csv")
-landCover<-read_csv("0_data/manual/gee_tables/ibutton_landCover.csv", col_types=c("forest_type"="factor", "discrete_classification"="factor"))
+landCover<-read_csv("0_data/manual/gee_tables/ibutton_landCover.csv", col_types=c("forest_type"="factor", "discrete_classification"="factor"))%>%
+  rename("tree_coverfraction"="tree-coverfraction")
 
 landsat<-read_csv("0_data/manual/gee_tables/ibutton_landsat_indices.csv")
 
@@ -74,7 +75,8 @@ gee_cov_all<-landsat%>%
   full_join(landCover)%>%
   rename(c(Month=month, Year=year, Site_StationKey=St_SttK))%>%
   as.data.frame()
-
+gee_cov_all$Project[gee_cov_all$Project== "WOOD"] <- "wood"
+gee_cov_all$Project[gee_cov_all$Project== "HL"] <- "HILLS"
 save(gee_cov_all, file="0_data/manual/gee_tables/gee_cov_all.rData")
 
 write_csv(gee_cov_all, file="0_data/manual/gee_tables/gee_cov_all.csv")     
@@ -93,10 +95,14 @@ save(gee_cov_scale, file="0_data/manual/gee_tables/gee_cov_scale.rData")
 ```{r eval=FALSE}
 load("0_data/manual/iButton_data/iButton_cNA_diff.rData")
 
-model_df<-left_join(iButton_cNA_diff, gee_cov_scale, by=c("Project", "Site_StationKey", "Month", "Year"))%>%
-  dplyr::select(Project, Site_StationKey, Month, Year, Tmax_Month:tree_coverfraction, -date)
+data_full<-left_join(iButton_cNA_diff, gee_cov_scale, by=c("Project", "Site_StationKey", "Month", "Year"))%>%
+  dplyr::select(-date)
 
-save(model_df, file="0_data/manual/for_models/model_df.rData")
+save(data_full, file="0_data/manual/for_models/data_full.rData")
+
+write.csv(data_full, file="0_data/manual/for_models/data_full.csv", row.names = FALSE)  
+
+
 ```
 
 

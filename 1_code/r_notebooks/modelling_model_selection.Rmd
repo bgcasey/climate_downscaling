@@ -1,5 +1,61 @@
+``` {r eval=FALSE}
+library(lme4)
+library(lmerTest)
+
+load("0_data/manual/for_models/data_full.rData")
+
+
+
+```
+```{r}
+m<-lmer(Tavg_diff ~ 
+        NDVI+
+        EVI+
+        NDMI+
+        SAVI+
+        BSI+
+        SI+
+        LAI+
+        logTWI+
+        TWI+
+        elevation+
+        slope+
+        aspect+
+        HLI+
+        TPI+
+        snow+
+        NDSI+
+        srad+
+        vs+
+        canopy_height+
+        canopy_standard_deviation+
+        ERA5_temp_max+
+        ERA5_temp_min+
+        ERA5_temp_mean+
+        ERA5_wind_speed+
+        (1|Site_StationKey), data=data_full)
+summary(m)
+
+vm<-vcov(m)
+
+
+
+ggplot(data_full, aes(y = Tmax_diff, x = TPI)) +
+  geom_point() +
+  xlab("NDVI") +
+  ylab("Tmax_diff)") +
+  theme_classic(base_size = 15) +
+  stat_smooth(method = "lm", formula = 'y ~ x', se=F,fullrange = T)
+
++
+  facet_wrap(~season_4)
+
+
+```
+
+
 ```{r eval=FALSE}
-load("0_data/manual/for_models/model_df.rData")
+load("0_data/manual/for_models/data_full.rData")
 
 test_df<-filter(model_df, Tmax_diff>-5)%>%
   drop_na()
