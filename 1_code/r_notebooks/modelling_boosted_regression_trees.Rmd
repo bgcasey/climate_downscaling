@@ -1,0 +1,183 @@
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+
+
+``` {r eval=FALSE}
+library(raster)
+library(dismo)
+
+library(lme4)
+library(dplyr)
+
+load("0_data/manual/for_models/data_full.rData")
+df<-data_full%>%
+  mutate(season_2=as.factor(season_2))
+```
+
+### Check for multicollinearity between predictors {-}
+
+
+```{r}
+pairs_cov <-data_full[c(14:39, 42)]
+
+#visualize with corrplot. Easier to visualize with a lot of variables
+M<-cor(pairs_cov, method = "pearson", use="pairwise.complete.obs")
+corrplot(M, tl.cex=0.5, method="number", type ="upper", addCoefasPercent=TRUE, order = "hclust", number.cex=.5, cl.cex=.5
+)
+```
+
+
+
+### BRT {-}
+
+Used https://rspatial.org/raster/sdm/9_sdm_brt.html as a referenced
+
+#### Split data into training and test sets {-}
+
+```{r eval=FALSE}
+set.seed(3456)
+samp <- sample(nrow(df), round(0.75 * nrow(df)))
+train_data <- df[samp,]
+save(train_data, file="2_pipeline/store/train_data.rData")
+# traindata <- traindata[traindata[,1] == 1, 2:9]
+test_data <- df[-samp,]
+save(test_data, file="2_pipeline/store/test_data.rData")
+
+```
+
+
+
+#### Fit BRT models on training data
+```{r}
+
+
+m2 <- gbm.step(data=training_data, gbm.x = c(3, 14, 16, 21:24, 26:35, 38, 40, 43:45, 47), gbm.y = 13,
+                        family = "gaussian", tree.complexity = 5,
+                        learning.rate = 0.001, bag.fraction = 0.75, max.trees = 100000)
+save(m2, file="2_pipeline/store/models/m2.rData")
+
+gbm.plot(m2, n.plots=21, write.title = FALSE)
+
+ #"Code to perform backwards elimination of variables, to drop those that give no evidence of improving predictive performance."#
+simp <- gbm.simplify(m2)
+save(simp, file="2_pipeline/store/models/simp.rData")
+
+# simp2 <- gbm.simplify(m2, n.drops = 5)
+
+
+optimal_no_drops <- simp$deviance.summary %$%
+    which(mean == min(mean))
+
+
+# train model with variables selected from gbm.simplify
+# get optimal number of drops from gbm.simplify models
+rownames(simp$deviance.summary) <- gsub("[^0-9]", "", rownames(simp$deviance.summary)) #remove non-numeric characters from the row names
+optimal_no_drops <-as.numeric(rownames(simp$deviance.summary%>%slice_min(mean))) # get the optimal number of drops
+
+m2_s <- gbm.step(data=trainingdata, gbm.x = simp$pred.list[[optimal_no_drops]], gbm.y = 13,
+                        family = "gaussian", tree.complexity = 5,
+                        learning.rate = 0.001, bag.fraction = 0.75, max.trees = 100000)
+
+save(m2_s, file="2_pipeline/store/models/m2.rData")
+
+
+# find interactions
+find.int<-gbm.interactions(m2)
+
+
+
+## From https://uc-r.github.io/gbm_regression#xgboost
+
+# Visualze variable imprortance
+library(vip)
+vip::vip(m2, num_features=25L)
+
+
+# Partial dependence plots
+
+
+library(lime)
+
+#define model type
+model_type.gbm <- function(x, ...) {
+  return("regression")
+}
+
+predict_model.gbm <- function(x, newdata, ...) {
+  pred <- predict(x, newdata, n.trees = x$n.trees)
+  return(as.data.frame(pred))
+}
+# get a few observations to perform local interpretation on
+local_obs <- df[1:2, ]
+
+explainer <- lime(df, m2)
+explanation <- explain(local_obs, explainer, n_features = 5)
+plot_features(explanation)
+```
+
+#### Predict to test data {-}
+
+```{r eval=FALSE}
+load("2_pipeline/store/test_data.rData")
+
+preds <- predict.gbm(m2, test_data,
+         n.trees=m2$gbm.call$best.trees, type="response")
+
+# get MSE and compute RMSE
+sqrt(min(m2$cv.values))
+
+caret::RMSE(preds,test_data$Tavg_diff)
+#0.6987317
+
+#visualize predictions vs test data
+x_ax = 1:length(preds)
+plot(x_ax, test_data$Tavg_diff, col="blue", pch=20, cex=.9)
+lines(x_ax, preds, col="red", pch=20, cex=.9) 
+
+
+calc.deviance(obs=test_data$Tavg_diff, pred=preds, calc.mean=TRUE)
+
+d <- cbind(test_data$Tavg_diff, preds)
+pres <- d[d[,1]==1, 2]
+abs <- d[d[,1]==0, 2]
+e <- evaluate(p=pres, a=abs)
+e
+
+df$test<-df$V1
+df<-as.data.frame(d
+                  )
+
+library(cvms)
+e <- evaluate(df, target_col=test, prediction_cols =  preds)
+
+
+
+
+```
+
+#### Compare predictions with data {-}
+
+
+#### Spatial prediction
+
+##### Load vairable rasters
+
+##### Create predictive raster
+
+```{r eval=FALSE}
+Method <- factor('electric', levels = levels(Anguilla_train$Method))
+add <- data.frame(Method)
+p <- predict(Anguilla_grids, angaus.tc5.lr005, const=add,
+       n.trees=angaus.tc5.lr005$gbm.call$best.trees, type="response")
+p <- mask(p, raster(Anguilla_grids, 1))
+plot(p, main='Angaus - BRT prediction')
+```
+
+
+
+
+
+
