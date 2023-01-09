@@ -192,7 +192,7 @@ iButton_cNA_diff%>%
   ggplot(aes(x=Tavg_cNA, y=Tavg_Month)) +
   geom_point(alpha=.5)
 
-iButton_cNA_diff%>%
+iButton_cNA_diff%>%toronto
   ggplot(aes(x=Tavg_diff)) +
   geom_histogram(aes(y=..density..), colour="black", fill="white", binwidth = .5)+
    geom_density(alpha=.2, fill="#FF6666") 
