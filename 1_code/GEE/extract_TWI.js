@@ -1,3 +1,6 @@
+// Run this script using the Earth Engine code editor at code.earthengine.google.com
+
+
 //########################################################################################################
 //##### INPUTS ##### 
 //########################################################################################################
@@ -37,18 +40,22 @@ var upslopeArea = (ee.Image("MERIT/Hydro/v1_0_1")
 var elv = (ee.Image("MERIT/Hydro/v1_0_1")
     .clip(aoi)
     .select('elv'))
-
+var hnd = (ee.Image("MERIT/Hydro/v1_0_1")
+    .clip(aoi)
+    .select('hnd'))
 
 // TPI equation is ln(α/tanβ)) where α=cumulative upslope drainage area and β is slope 
 var slope = ee.Terrain.slope(elv)
 var upslopeArea = upslopeArea.multiply(1000000).rename('UpslopeArea') //multiply to conver km^2 to m^2
-var slopeRad = slope.divide(180).multiply(Math.PI) //convert degrees to radians
-var TWI = (upslopeArea.divide(slopeRad.tan())).rename('TWI')
-var logTWI = TWI.log().rename('logTWI')
+var slopeRad = slope.divide(180).multiply(Math.PI).rename('slopeRad') //convert degrees to radians
+var TWI = (upslopeArea.divide(slopeRad.tan())).log().rename('TWI')
+//var logTWI = TWI.log().rename('logTWI')
+ 
 
-print(logTWI, "logTWI")
+
+print(TWI, "TWI")
 // create a multiband image with all of the terrain metrics
-var terrainTWI = elv.addBands([upslopeArea, slope, slopeRad, TWI, logTWI])
+var terrainTWI = elv.addBands([upslopeArea, slope, slopeRad, TWI, hnd])
 print(terrainTWI, "terrainTWI")
 
 
@@ -57,7 +64,7 @@ print(terrainTWI, "terrainTWI")
 //########################################################################################################
 
 Map.addLayer(TWI, {}, "TWI")
-Map.addLayer(logTWI, {min: 0, max: 20}, "logTWI")
+// Map.addLayer(logTWI, {min: 0, max: 20}, "logTWI")
 Map.centerObject(aoi, 6) // center the map on the study area
 
 // add ibutton locations
@@ -88,7 +95,7 @@ Export.table.toDrive({
     selectors: [ // choose properties to include in export table
                   'Project', 
                   'St_SttK',
-                  'logTWI',
                   'TWI',
+                  'hnd'
                   ] 
 });

@@ -1,3 +1,6 @@
+// Run this script using the Earth Engine code editor at code.earthengine.google.com
+
+
 //########################################################################################################
 //##### INPUTS ##### 
 //########################################################################################################
@@ -52,6 +55,13 @@ var slope = ee.Terrain.slope(dem);
 // Aspect. Units are degrees where 0=N, 90=E, 180=S, 270=W.
 var aspect = ee.Terrain.aspect(dem);
 
+// var northness = aspect.cos().rename("northness"); 
+
+// calcuate northness variable. Convert aspect degrees to radians and take the cosine. 
+var northness = aspect.multiply(Math.PI).divide(180).cos().rename('northness')
+
+
+
 //////////
 //// TPI
 //////////
@@ -68,7 +78,7 @@ var calculateNeighborhoodMean = function(image, kernelRadius) {
 
 // function to calculate TPI
 var calculateTPI = function(image, meanImage) {
-      return image.subtract(meanImage).rename('tpi')
+      return image.subtract(meanImage).rename('TPI')
     }
 
 // define a kernal radius for the neighborhood function
@@ -88,7 +98,7 @@ var HLI = hli_f.hli(dem);
 
 
 // create a multiband image with all of the terrain metrics
-var terrain = dem.addBands([slope, aspect, TPI, HLI])
+var terrain = dem.addBands([slope, aspect, TPI, HLI, northness])
 print(terrain, "terrain")
 
 
@@ -135,6 +145,7 @@ Export.table.toDrive({
                   'slope',
                   'aspect',
                   'HLI',
-                  'TPI'
+                  'TPI',
+                  'northness'
                   ] 
 });
