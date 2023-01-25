@@ -46,7 +46,7 @@ rm -r climate_downscaling/
 cloud<-read_csv("0_data/manual/gee_tables/ibutton_noaa_cloud_monthly.csv")
 # terra climate variables. dplyr::selected windspeed and downward surface shortwave radiation.
 terra<-read_csv("0_data/manual/gee_tables/ibutton_terra_monthly.csv")%>%
-  dplyr::select(year, month, Project, St_SttK, pr, srad, vs)
+  dplyr::select(year, month, Project, St_SttK, pr, srad, vs, soil)
 snow<-read_csv("0_data/manual/gee_tables/ibutton_snow_indices.csv")
 terrain<-read_csv("0_data/manual/gee_tables/ibutton_terrain.csv")
 canopy<-read_csv("0_data/manual/gee_tables/ibutton_canopy.csv")
@@ -63,6 +63,8 @@ ERA5_m<-read_csv("0_data/manual/gee_tables/ibutton_timeSeries_ERA5_monthly.csv")
   mutate(ERA5_temp_min= minimum_2m_air_temperature-273.15)%>%
   dplyr::select(year, month, Project, St_SttK, ERA5_temp_max, ERA5_temp_min, ERA5_temp_mean, ERA5_wind_speed)
 
+CHILE<-read_csv("0_data/manual/gee_tables/ibutton_CHILI.csv")%>%
+  rename(CHILI=mean)
 
 # join into a single covariate data frame
 gee_cov_all<-landsat%>%
@@ -74,6 +76,7 @@ gee_cov_all<-landsat%>%
   full_join(ERA5_m)%>%
   full_join(cloud)%>%
   full_join(landCover)%>%
+  full_join(CHILE)%>%
   rename(c(Month=month, Year=year, Site_StationKey=St_SttK))%>%
   as.data.frame()
 gee_cov_all$Project[gee_cov_all$Project== "WOOD"] <- "wood"
@@ -94,10 +97,10 @@ write_csv(gee_cov_all, file="0_data/manual/gee_tables/gee_cov_all.csv")
 
 # scale covariates
 
-gee_cov_scale<-gee_cov_all%>%
-  mutate(across(c(6:33, 36:37), scale, center=TRUE, scale=TRUE))
-
-save(gee_cov_scale, file="0_data/manual/gee_tables/gee_cov_scale.rData")
+# gee_cov_scale<-gee_cov_all%>%
+#   mutate(across(c(6:33, 36:38), scale, center=TRUE, scale=TRUE))
+# 
+# save(gee_cov_scale, file="0_data/manual/gee_tables/gee_cov_scale.rData")
 
 ```
 

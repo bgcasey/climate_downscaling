@@ -1,0 +1,749 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r eval=FALSE}
+# library(raster)
+library(dismo)
+library(gbm)
+# library(lme4)
+library(dplyr)
+# library(caret)        # an aggregator package for performing many machine learning models
+library(corrplot)
+
+load("0_data/manual/for_models/data_full.rData")
+df<-data_full%>%
+  mutate(season_2=as.factor(season_2))%>%
+  mutate(season_4=as.factor(season_4))
+```
+
+Set up a data frame to be used by the `gbm` function. It will only have
+the predictor and response variables.
+
+```{r eval= FALSE}
+df1<-df%>%
+dplyr::select(Tmax_diff, Tmin_diff, Tavg_diff, NDVI, NDMI, LAI, TWI, elevation, slope, HLI, TPI, northness, snow, NDSI, pr, srad, vs, soil, canopy_height, canopy_standard_deviation, tree_coverfraction, cloud_fraction, discrete_classification, forest_type, CHILI, Month, season_4)%>%
+na.omit()
+
+# set.seed(3456)
+# samp <- sample(nrow(df1), round(0.70 * nrow(df1)))
+# train_data <- df1[samp,]
+# save(train_data, file="2_pipeline/store/train_data.rData")
+# # traindata <- traindata[traindata[,1] == 1, 2:9]
+# test_data <- df1[-samp,]
+# save(test_data, file="2_pipeline/store/test_data.rData")
+```
+
+### Check for multicollinearity between predictors {.unnumbered}
+
+```{r}
+pairs_cov <-df1[c(4:22, 25)]
+
+#visualize with corrplot. Easier to visualize with a lot of variables
+M<-cor(pairs_cov, method = "pearson", use="pairwise.complete.obs")
+corrplot(M, tl.cex=0.5, method="number", type ="upper", addCoefasPercent=TRUE, order = "hclust", number.cex=.5, cl.cex=.5
+)
+
+
+# remove highly correlated variables
+#compare correlated predictors in univariate models
+m1<-lm(Tavg_diff~snow, data=df1)
+m2<-lm(Tavg_diff~NDSI, data=df1)
+m3<-lm(Tavg_diff~CHILI, data=df1)
+m4<-lm(Tavg_diff~HLI, data=df1)
+m5<-lm(Tavg_diff~tree_coverfraction, data=df1)
+m6<-lm(Tavg_diff~canopy_height, data=df1)
+
+df2<-df1%>%
+  dplyr::select(-c(NDSI, tree_coverfraction, HLI ))
+
+```
+
+### BRT {.unnumbered}
+
+Used <https://rspatial.org/raster/sdm/9_sdm_brt.html> as a referenced
+
+#### Mean temperature {.unnumbered}
+
+```{r eval=FALSE}
+df3<-df2%>%
+  dplyr::select(-c(Tmax_diff, Tmin_diff))
+
+```
+
+##### Tune BRT parameters {.unnumbered}
+
+Tutorials on tuning: - <https://uc-r.github.io/gbm_regression> - Kuhn,
+M., & Johnson, K. (2013). Applied predictive modeling (Vol. 26, p. 13).
+New York: Springer.
+
+Create a hyper parameter grid that defines the different parameters I
+want to compare.
+
+```{r eval=FALSE}
+set.seed(123)
+random_index <- sample(1:nrow(df3), nrow(df3))
+random_df3 <- df3[random_index, ]
+
+
+# create hyperparameter grid
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+# total number of combinationsco
+nrow(hyper_grid)
+## [1] 108
+```
+
+Create a function that will build gbm models for each combination of
+parameters.
+
+```{r}
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tavg_diff ~ .,
+    distribution = "gaussian",
+    data = random_df3,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_mean_1<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_mean_1, file="2_pipeline/store/tune_param_mean_1.rData")
+
+```
+
+##### Apply dismo's `gbm.step` to tuned parameters {.unnumbered}
+
+```{r eval=FALSE}
+set.seed(123)
+#use gbm.step using tuned parameters
+brt_meanTemp_tuned_1 <- gbm.step(data=df3, gbm.x = c(2:22), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 5,  n.minobsinnode = 15,
+                        learning.rate = 0.1, bag.fraction = 0.85)
+
+save(brt_meanTemp_tuned_1, file="2_pipeline/store/models/brt_meanTemp_tuned_1.rData")
+
+
+# view relative importance of predictors
+summary(brt_meanTemp_tuned_1)
+
+# view plots of all variables
+gbm.plot(brt_meanTemp_tuned_1, n.plots=21, write.title = FALSE)
+
+# view optimal number of trees
+gbm.perf(brt_meanTemp_tuned_1)
+#[1] 557
+
+# get model stats
+# put relevant stats into a dataframe (e.g. explained deviance)
+varimp.brt_meanTemp_tuned_1 <- as.data.frame(brt_meanTemp_tuned_1$contributions)
+names(varimp.brt_meanTemp_tuned_1)[2] <- "brt_meanTemp_tuned_1"
+cvstats.brt_meanTemp_tuned_1 <- as.data.frame(brt_meanTemp_tuned_1$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_tuned_1$deviance.null <- brt_meanTemp_tuned_1$self.statistics$mean.null
+cvstats.brt_meanTemp_tuned_1$deviance.explained <- (cvstats.brt_meanTemp_tuned_1$deviance.null-cvstats.brt_meanTemp_tuned_1$deviance.mean)/cvstats.brt_meanTemp_tuned_1$deviance.null
+cvstats.brt_meanTemp_tuned_1$model_name<-"meanTemp_tuned_1"
+
+```
+
+##### Identify and eliminate unimportant variables {.unnumbered}
+
+Drop variables that don't improve model performance.
+
+```{r eval=FALSE}
+simp_meanTemp_tuned <- gbm.simplify(brt_meanTemp_tuned)
+save(simp_meanTemp_tuned, file="2_pipeline/store/models/simp_meanTemp_tuned.rData")
+
+##  remove non-numeric characters from the row names
+rownames(simp_meanTemp_tuned$deviance.summary) <- gsub("[^0-9]", "", rownames(simp_meanTemp_tuned$deviance.summary))
+
+## get the optimal number of drops
+optimal_no_drops<-as.numeric(rownames(simp_meanTemp_tuned$deviance.summary%>%slice_min(mean))) 
+```
+
+##### Run model with reduced variables {.unnumbered}
+
+```{r}
+# recreate hypergrid
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+### remove droped variables from the dataframe
+df4<-df3%>%
+  dplyr::select(Tavg_diff,simp_meanTemp_tuned$pred.list[[optimal_no_drops]])
+
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tavg_diff ~ .,
+    distribution = "gaussian",
+    data = df4,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_mean_2<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_mean_2, file="2_pipeline/store/tune_param_mean_2.rData")
+
+
+brt_meanTemp_tuned_2 <- gbm.step(data=df4, gbm.x = c(2:19), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 5,  n.minobsinnode = 20,
+                        learning.rate = 0.001, bag.fraction = 0.75, max.trees = 50000)
+
+
+save(brt_meanTemp_tuned_2, file="2_pipeline/store/models/brt_meanTemp_tuned_2.rData")
+
+summary(brt_meanTemp_tuned_2)
+
+varimp.brt_meanTemp_tuned_2 <- as.data.frame(brt_meanTemp_tuned_2$contributions)
+names(varimp.brt_meanTemp_tuned_2)[2] <- "brt_meanTemp_tuned"
+cvstats.brt_meanTemp_tuned_2<- as.data.frame(brt_meanTemp_tuned_2$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_tuned_2$deviance.null <- brt_meanTemp_tuned_2$self.statistics$mean.null
+cvstats.brt_meanTemp_tuned_2$deviance.explained <- (cvstats.brt_meanTemp_tuned_2$deviance.null-cvstats.brt_meanTemp_tuned_2$deviance.mean)/cvstats.brt_meanTemp_tuned_2$deviance.null
+cvstats.brt_meanTemp_tuned_2$model_name<-"meanTemp_tuned_2"
+```
+
+#### Max temperature {.unnumbered}
+
+```{r eval=FALSE}
+df3<-df2%>%
+  dplyr::select(-c(Tavg_diff, Tmin_diff))
+
+```
+
+##### Tune BRT parameters {.unnumbered}
+
+Tutorials on tuning: - <https://uc-r.github.io/gbm_regression> - Kuhn,
+M., & Johnson, K. (2013). Applied predictive modeling (Vol. 26, p. 13).
+New York: Springer.
+
+Create a hyper parameter grid that defines the different parameters I
+want to compare.
+
+```{r eval=FALSE}
+set.seed(123)
+random_index <- sample(1:nrow(df3), nrow(df3))
+random_df3 <- df3[random_index, ]
+
+
+# create hyperparameter grid
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+# total number of combinationsco
+nrow(hyper_grid)
+## [1] 108
+```
+
+Create a function that will build gbm models for each combination of
+parameters.
+
+```{r}
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tmax_diff ~ .,
+    distribution = "gaussian",
+    data = random_df3,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_max_1<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_max_1, file="2_pipeline/store/tune_param_max_1.rData")
+
+```
+
+##### Apply dismo's gbm.step to tuned parameters {.unnumbered}
+
+```{r eval=FALSE}
+set.seed(123)
+#use gbm.step using tuned parameters
+brt_maxTemp_tuned_1 <- gbm.step(data=df3, gbm.x = c(2:22), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.minobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_maxTemp_tuned_1, file="2_pipeline/store/models/brt_maxTemp_tuned_1.rData")
+
+
+# view relative importance of predictors
+summary(brt_maxTemp_tuned_1)
+
+# view plots of all variables
+gbm.plot(brt_maxTemp_tuned_1, n.plots=21, write.title = FALSE)
+
+# view optimal number of trees
+gbm.perf(brt_maxTemp_tuned_1)
+#[1] 762
+
+
+# get model stats
+# put relevant stats into a dataframe (e.g. explained deviance)
+varimp.brt_maxTemp_tuned_1 <- as.data.frame(brt_maxTemp_tuned_1$contributions)
+names(varimp.brt_maxTemp_tuned_1)[2] <- "brt_maxTemp_tuned_1"
+cvstats.brt_maxTemp_tuned_1 <- as.data.frame(brt_maxTemp_tuned_1$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_tuned_1$deviance.null <- brt_maxTemp_tuned_1$self.statistics$mean.null
+cvstats.brt_maxTemp_tuned_1$deviance.explained <- (cvstats.brt_maxTemp_tuned_1$deviance.null-cvstats.brt_maxTemp_tuned_1$deviance.mean)/cvstats.brt_maxTemp_tuned_1$deviance.null
+
+cvstats.brt_maxTemp_tuned_1$model_name<-"maxTemp_tuned_1"
+
+
+```
+
+##### Identify and eliminate unimportant variables {.unnumbered}
+
+Drop variables that don't improve model performance.
+
+```{r eval=FALSE}
+simp_maxTemp_tuned <- gbm.simplify(brt_maxTemp_tuned_1)
+save(simp_maxTemp_tuned, file="2_pipeline/store/models/simp_maxTemp_tuned.rData")
+
+##  remove non-numeric characters from the row names
+rownames(simp_maxTemp_tuned$deviance.summary) <- gsub("[^0-9]", "", rownames(simp_maxTemp_tuned$deviance.summary))
+
+## get the optimal number of drops
+optimal_no_drops<-as.numeric(rownames(simp_maxTemp_tuned$deviance.summary%>%slice_min(mean))) 
+```
+
+##### Run model with reduced variables {.unnumbered}
+
+```{r}
+# recreate hypergrid
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+### remove dropped variables from the dataframe
+df4<-df3%>%
+  dplyr::select(Tmax_diff,simp_maxTemp_tuned$pred.list[[optimal_no_drops]])
+
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tmax_diff ~ .,
+    distribution = "gaussian",
+    data = df2,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_max_2<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_max_2, file="2_pipeline/store/tune_param_max_2.rData")
+
+
+brt_maxTemp_tuned_2 <- gbm.step(data=df4, gbm.x = c(2:15), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.minobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85)
+ 
+
+save(brt_maxTemp_tuned_2, file="2_pipeline/store/models/brt_maxTemp_tuned_2.rData")
+
+summary(brt_maxTemp_tuned_2)
+# view plots of all variables
+gbm.plot(brt_maxTemp_tuned_2, n.plots=14, write.title = FALSE)
+# view optimal number of trees
+gbm.perf(brt_maxTemp_tuned_2)
+#[1] 730
+
+
+
+varimp.brt_maxTemp_tuned_2 <- as.data.frame(brt_maxTemp_tuned_2$contributions)
+names(varimp.brt_maxTemp_tuned_2)[2] <- "brt_maxTemp_tuned"
+cvstats.brt_maxTemp_tuned_2<- as.data.frame(brt_maxTemp_tuned_2$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_tuned_2$deviance.null <- brt_maxTemp_tuned_2$self.statistics$mean.null
+cvstats.brt_maxTemp_tuned_2$deviance.explained <- (cvstats.brt_maxTemp_tuned_2$deviance.null-cvstats.brt_maxTemp_tuned_2$deviance.mean)/cvstats.brt_maxTemp_tuned_2$deviance.null
+cvstats.brt_maxTemp_tuned_2$model_name<-"maxTemp_tuned_2"
+```
+
+#### Min temperature {.unnumbered}
+
+```{r eval=FALSE}
+df3<-df2%>%
+  dplyr::select(-c(Tavg_diff, Tmax_diff))
+```
+
+##### Tune BRT parameters {.unnumbered}
+
+Tutorials on tuning: - <https://uc-r.github.io/gbm_regression> - Kuhn,
+M., & Johnson, K. (2013). Applied predictive modeling (Vol. 26, p. 13).
+New York: Springer.
+
+Create a hyper parameter grid that defines the different parameters I
+want to compare.
+
+```{r eval=FALSE}
+set.seed(123)
+random_index <- sample(1:nrow(df3), nrow(df3))
+random_df3 <- df3[random_index, ]
+
+
+# create hyperparameter grid
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+# total number of combinationsco
+nrow(hyper_grid)
+## [1] 108
+```
+
+Create a function that will build gbm models for each combination of
+parameters.
+
+```{r eval=FALSE}
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tmin_diff ~ .,
+    distribution = "gaussian",
+    data = random_df3,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_min_1<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_min_1, file="2_pipeline/store/tune_param_min_1.rData")
+
+```
+
+##### Apply dismo's gbm.step to tuned parameters {.unnumbered}
+
+```{r eval=FALSE}
+set.seed(123)
+#use gbm.step using tuned parameters
+brt_minTemp_tuned_1 <- gbm.step(data=df3, gbm.x = c(2:22), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 5,  n.minobsinnode = 20,
+                        learning.rate = 0.001, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_minTemp_tuned_1, file="2_pipeline/store/models/brt_minTemp_tuned_1.rData")
+
+
+# view relative importance of predictors
+summary(brt_minTemp_tuned_1)
+
+# view plots of all variables
+gbm.plot(brt_minTemp_tuned_1, n.plots=21, write.title = FALSE)
+
+# view optimal number of trees
+gbm.perf(brt_minTemp_tuned_1)
+#[1] 39400
+
+# get model stats
+# put relevant stats into a dataframe (e.g. explained deviance)
+varimp.brt_minTemp_tuned_1 <- as.data.frame(brt_minTemp_tuned_1$contributions)
+names(varimp.brt_minTemp_tuned_1)[2] <- "brt_minTemp_tuned_1"
+cvstats.brt_minTemp_tuned_1 <- as.data.frame(brt_minTemp_tuned_1$cv.statistics[c(1,3)])
+cvstats.brt_minTemp_tuned_1$deviance.null <- brt_minTemp_tuned_1$self.statistics$mean.null
+cvstats.brt_minTemp_tuned_1$deviance.explained <- (cvstats.brt_minTemp_tuned_1$deviance.null-cvstats.brt_minTemp_tuned_1$deviance.mean)/cvstats.brt_minTemp_tuned_1$deviance.null
+
+cvstats.brt_minTemp_tuned_1$model_name<-"minTemp_tuned_1"
+```
+
+##### Identify and eliminate unimportant variables {.unnumbered}
+
+Drop variables that don't improve model performance.
+
+```{r eval=FALSE}
+simp_minTemp_tuned <- gbm.simplify(brt_minTemp_tuned_1)
+save(simp_minTemp_tuned, file="2_pipeline/store/models/simp_minTemp_tuned.rData")
+
+##  remove non-numeric characters from the row names
+rownames(simp_minTemp_tuned$deviance.summary) <- gsub("[^0-9]", "", rownames(simp_minTemp_tuned$deviance.summary))
+
+## get the optimal number of drops
+optimal_no_drops<-as.numeric(rownames(simp_minTemp_tuned$deviance.summary%>%slice_min(mean))) 
+```
+
+##### Run model with reduced variables {.unnumbered}
+
+```{r}
+# recreate hypergrid
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+### remove droped variables from the dataframe
+df4<-df3%>%
+  dplyr::select(Tmin_diff,simp_minTemp_tuned$pred.list[[optimal_no_drops]])
+
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tmin_diff ~ .,
+    distribution = "gaussian",
+    data = df2,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_min_2<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_min_2, file="2_pipeline/store/tune_param_min_2.rData")
+
+
+brt_minTemp_tuned_2 <- gbm.step(data=df4, gbm.x = c(2:16), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.minobsinnode = 15,
+                        learning.rate = 0.1, bag.fraction = 0.75)
+
+
+save(brt_minTemp_tuned_2, file="2_pipeline/store/models/brt_minTemp_tuned_2.rData")
+
+gbm.perf(brt_minTemp_tuned_2)
+# 247
+
+varimp.brt_minTemp_tuned_2 <- as.data.frame(brt_minTemp_tuned_2$contributions)
+names(varimp.brt_minTemp_tuned_2)[2] <- "brt_minTemp_tuned_2"
+cvstats.brt_minTemp_tuned_2 <- as.data.frame(brt_minTemp_tuned_2$cv.statistics[c(1,3)])
+cvstats.brt_minTemp_tuned_2$deviance.null <- brt_minTemp_tuned_2$self.statistics$mean.null
+cvstats.brt_minTemp_tuned_2$deviance.explained <- (cvstats.brt_minTemp_tuned_2$deviance.null-cvstats.brt_minTemp_tuned_2$deviance.mean)/cvstats.brt_minTemp_tuned_2$deviance.null
+
+cvstats.brt_minTemp_tuned_2$model_name<-"minTemp_tuned_2"
+```
+
+#### Combine results {.unnumbered}
+
+```{r eval=FALSE}
+
+cvstats_brt_all<-rbind(cvstats.brt_maxTemp_tuned_1, cvstats.brt_maxTemp_tuned_2, cvstats.brt_meanTemp_tuned_1, cvstats.brt_meanTemp_tuned_2, cvstats.brt_minTemp_tuned_1, cvstats.brt_minTemp_tuned_2)%>%
+  dplyr::select(c(5, 1:4))
+
+save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
+
+
+
+varimp_brt_all<-varimp.brt_meanTemp_tuned_1%>%left_join(varimp.brt_meanTemp_tuned_2, by="var")%>%
+  left_join(varimp.brt_maxTemp_tuned_1, by="var")%>%
+  left_join(varimp.brt_maxTemp_tuned_2, by="var")%>%
+  left_join(varimp.brt_minTemp_tuned_1, by="var")%>%
+  left_join(varimp.brt_minTemp_tuned_2, by="var")
+
+save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
+
+
+```
+
+
+
+
+#### Spatial prediction {.unnumbered}
+
+##### Load spatial variable rasters {.unnumbered}
+
+There is no raster data for month and season so we'll create a data
+frame with a constant value to plug into the predict function.
+
+```{r}
+Method <- factor('electric', levels = levels(Anguilla_train$Method))
+add <- data.frame(Method)
+```
+
+##### Create predictive rasters {.unnumbered}
+
+###### Difference between mean temperature {.unnumbered}
+
+```{r eval=FALSE}
+p <- predict(Anguilla_grids, angaus.tc5.lr005, const=add,
+       n.trees=angaus.tc5.lr005$gbm.call$best.trees, type="response")
+p <- mask(p, raster(Anguilla_grids, 1))
+plot(p, main='Angaus - BRT prediction')
+```
+
+###### Difference between max temperature {.unnumbered}
+
+###### Difference between min temperature {.unnumbered}
+
+#### Predict to test data {.unnumbered}
+
+```{r eval=FALSE}
+load("2_pipeline/store/test_data.rData")
+
+preds <- predict.gbm(m2, test_data,
+         n.trees=m2$gbm.call$best.trees, type="response")
+
+# get MSE and compute RMSE
+sqrt(min(m2$cv.values))
+
+caret::RMSE(preds,test_data$Tavg_diff)
+#0.6987317
+
+#visualize predictions vs test data
+x_ax = 1:length(preds)
+plot(x_ax, test_data$Tavg_diff, col="blue", pch=20, cex=.9)
+lines(x_ax, preds, col="red", pch=20, cex=.9) 
+
+
+calc.deviance(obs=test_data$Tavg_diff, pred=preds, calc.mean=TRUE)
+
+d <- cbind(test_data$Tavg_diff, preds)
+pres <- d[d[,1]==1, 2]
+abs <- d[d[,1]==0, 2]
+e <- evaluate(p=pres, a=abs)
+e
+
+df$test<-df$V1
+df<-as.data.frame(d
+                  )
+
+library(cvms)
+e <- evaluate(df, target_col=test, prediction_cols =  preds)
+
+
+
+
+```
+
+#### Compare predictions with data {.unnumbered}

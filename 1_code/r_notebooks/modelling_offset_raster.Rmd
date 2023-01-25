@@ -1,0 +1,56 @@
+
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r eval=FALSE}
+library(raster)
+library(dplyr)
+library(foreach)
+
+```
+
+
+
+## Import GEE rasters
+
+```{r}
+# dataPath <- "/Volumes/GoogleDrive/My Drive/PhD/thesis/chapter_1/empirical/0_data/external/CL_LiDAR/grid_metrics_surfaces/"
+
+bl<-list.dirs(path="0_data/external/GEE_rasters/", full.names = F, recursive = F)
+
+#load study area shapefile
+# load("0_data/manual/bird/studyarea_big.rData")
+
+
+foreach (j = 1:length(bl)) %do%
+
+{ 
+  t1 = proc.time()
+  print(paste("---- Begin",bl[j], Sys.time()))
+  # fp<-combine_words(bl[j],after='*.tif$')
+  fl <- list.files(path=paste0("0_data/external/GEE_rasters/", bl[j]), pattern = '*.tif$', recursive = T, full.names = T)
+  print(paste("----",bl[j]," file scan complete", Sys.time()))
+  fl <- lapply(fl, raster)
+  print(paste("----",bl[j]," lapply Raster complete", Sys.time()))
+  # #fl <- lapply(fl, projectRaster,crs="+init=EPSG:3400")
+  # print(paste("----",bl[j]," projectRaster complete", Sys.time()))
+  fl$fun <- mean
+  fl$tolerance <-.5
+  x <- do.call(raster::mosaic, fl)
+  print(paste("----",bl[j]," mosaic complete!", Sys.time()))
+  # x <- projectRaster(x, crs = st_crs(c_bb)$proj4string)
+  # print(paste("----",bl[j]," projectRaster complete", Sys.time()))
+  # x<-raster::crop(x ,c_bb)
+  # print(paste("----",bl[j]," crop complete", Sys.time()))
+  #assign(paste0(bl[j],'_mosaic'), x)
+  writeRaster(x, filename=paste0("0_data/manual/raster_mosaics/",bl[j]), format="GTiff",  overwrite=T) 
+  print(paste("----",bl[j]," saved as GeoTIFF", Sys.time()))
+  print("process time")
+  print(proc.time() - t1)
+  removeTmpFiles(0) #The raster package can store a lot of files. This removes any temp raster files generated   during the loop
+  }
+
+  ````
+
