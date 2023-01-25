@@ -77,7 +77,7 @@ library(knitr)
 
 Use `1_code/r_notebooks/ibutton_data_prepare.Rmd`.
 
-```{r child = '1_code/r_notebooks/ibutton_data_prepare.Rmd'}
+```{r child = '1_code/r_notebooks/1_ibutton_data_prepare.Rmd'}
 ```
 
 
@@ -85,7 +85,7 @@ Use `1_code/r_notebooks/ibutton_data_prepare.Rmd`.
 
 Use `1_code/r_notebooks/ibutton_data_xy.Rmd`.
 
-```{r child = '1_code/r_notebooks/ibutton_data_xy.Rmd'}
+```{r child = '1_code/r_notebooks/2_ibutton_data_xy.Rmd'}
 ```
 
 
@@ -128,21 +128,14 @@ Use `1_code/r_notebooks/5_covariates_gee_spatial.Rmd`.
 # Modelling
 
 
-## Data exploration and visualization
+## Boosted regression trees
 
 Use `1_code/r_notebooks/modelling_data_exploration.Rmd`.
-```{r child = '1_code/r_notebooks/modelling_data_exploration.Rmd'}
+```{r child = '1_code/r_notebooks/6_boosted_regression_trees.Rmd'}
 ```
 
 
-## Model selection
-
-Use `1_code/r_notebooks/modelling_model_selection.Rmd`.
-```{r child = '1_code/r_notebooks/modelling_model_selection.Rmd'}
-```
-
-
-## Offset raster
+## Predicted offset raster
 
 Use `1_code/r_notebooks/modelling_offset_raster.Rmd`.
 ```{r child = '1_code/r_notebooks/modelling_offset_raster.Rmd'}
