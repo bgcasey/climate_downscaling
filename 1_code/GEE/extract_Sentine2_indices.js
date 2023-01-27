@@ -14,14 +14,14 @@ print(ibuttons, "ibuttons")
 
 // var study_area = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
 // print(study_area, "study_area")
+// albert provicial boundary
+var alberta = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/Alberta_boundary");
 
-// Create geometry object,for study area
-var geometry = /* color: #ffc82d */study_area.geometry();
-print(geometry, "geometry");
+// Use alberta boundary as study area
+var geometry = alberta.geometry();
+var aoi = geometry
 //Map.addLayer(geometry);
 
-// defin e a geometry - there are lots of ways to do this, see the GEE User guide
-var aoi = geometry
 
 
 // // filter ibuttons for testing
@@ -39,8 +39,8 @@ var buf=30
 
 //// set up time steps. In this case we want to extract median monthy spectral indices for a date range
 // Define start and end dates
-var Date_Start = ee.Date('2005-01-01');
-var Date_End = ee.Date('2021-12-01');
+var Date_Start = ee.Date('2017-04-01');
+var Date_End = ee.Date('2022-12-01');
 
 var num_months_in_interval=1;
 //var Date_window = ee.Number(30); //creates a 30day/month time step

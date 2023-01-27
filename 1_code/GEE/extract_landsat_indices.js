@@ -13,11 +13,16 @@ print(ibuttons, "ibuttons")
 //var ibuttons =ibuttons.limit(20)
 
 
+
 var study_area = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/study_area");
 print(study_area, "study_area")
 
+// albert provicial boundary
+var alberta = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/Alberta_boundary");
+
+
 // Create geometry object,for study area
-var geometry = /* color: #ffc82d */study_area.geometry();
+var geometry = /* color: #ffc82d */alberta.geometry();
 print(geometry, "geometry");
 //Map.addLayer(geometry);
 
@@ -232,68 +237,68 @@ print ("extracted_values", extracted_values)
 
 // ### Save/export Senitenl zonal stats ###
 
-// Export data to a csv
-Export.table.toDrive({
-  folder: 'google_earth_engine_tables',
-  collection: extracted_values,
-  description:'ibutton_landsat_indices',
-  fileFormat: 'csv',
-    selectors: [ // choose properties to include in export table
-                  'year',
-                  'month',
-                  'date',
-                  'Project', 
-                  'St_SttK',
-                  'NDVI',
-                  'EVI',
-                  'NDMI',
-                  'SAVI',
-                  'BSI',
-                  'SI',
-                  'LAI'] 
-});
+// // Export data to a csv
+// Export.table.toDrive({
+//   folder: 'google_earth_engine_tables',
+//   collection: extracted_values,
+//   description:'ibutton_landsat_indices',
+//   fileFormat: 'csv',
+//     selectors: [ // choose properties to include in export table
+//                   'year',
+//                   'month',
+//                   'date',
+//                   'Project', 
+//                   'St_SttK',
+//                   'NDVI',
+//                   'EVI',
+//                   'NDMI',
+//                   'SAVI',
+//                   'BSI',
+//                   'SI',
+//                   'LAI'] 
+// });
 
-var hist=ui.Chart.feature.histogram(extracted_values, 'NDVI')
-print("ndvi hist", hist)
+// // var hist=ui.Chart.feature.histogram(extracted_values, 'NDVI')
+// // print("ndvi hist", hist)
 
-var hist=ui.Chart.feature.histogram(extracted_values, 'EVI')
-print("evi hist", hist)
+// // var hist=ui.Chart.feature.histogram(extracted_values, 'EVI')
+// // print("evi hist", hist)
 
-var hist=ui.Chart.feature.histogram(extracted_values, 'NDMI')
-print("ndmi hist", hist)
+// // var hist=ui.Chart.feature.histogram(extracted_values, 'NDMI')
+// // print("ndmi hist", hist)
 
-var hist=ui.Chart.feature.histogram(extracted_values, 'SAVI')
-print("savi hist", hist)
+// // var hist=ui.Chart.feature.histogram(extracted_values, 'SAVI')
+// // print("savi hist", hist)
 
-var hist=ui.Chart.feature.histogram(extracted_values, 'BSI')
-print("bsi hist", hist)
+// // var hist=ui.Chart.feature.histogram(extracted_values, 'BSI')
+// // print("bsi hist", hist)
 
-var hist=ui.Chart.feature.histogram(extracted_values, 'SI')
-print("si hist", hist)
+// // var hist=ui.Chart.feature.histogram(extracted_values, 'SI')
+// // print("si hist", hist)
 
-var hist=ui.Chart.feature.histogram(extracted_values, 'LAI')
-print("lai hist", hist)
+// // var hist=ui.Chart.feature.histogram(extracted_values, 'LAI')
+// // print("lai hist", hist)
 
 
-//########################################################################################################
-// // // ### Focal statistics via reduceNeighborhood ###
 // //########################################################################################################
+// // // // ### Focal statistics via reduceNeighborhood ###
+// // //########################################################################################################
 
 
-var neighborhood= leo7_monthly.select(['NDVI', 'NDMI', 'EVI', 'SAVI', 'BSI', 'SI', 'LAI']).map(function(img) {
-return img.reduceNeighborhood({
-    reducer: ee.Reducer.mean(), // set the names of output properties to the corresponding band names
-    kernel: ee.Kernel.square(30, "meters"),
-    }).copyProperties(img)
+// var neighborhood= leo7_monthly.select(['NDVI', 'NDMI', 'EVI', 'SAVI', 'BSI', 'SI', 'LAI']).map(function(img) {
+// return img.reduceNeighborhood({
+//     reducer: ee.Reducer.mean(), // set the names of output properties to the corresponding band names
+//     kernel: ee.Kernel.square(30, "meters"),
+//     }).copyProperties(img)
 
-}); 
-print(neighborhood, "neighborhood")
+// }); 
+// print(neighborhood, "neighborhood")
 
 
-// var neighborhood_ndvi= neighborhood.select('NDVI_mean')
-//     .filterMetadata('year', 'equals', 2020)
-//     .filterMetadata('month', 'equals', 1)
-// print(neighborhood_ndvi, "leo7_NDVI")
+// // var neighborhood_ndvi= neighborhood.select('NDVI_mean')
+// //     .filterMetadata('year', 'equals', 2020)
+// //     .filterMetadata('month', 'equals', 1)
+// // print(neighborhood_ndvi, "leo7_NDVI")
 
 
 
@@ -307,32 +312,32 @@ print(neighborhood, "neighborhood")
 // });
 
 
-var neighborhood_extracted_values = neighborhood .select(['NDVI_mean', 'EVI_mean', 'NDMI_mean',  'SAVI_mean', 'BSI_mean', 'SI_mean', 'LAI_mean']).map(function(img) {
-  return img.reduceRegions({
-    collection: ibuttons,
-    reducer: ee.Reducer.first(), // set the names of output properties to the corresponding band names
-    scale: 30,
-    // tileScale: 2
-  }).map(function (featureWithReduction) {
-    return featureWithReduction.copyProperties(img); //to get year and month properties
-  });
-}).flatten(); //  Flattens collections of collections into a feature collection of those collections
+// var neighborhood_extracted_values = neighborhood .select(['NDVI_mean', 'EVI_mean', 'NDMI_mean',  'SAVI_mean', 'BSI_mean', 'SI_mean', 'LAI_mean']).map(function(img) {
+//   return img.reduceRegions({
+//     collection: ibuttons,
+//     reducer: ee.Reducer.first(), // set the names of output properties to the corresponding band names
+//     scale: 30,
+//     // tileScale: 2
+//   }).map(function (featureWithReduction) {
+//     return featureWithReduction.copyProperties(img); //to get year and month properties
+//   });
+// }).flatten(); //  Flattens collections of collections into a feature collection of those collections
 
-print (neighborhood_extracted_values, "neighborhood_extracted_values")
+// print (neighborhood_extracted_values, "neighborhood_extracted_values")
 
 
-/////////////////
-Export.table.toDrive({
-  folder: 'google_earth_engine_tables',
-  collection: neighborhood_extracted_values,
-  description:'ibutton_landsat_neighborhood_indices',
-  fileFormat: 'csv',
-    selectors: [ // choose properties to include in export table
-                  'year',
-                  'month',
-                  'date',
-                  'Project', 
-                  'St_SttK',
-                  'NDVI_mean', 'EVI_mean', 'NDMI_mean',  'SAVI_mean', 'BSI_mean', 'SI_mean', 'LAI_mean'] 
-});
+// /////////////////
+// Export.table.toDrive({
+//   folder: 'google_earth_engine_tables',
+//   collection: neighborhood_extracted_values,
+//   description:'ibutton_landsat_neighborhood_indices',
+//   fileFormat: 'csv',
+//     selectors: [ // choose properties to include in export table
+//                   'year',
+//                   'month',
+//                   'date',
+//                   'Project', 
+//                   'St_SttK',
+//                   'NDVI_mean', 'EVI_mean', 'NDMI_mean',  'SAVI_mean', 'BSI_mean', 'SI_mean', 'LAI_mean'] 
+// });
 

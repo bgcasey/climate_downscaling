@@ -15,10 +15,17 @@ var era5= ee.ImageCollection("ECMWF/ERA5/MONTHLY");
 // //##### Define study area ##### 
 // //########################################################################################################
 
-//define study area
-var aoi = ibuttons.geometry().bounds().buffer(10000).bounds();
-// var region_t = ibuttons.getInfo()
-print(aoi, "aoi")
+
+// albert provincial boundary
+var alberta = ee.FeatureCollection("projects/ee-bgcasey-climate/assets/Alberta_boundary");
+
+// Use alberta boundary as study area
+var geometry = alberta.geometry();
+var aoi = geometry
+//define study area based on ibuttons
+// var aoi = ibuttons.geometry().bounds().buffer(10000).bounds();
+// // var region_t = ibuttons.getInfo()
+// print(aoi, "aoi")
 
 // convert the geometry to a feature to get the batch.Download.ImageCollection.toDrive function to work
 var aoi1=ee.FeatureCollection(aoi)
@@ -27,14 +34,44 @@ print(aoi1, "aoi1")
 
 
 
+
 //########################################################################################################
 //##### Filter image collection ##### 
 //########################################################################################################
 
 // //filter to specifc years 
-var era5_filterYr = era5.filter(ee.Filter.calendarRange(2005,2021,'year'));
+var era5_filterYr = era5.filter(ee.Filter.calendarRange(2005,2021,'year'))
+    .map(function(img){return img.clip(aoi)})//clip to study area
+
 // //.filter(ee.Filter.calendarRange(6,8,'month'));
 print(era5_filterYr.limit(10), 'era5_filterYr')
+
+
+//########################################################################################################
+//##### Resample and download rasters ##### 
+//########################################################################################################
+
+// var leo7=ee.ImageCollection('LANDSAT/LE07/C02/T1_L2')
+// print("leo7", leo7)
+
+
+// var projected_raster=era5_filterYr.map(function(im){
+//   var reproject=im.reproject({crs: 'EPSG:4326', scale:30}).clip(aoi);
+//   return reproject;
+// });
+// print("projected_raster", projected_raster)
+
+
+//download image collection
+var batch = require('users/fitoprincipe/geetools:batch')
+
+
+batch.Download.ImageCollection.toDrive(era5_filterYr.mosaic(), 'ERA5_rasters', 
+                {name:'ERA5_{year}_{month}',
+                crs: 'EPSG:4326',
+                scale: 30, 
+                region:aoi1
+});
 
 
 //########################################################################################################

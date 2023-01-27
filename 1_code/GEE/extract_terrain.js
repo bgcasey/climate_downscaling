@@ -41,7 +41,8 @@ var CRS = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR")
 var dem = ee.ImageCollection('NRCan/CDEM')
   .mosaic()//combine the tiled image collection into a single image
   .clip(aoi)// clip to the study area
-  .setDefaultProjection(CRS) // set the projection to the fixed projection defined above
+  .reproject({crs: 'EPSG:4326', scale:30})
+
 
 var elevationScale = dem.projection().nominalScale();
 
