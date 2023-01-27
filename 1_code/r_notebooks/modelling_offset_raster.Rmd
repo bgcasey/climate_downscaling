@@ -15,7 +15,7 @@ library(foreach)
 
 ## Import GEE rasters
 
-```{r}
+```{r eval=FALSE}
 # dataPath <- "/Volumes/GoogleDrive/My Drive/PhD/thesis/chapter_1/empirical/0_data/external/CL_LiDAR/grid_metrics_surfaces/"
 
 bl<-list.dirs(path="0_data/external/GEE_rasters/", full.names = F, recursive = F)
@@ -50,7 +50,7 @@ foreach (j = 1:length(bl)) %do%
   print("process time")
   print(proc.time() - t1)
   removeTmpFiles(0) #The raster package can store a lot of files. This removes any temp raster files generated   during the loop
-  }
+}
 
-  ````
+```
 

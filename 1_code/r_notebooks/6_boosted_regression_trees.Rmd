@@ -43,7 +43,7 @@ na.omit()
 
 ### Check for multicollinearity between predictors {.unnumbered}
 
-```{r}
+```{r eval=FALSE}
 pairs_cov <-df1[c(4:22, 25)]
 
 #visualize with corrplot. Easier to visualize with a lot of variables
@@ -112,7 +112,7 @@ nrow(hyper_grid)
 Create a function that will build gbm models for each combination of
 parameters.
 
-```{r}
+```{r eval=FALSE}
 # grid search 
 for(i in 1:nrow(hyper_grid)) {
   
@@ -196,7 +196,7 @@ optimal_no_drops<-as.numeric(rownames(simp_meanTemp_tuned$deviance.summary%>%sli
 
 ##### Run model with reduced variables {.unnumbered}
 
-```{r}
+```{r eval=FALSE}
 # recreate hypergrid
 hyper_grid <- expand.grid(
   shrinkage = c(.001, .01, .1),
@@ -303,7 +303,7 @@ nrow(hyper_grid)
 Create a function that will build gbm models for each combination of
 parameters.
 
-```{r}
+```{r eval=FALSE}
 # grid search 
 for(i in 1:nrow(hyper_grid)) {
   
@@ -390,7 +390,7 @@ optimal_no_drops<-as.numeric(rownames(simp_maxTemp_tuned$deviance.summary%>%slic
 
 ##### Run model with reduced variables {.unnumbered}
 
-```{r}
+```{r eval=FALSE}
 # recreate hypergrid
 hyper_grid <- expand.grid(
   shrinkage = c(.001, .01, .1),
@@ -587,7 +587,7 @@ optimal_no_drops<-as.numeric(rownames(simp_minTemp_tuned$deviance.summary%>%slic
 
 ##### Run model with reduced variables {.unnumbered}
 
-```{r}
+```{r eval=FALSE}
 # recreate hypergrid
 hyper_grid <- expand.grid(
   shrinkage = c(.001, .01, .1),
@@ -672,8 +672,6 @@ varimp_brt_all<-varimp.brt_meanTemp_tuned_1%>%left_join(varimp.brt_meanTemp_tune
   left_join(varimp.brt_minTemp_tuned_2, by="var")
 
 save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
-
-
 ```
 
 
@@ -686,7 +684,7 @@ save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
 There is no raster data for month and season so we'll create a data
 frame with a constant value to plug into the predict function.
 
-```{r}
+```{r eval=FALSE}
 Method <- factor('electric', levels = levels(Anguilla_train$Method))
 add <- data.frame(Method)
 ```
