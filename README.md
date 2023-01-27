@@ -27,29 +27,6 @@
 
 # Overview
 
-<style type="text/css">
-pre {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-pre[class] {
-  max-height: 100px;
-}
-</style>
-<style type="text/css">
-# set max height of code chunks using the following css styling
-
-pre {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-pre[class] {
-  max-height: 100px;
-}
-</style>
-
 # iButton Data
 
 ## Prepare data

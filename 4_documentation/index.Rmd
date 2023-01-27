@@ -22,16 +22,6 @@ description: "This is document walks through the analyses I performed for this r
 
 # Overview
 
-```{css, echo=FALSE}
-pre {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-pre[class] {
-  max-height: 100px;
-}
-```
 
 
 ```{r GlobalOptions, echo=FALSE}
@@ -44,21 +34,6 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```{r setup, include=FALSE, cache=FALSE}
 #Set root directory to R project root
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-```
-
-
-
-```{css, echo=FALSE}
-# set max height of code chunks using the following css styling
-
-pre {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-pre[class] {
-  max-height: 100px;
-}
 ```
 
 
