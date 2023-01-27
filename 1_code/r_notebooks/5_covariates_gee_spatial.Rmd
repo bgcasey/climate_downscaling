@@ -16,7 +16,7 @@ library(readr)
 
 Bring GEE scripts into the current rProject by cloning the GEE git and copying over the .js files.  
 
-```{bash engine.opts='-l'}
+```{bash engine.opts='-l', eval=FALSE}
 # set directory to clone GEE git into (should be empty)
 cd 1_code/GEE
 
@@ -116,7 +116,7 @@ data_full<-left_join(iButton_cNA_diff, gee_cov_all, by=c("Project", "Site_Statio
 
 ### Add season column {-}
 
-```{r eval=False}
+```{r eval=FALSE}
 
 data_full<-data_full%>%
  mutate(season_4 = case_when(

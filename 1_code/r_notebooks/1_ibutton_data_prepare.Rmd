@@ -31,7 +31,7 @@ Count the number of unique iButtons
 
 ```{r echo=FALSE, message = FALSE, results="asis"}
 # count unique deployments
-nrow(distinct(as.data.frame((RIVR$Site_StationKey))))
+nrow(dplyr::distinct(as.data.frame((RIVR$Site_StationKey))))
 ```
 
 View data
@@ -98,7 +98,7 @@ Count the number of unique iButtons
 
 ```{r echo=FALSE, message = FALSE, results="asis"}
 # count unique deployments
-nrow(distinct(as.data.frame((hills$Site_StationKey))))
+nrow(dplyr::distinct(as.data.frame((hills$Site_StationKey))))
 ```
 
 View data
