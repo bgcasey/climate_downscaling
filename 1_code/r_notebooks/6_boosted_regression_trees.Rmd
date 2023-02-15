@@ -254,12 +254,85 @@ save(brt_meanTemp_tuned_2, file="2_pipeline/store/models/brt_meanTemp_tuned_2.rD
 summary(brt_meanTemp_tuned_2)
 
 varimp.brt_meanTemp_tuned_2 <- as.data.frame(brt_meanTemp_tuned_2$contributions)
-names(varimp.brt_meanTemp_tuned_2)[2] <- "brt_meanTemp_tuned"
+names(varimp.brt_meanTemp_tuned_2)[2] <- "brt_meanTemp_tuned_2"
 cvstats.brt_meanTemp_tuned_2<- as.data.frame(brt_meanTemp_tuned_2$cv.statistics[c(1,3)])
 cvstats.brt_meanTemp_tuned_2$deviance.null <- brt_meanTemp_tuned_2$self.statistics$mean.null
 cvstats.brt_meanTemp_tuned_2$deviance.explained <- (cvstats.brt_meanTemp_tuned_2$deviance.null-cvstats.brt_meanTemp_tuned_2$deviance.mean)/cvstats.brt_meanTemp_tuned_2$deviance.null
 cvstats.brt_meanTemp_tuned_2$model_name<-"meanTemp_tuned_2"
 ```
+
+
+##### Small model with top predictors {-}
+
+```{r eval=FALSE, message=FALSE}
+df5<-df1%>%
+  dplyr::select(Tavg_diff,TPI, canopy_height, Month, srad, vs, northness, TWI, CHILI)
+
+set.seed(123)
+random_index <- sample(1:nrow(df5), nrow(df5))
+random_df5 <- df5[random_index, ]
+
+
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tavg_diff ~ .,
+    distribution = "gaussian",
+    data = random_df5,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_mean_3<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_mean_3, file="2_pipeline/store/tune_param_mean_3.rData")
+
+brt_meanTemp_tuned_3 <- gbm.step(data=df5, gbm.x = c(2:9), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.minobsinnode = 20,
+                        learning.rate = 0.1, bag.fraction = 0.5, max.trees = 50000)
+
+
+save(brt_meanTemp_tuned_3, file="2_pipeline/store/models/brt_meanTemp_tuned_3.rData")
+
+
+summary(brt_meanTemp_tuned_3)
+
+varimp.brt_meanTemp_tuned_3 <- as.data.frame(brt_meanTemp_tuned_3$contributions)
+names(varimp.brt_meanTemp_tuned_3)[2] <- "brt_meanTemp_tuned_3"
+cvstats.brt_meanTemp_tuned_3<- as.data.frame(brt_meanTemp_tuned_3$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_tuned_3$deviance.null <- brt_meanTemp_tuned_3$self.statistics$mean.null
+cvstats.brt_meanTemp_tuned_3$deviance.explained <- (cvstats.brt_meanTemp_tuned_3$deviance.null-cvstats.brt_meanTemp_tuned_3$deviance.mean)/cvstats.brt_meanTemp_tuned_3$deviance.null
+cvstats.brt_meanTemp_tuned_3$model_name<-"meanTemp_tuned_3"
+
+```
+
+
 
 #### Max temperature {.unnumbered}
 
@@ -274,7 +347,7 @@ df3<-df2%>%
 Tutorials on tuning: - <https://uc-r.github.io/gbm_regression> - Kuhn,
 M., & Johnson, K. (2013). Applied predictive modeling (Vol. 26, p. 13).
 New York: Springer.
-
+ 
 Create a hyper parameter grid that defines the different parameters I
 want to compare.
 
@@ -455,12 +528,89 @@ gbm.perf(brt_maxTemp_tuned_2)
 
 
 varimp.brt_maxTemp_tuned_2 <- as.data.frame(brt_maxTemp_tuned_2$contributions)
-names(varimp.brt_maxTemp_tuned_2)[2] <- "brt_maxTemp_tuned"
+names(varimp.brt_maxTemp_tuned_2)[2] <- "brt_maxTemp_tuned_2"
 cvstats.brt_maxTemp_tuned_2<- as.data.frame(brt_maxTemp_tuned_2$cv.statistics[c(1,3)])
 cvstats.brt_maxTemp_tuned_2$deviance.null <- brt_maxTemp_tuned_2$self.statistics$mean.null
 cvstats.brt_maxTemp_tuned_2$deviance.explained <- (cvstats.brt_maxTemp_tuned_2$deviance.null-cvstats.brt_maxTemp_tuned_2$deviance.mean)/cvstats.brt_maxTemp_tuned_2$deviance.null
 cvstats.brt_maxTemp_tuned_2$model_name<-"maxTemp_tuned_2"
 ```
+
+
+##### Small model with top predictors {-}
+
+```{r eval=FALSE, message=FALSE}
+df5<-df1%>%
+  dplyr::select(Tmax_diff,TPI, canopy_height, Month, srad, vs, northness, TWI, CHILI)
+
+set.seed(123)
+random_index <- sample(1:nrow(df5), nrow(df5))
+random_df5 <- df5[random_index, ]
+
+
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tmax_diff ~ .,
+    distribution = "gaussian",
+    data = random_df5,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_max_3<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_max_3, file="2_pipeline/store/tune_param_max_3.rData")
+
+brt_maxTemp_tuned_3 <- gbm.step(data=df5, gbm.x = c(2:9), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 2,  n.minobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+
+save(brt_maxTemp_tuned_3, file="2_pipeline/store/models/brt_maxTemp_tuned_3.rData")
+
+
+gbm.plot(brt_maxTemp_tuned_3)
+
+
+summary(brt_maxTemp_tuned_3)
+
+varimp.brt_maxTemp_tuned_3 <- as.data.frame(brt_maxTemp_tuned_3$contributions)
+names(varimp.brt_maxTemp_tuned_3)[2] <- "brt_maxTemp_tuned_3"
+cvstats.brt_maxTemp_tuned_3<- as.data.frame(brt_maxTemp_tuned_3$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_tuned_3$deviance.null <- brt_maxTemp_tuned_3$self.statistics$mean.null
+cvstats.brt_maxTemp_tuned_3$deviance.explained <- (cvstats.brt_maxTemp_tuned_3$deviance.null-cvstats.brt_maxTemp_tuned_3$deviance.mean)/cvstats.brt_maxTemp_tuned_3$deviance.null
+cvstats.brt_maxTemp_tuned_3$model_name<-"maxTemp_tuned_3"
+
+```
+
+
+
 
 #### Min temperature {.unnumbered}
 
@@ -654,11 +804,86 @@ cvstats.brt_minTemp_tuned_2$deviance.explained <- (cvstats.brt_minTemp_tuned_2$d
 cvstats.brt_minTemp_tuned_2$model_name<-"minTemp_tuned_2"
 ```
 
+
+
+
+##### Small model with top predictors {-}
+
+```{r eval=FALSE, message=FALSE}
+df5<-df1%>%
+  dplyr::select(Tmin_diff,TPI, canopy_height, Month, srad, vs, northness, TWI, CHILI)
+
+set.seed(123)
+random_index <- sample(1:nrow(df5), nrow(df5))
+random_df5 <- df5[random_index, ]
+
+
+hyper_grid <- expand.grid(
+  shrinkage = c(.001, .01, .1),
+  interaction.depth = c(2, 3, 5),
+  # n.trees = seq(100, 1000, by = 100),
+  n.minobsinnode = c(10, 15, 20, 30),
+  bag.fraction = c(.5, .75, .85), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                 # a place to dump results
+)
+
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = Tmin_diff ~ .,
+    distribution = "gaussian",
+    data = random_df5,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .75,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+# save
+tune_param_min_3<-hyper_grid%>%
+   dplyr::arrange(min_RMSE) 
+save(tune_param_min_3, file="2_pipeline/store/tune_param_min_3.rData")
+
+brt_minTemp_tuned_3 <- gbm.step(data=df5, gbm.x = c(2:9), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.minobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+
+save(brt_minTemp_tuned_3, file="2_pipeline/store/models/brt_minTemp_tuned_3.rData")
+
+
+summary(brt_minTemp_tuned_3)
+
+varimp.brt_minTemp_tuned_3 <- as.data.frame(brt_minTemp_tuned_3$contributions)
+names(varimp.brt_minTemp_tuned_3)[2] <- "brt_minTemp_tuned"
+cvstats.brt_minTemp_tuned_3<- as.data.frame(brt_minTemp_tuned_3$cv.statistics[c(1,3)])
+cvstats.brt_minTemp_tuned_3$deviance.null <- brt_minTemp_tuned_3$self.statistics$mean.null
+cvstats.brt_minTemp_tuned_3$deviance.explained <- (cvstats.brt_minTemp_tuned_3$deviance.null-cvstats.brt_minTemp_tuned_3$deviance.mean)/cvstats.brt_minTemp_tuned_3$deviance.null
+cvstats.brt_minTemp_tuned_3$model_name<-"minTemp_tuned_3"
+
+
+```
+
+
 #### Combine results {.unnumbered}
 
 ```{r eval=FALSE}
 
-cvstats_brt_all<-rbind(cvstats.brt_maxTemp_tuned_1, cvstats.brt_maxTemp_tuned_2, cvstats.brt_meanTemp_tuned_1, cvstats.brt_meanTemp_tuned_2, cvstats.brt_minTemp_tuned_1, cvstats.brt_minTemp_tuned_2)%>%
+cvstats_brt_all<-rbind(cvstats.brt_maxTemp_tuned_1, cvstats.brt_maxTemp_tuned_2, cvstats.brt_maxTemp_tuned_3, cvstats.brt_meanTemp_tuned_1, cvstats.brt_meanTemp_tuned_2,cvstats.brt_meanTemp_tuned_3, cvstats.brt_minTemp_tuned_1, cvstats.brt_minTemp_tuned_2, cvstats.brt_minTemp_tuned_3)%>%
   dplyr::select(c(5, 1:4))
 
 save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
@@ -666,10 +891,13 @@ save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
 
 
 varimp_brt_all<-varimp.brt_meanTemp_tuned_1%>%left_join(varimp.brt_meanTemp_tuned_2, by="var")%>%
+  left_join(varimp.brt_meanTemp_tuned_3, by="var")%>%
   left_join(varimp.brt_maxTemp_tuned_1, by="var")%>%
   left_join(varimp.brt_maxTemp_tuned_2, by="var")%>%
+  left_join(varimp.brt_maxTemp_tuned_3, by="var")%>%
   left_join(varimp.brt_minTemp_tuned_1, by="var")%>%
-  left_join(varimp.brt_minTemp_tuned_2, by="var")
+  left_join(varimp.brt_minTemp_tuned_2, by="var")%>%
+left_join(varimp.brt_minTemp_tuned_3, by="var")
 
 save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
 ```

@@ -54,3 +54,12 @@ foreach (j = 1:length(bl)) %do%
 
 ```
 
+
+```{r}
+test1<-raster::stack("0_data/external/GEE_rasters/all/rasters_2021_8_cl_2.tif")
+test2<-raster::stack("0_data/external/GEE_rasters/all/all_fixed_cl_2.tif")
+test3<-raster::stack(test1, test2)
+
+```
+
+
