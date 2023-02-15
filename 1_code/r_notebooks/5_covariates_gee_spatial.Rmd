@@ -33,6 +33,9 @@ find climate_downscaling -type f -not -name "*.*" -exec mv "{}" "{}".js \;
 # move .js files up a directory
 mv -v climate_downscaling/*.js .
 
+# move functions folder up a directory
+mv -v climate_downscaling/functions/ .
+
 # delete .git folder
 rm -r climate_downscaling/
 ```

@@ -1,6 +1,6 @@
 // code is from https://github.com/aazuspan/geeTools#Heat-Load-Index
 
-var utils = require('users/bgcasey/climate_downscaling:utils');
+var utils = require('users/bgcasey/climate_downscaling:functions/utils');
 
 /**
  * Calculate McCune and Keon 2002 Heat Load Index (HLI) with corrected coefficients from McCune 2007. This

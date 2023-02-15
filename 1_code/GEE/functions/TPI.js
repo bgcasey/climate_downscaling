@@ -1,22 +1,22 @@
 // Code is from https://github.com/aazuspan/geeTools/blob/master/TPI.js
 
-var utils = require('users/bgcasey/climate_downscaling:utils');
+var utils = require('users/bgcasey/climate_downscaling:functions/utils');
 
 // Calculate topographic position index based on a DEM image, following Weiss 2001.
 // Radius, window_shape, and units define the TPI kernel, and are passed to ee.Image.focal_mean
-exports.tpi = function (dem, optionalParameters) {
+exports.tpi = function (dem, radius, windowShape, units) {
   // Default parameters
-  var params = {
-    radius: 300,
-    windowShape: "circle",
-    units: "meters",
-  };
+  // var params = {
+  //   radius: 300,
+  //   windowShape: "circle",
+  //   units: "meters",
+  // };
 
-  params = utils.updateParameters(params, optionalParameters);
+  // params = utils.updateParameters(params, optionalParameters);
 
   dem = dem.double();
   var r = dem
-    .subtract(dem.focal_mean(params.radius, params.windowShape, params.units))
+    .subtract(dem.focal_mean(radius, windowShape, units))
     .add(0.5)
     .int()
     .rename("TPI");
