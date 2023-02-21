@@ -18,7 +18,7 @@ library(dplyr)
 # library(caret)        # an aggregator package for performing many machine learning models
 library(corrplot)
 
-load("0_data/manual/for_models/data_full.rData")
+load("0_data/manual/formatted_for_models/data_full.rData")
 df<-data_full%>%
   mutate(season_2=as.factor(season_2))%>%
   mutate(season_4=as.factor(season_4))
@@ -29,8 +29,7 @@ the predictor and response variables.
 
 ```{r eval= FALSE}
 df1<-df%>%
-dplyr::select(Tmax_diff, Tmin_diff, Tavg_diff, NDVI, NDMI, LAI, TWI, elevation, slope, HLI, TPI, northness, snow, NDSI, pr, srad, vs, soil, canopy_height, canopy_standard_deviation, tree_coverfraction, cloud_fraction, discrete_classification, forest_type, CHILI, Month, season_4)%>%
-na.omit()
+dplyr::select(Tmax_diff, Tmin_diff, Tavg_diff, NDVI, NDMI, LAI, TWI, elevation, slope, HLI, tpi_50, tpi_500, northness, snow, NDSI, pr, srad, vs, soil, canopy_height, canopy_standard_deviation, tree_coverfraction, cloud_fraction, discrete_classification, forest_type, CHILI, Month, season_4)
 
 # set.seed(3456)
 # samp <- sample(nrow(df1), round(0.70 * nrow(df1)))
@@ -75,7 +74,6 @@ Used <https://rspatial.org/raster/sdm/9_sdm_brt.html> as a referenced
 ```{r eval=FALSE}
 df3<-df2%>%
   dplyr::select(-c(Tmax_diff, Tmin_diff))
-
 ```
 
 ##### Tune BRT parameters {.unnumbered}
@@ -266,7 +264,9 @@ cvstats.brt_meanTemp_tuned_2$model_name<-"meanTemp_tuned_2"
 
 ```{r eval=FALSE, message=FALSE}
 df5<-df1%>%
-  dplyr::select(Tavg_diff,TPI, canopy_height, Month, srad, vs, northness, TWI, CHILI)
+  dplyr::select(Tavg_diff,tpi_50, canopy_height, srad, vs, northness, TWI, CHILI, season_4)%>%
+  na.omit()
+
 
 set.seed(123)
 random_index <- sample(1:nrow(df5), nrow(df5))
@@ -314,8 +314,8 @@ tune_param_mean_3<-hyper_grid%>%
 save(tune_param_mean_3, file="2_pipeline/store/tune_param_mean_3.rData")
 
 brt_meanTemp_tuned_3 <- gbm.step(data=df5, gbm.x = c(2:9), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.minobsinnode = 20,
-                        learning.rate = 0.1, bag.fraction = 0.5, max.trees = 50000)
+                        family = "gaussian", tree.complexity = 3,  n.minobsinnode = 15,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
 
 
 save(brt_meanTemp_tuned_3, file="2_pipeline/store/models/brt_meanTemp_tuned_3.rData")

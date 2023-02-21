@@ -1,0 +1,68 @@
+
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+### Load spatial variable rasters {.unnumbered}
+
+```{r eval=FALSE}
+gee_all_summer<-raster::brick("0_data/manual/raster_mosaics/gee_all_summer.tif")
+```
+
+
+### Difference between mean temperature {.unnumbered}
+
+Load model.
+
+from https://rspatial.org/raster/sdm/9_sdm_brt.html
+
+```{r eval=FALSE}
+load("2_pipeline/store/models/brt_meanTemp_tuned_3.rData")
+```
+
+
+#### Summer {-}
+```{r eval=FALSE}
+# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
+season <- factor('summer', levels = levels(df5$Method))
+add <- data.frame(season)
+
+# test on a smaller area
+load("../chapter_1/empirical/0_data/manual/bird/studyarea.rData")
+test<-crop(gee_all_summer, studyarea)
+p <- predict(test, brt_meanTemp_tuned_3, const=add,
+       n.trees=brt_meanTemp_tuned_3$gbm.call$best.trees, type="response")
+
+
+
+p <- predict(gee_all_summer, brt_meanTemp_tuned_3, const=add,
+       n.trees=brt_meanTemp_tuned_3$gbm.call$best.trees, type="response")
+# p <- mask(p, raster(gee_all_summers, 1))
+plot(p, main='BRT prediction: difference between mean temperature')
+writeRaster(p, file="3_output/offset_rasters/meanTemp_summer_offset.tif")
+```
+
+#### Fall {-}
+
+#### Winter {-}
+ 
+#### Spring {-}
+
+
+
+### Difference between max temperature {.unnumbered}
+
+Load model.
+
+```{r eval=FALSE}
+load("2_pipeline/store/models/brt_maxTemp_tuned_3.rData")
+```
+
+
+### Difference between min temperature {.unnumbered}
+Load model.
+
+```{r eval=FALSE}
+load("2_pipeline/store/models/brt_minTemp_tuned_3.rData")
+```
