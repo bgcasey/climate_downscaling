@@ -11,7 +11,7 @@ library(dplyr)
 library(readr)
 ```
 
-### GEE scripts {-}
+## GEE scripts {-}
 
 Bring GEE scripts into the current rProject by cloning the GEE git and copying over the .js files.  
 
@@ -39,13 +39,14 @@ mv -v climate_downscaling/functions/ .
 rm -r climate_downscaling/
 ```
 
-### Import GEE covariates {-}
+
+## GEE covariates .CSV {-}
 
 ```{r eval=FALSE}
 gee_cov_all<-read_csv("0_data/manual/gee_tables/ibutton_all_indices.csv")
 gee_cov_all$Project[gee_cov_all$Project== "WOOD"] <- "wood"
 gee_cov_all$Project[gee_cov_all$Project== "HL"] <- "HILLS"
-gee_cov_all<-rename(gee_cov_all, c("Site_StationKey" = "St_SttK", "Month"="month", "Year"= "year"))
+gee_cov_all<-rename(gee_cov_all, c("Site_StationKey" = "St_SttK", "Month"="month", "Year"= "year", "tree_coverfraction"="tree-coverfraction"))
 
 ### add latitude
 load("0_data/manual/iButton_data/spatial/ss_xy.rData")
@@ -69,7 +70,7 @@ data_full<-left_join(iButton_cNA_diff, gee_cov_all, by=c("Project", "Site_Statio
   as.data.frame()
 ```
 
-#### Add season column {-}
+### Add season column {-}
 
 ```{r eval=FALSE}
 
@@ -79,7 +80,7 @@ data_full<-data_full%>%
       Month %in%  c(12, 1, 2)  ~ "Winter",
       Month %in%  3:5  ~ "Spring",
       TRUE ~ "Summer"))%>%
-  mutate( season_2 = case_when(
+  mutate(season_2 = case_when(
       Month %in%  c(10:12, 1, 2,3) ~ "Winter",
       TRUE ~ "Summer"))
 
@@ -87,4 +88,82 @@ save(data_full, file="0_data/manual/formatted_for_models/data_full.rData")
 
 write.csv(data_full, file="0_data/manual/formatted_for_models/data_full.csv", row.names = FALSE)  
 ```
+
+## GEE rasters
+```{r eval=FALSE}
+library(raster)
+library(dplyr)
+library(foreach)
+library(stringr)
+```
+
+### Import GEE rasters
+
+### Mosaic rasters {-}
+
+```{r eval=FALSE}
+# dataPath <- "/Volumes/GoogleDrive/My Drive/PhD/thesis/chapter_1/empirical/0_data/external/CL_LiDAR/grid_metrics_surfaces/"
+
+bl<-list.dirs(path="0_data/external/GEE_rasters/test/", full.names = F, recursive = F)
+
+#set temp directory to an external drive to free up harddrive space
+rasterOptions(tmpdir=file.path("../r_tmp")) 
+
+foreach (j = 1:length(bl)) %do%
+{ 
+  t1 = proc.time()
+  print(paste("---- Begin",bl[j], Sys.time()))
+  # fp<-combine_words(bl[j],after='*.tif$')
+  fl <- list.files(path=paste0("0_data/external/GEE_rasters/test/", bl[j]), pattern = '*.tif$', recursive = T, full.names = T)
+  print(paste("----",bl[j]," file scan complete", Sys.time()))
+  fl <- lapply(fl, brick)
+  print(paste("----",bl[j]," lapply raster::brick  complete", Sys.time()))
+  #fl <- lapply(fl, projectRaster,crs="+init=EPSG:3400")
+  print(paste("----",bl[j]," projectRaster complete", Sys.time()))
+  fl$fun <- mean
+  fl$tolerance <-.5
+  x <- do.call(raster::mosaic, fl)
+  print(paste("----",bl[j]," mosaic complete!", Sys.time()))
+  # x <- projectRaster(x, crs = st_crs(c_bb)$proj4string)
+  # print(paste("----",bl[j]," projectRaster complete", Sys.time()))
+  # x<-raster::crop(x ,c_bb)
+  # print(paste("----",bl[j]," crop complete", Sys.time()))
+  #assign(paste0(bl[j],'_mosaic'), x)
+  writeRaster(x, filename=paste0("0_data/manual/raster_mosaics/",bl[j]), format="GTiff",  overwrite=T)
+  print(paste("----",bl[j]," saved as GeoTIFF", Sys.time()))
+  print("process time")
+  print(proc.time() - t1)
+  removeTmpFiles(0) #The raster package can store a lot of files. This removes any temp raster files generated   during the loop
+}
+```
+
+### Crop raster mosaics {-}
+
+```{r}
+ab_bc<-st_read("../Data/Canada/alberta_bc")
+
+# raster mosaic of fixed spatial variables
+fixed<-raster::brick("0_data/manual/raster_mosaics/fixed.tif")%>%
+  crop(ab_bc)
+writeRaster(fixed, filename='0_data/manual/raster_mosaics/fixed_AB_BC.tif', format="GTiff", overwrite=TRUE)
+
+
+# raster mosaic of time series variables
+# summer
+ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_06.tif")%>%
+  crop(ab_bc)
+writeRaster(ts_summer, filename="0_data/manual/raster_mosaics/time_series_06_AB_BC.tif", format="GTiff", overwrite=TRUE)
+
+```
+
+### Combine raster mosaics {-}
+
+```{r eval=FALSE}
+ts_summer_AB_BC<-raster::brick("0_data/manual/raster_mosaics/time_series_06_AB_BC.tif")
+fixed_AB_BC<-raster::brick("0_data/manual/raster_mosaics/fixed_AB_BC.tif")
+
+gee_all_summer<-brick(fixed_AB_BC, ts_summer_AB_BC)
+writeRaster(gee_all_summer, filename="0_data/manual/raster_mosaics/gee_all_summer.tif", format="GTiff", overwrite=TRUE)
+```
+
 
