@@ -7,8 +7,30 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ### Load spatial variable rasters {.unnumbered}
 
 ```{r eval=FALSE}
-gee_all_summer<-raster::brick("0_data/manual/raster_mosaics/gee_all_summer.tif")
+ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_06.tif")
+fixed<-raster::brick("0_data/manual/raster_mosaics/fixed.tif")
 ```
+
+#### Combine raster mosaics {-}
+
+```{r eval=FALSE}
+gee_all_summer<-brick(fixed, ts_summer)
+# gee_all_spring<-brick(fixed, ts_spring)
+# gee_all_winter<-brick(fixed, ts_fall)
+# gee_all_fall<-brick(fixed, ts_winter)
+```
+
+```{r eval=FALSE}
+# test prediction code on a smaller raster
+# test on a smaller area
+
+load("../chapter_1/empirical/0_data/manual/bird/studyarea_big.rData")
+study_area<-st_transform(c_bb, crs="EPSG:3348")
+
+gee_all_summer_1<-crop(gee_all_summer, study_area)
+```
+
+
 
 
 ### Difference between mean temperature {.unnumbered}
@@ -29,11 +51,13 @@ season <- factor('summer', levels = levels(df5$Method))
 add <- data.frame(season)
 
 # test on a smaller area
-load("../chapter_1/empirical/0_data/manual/bird/studyarea.rData")
+load("../chapter_1/empirical/0_data/manual/bird/studyarea_big.rData")
+study_area<-st_transform(c_bb, crs="EPSG:3348")
+
 test<-crop(gee_all_summer, studyarea)
 p <- predict(test, brt_meanTemp_tuned_3, const=add,
        n.trees=brt_meanTemp_tuned_3$gbm.call$best.trees, type="response")
-
+season_4
 
 
 p <- predict(gee_all_summer, brt_meanTemp_tuned_3, const=add,
