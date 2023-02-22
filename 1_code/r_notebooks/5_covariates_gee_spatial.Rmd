@@ -92,6 +92,7 @@ write.csv(data_full, file="0_data/manual/formatted_for_models/data_full.csv", ro
 ## GEE rasters
 ```{r eval=FALSE}
 library(raster)
+library(terra)
 library(dplyr)
 library(foreach)
 library(stringr)
@@ -102,33 +103,32 @@ library(stringr)
 ### Mosaic rasters {-}
 
 ```{r eval=FALSE}
-# dataPath <- "/Volumes/GoogleDrive/My Drive/PhD/thesis/chapter_1/empirical/0_data/external/CL_LiDAR/grid_metrics_surfaces/"
 
-bl<-list.dirs(path="0_data/external/GEE_rasters/test/", full.names = F, recursive = F)
+# Load study area
+study_area<-st_read("../Data/Canada/alberta_bc")
+
+# dataPath <- "/Volumes/GoogleDrive/My Drive/PhD/thesis/chapter_1/empirical/0_data/external/CL_LiDAR/grid_metrics_surfaces/"
+bl<-list.dirs(path="0_data/external/GEE_rasters/", full.names = T, recursive = T)
 
 #set temp directory to an external drive to free up harddrive space
 rasterOptions(tmpdir=file.path("../r_tmp")) 
 
 foreach (j = 1:length(bl)) %do%
-{ 
+{
   t1 = proc.time()
   print(paste("---- Begin",bl[j], Sys.time()))
-  # fp<-combine_words(bl[j],after='*.tif$')
-  fl <- list.files(path=paste0("0_data/external/GEE_rasters/test/", bl[j]), pattern = '*.tif$', recursive = T, full.names = T)
+  fl <- list.files(path=paste0("0_data/external/GEE_rasters/", bl[j]), pattern = '*.tif$', recursive = T, full.names = T)
   print(paste("----",bl[j]," file scan complete", Sys.time()))
   fl <- lapply(fl, brick)
   print(paste("----",bl[j]," lapply raster::brick  complete", Sys.time()))
-  #fl <- lapply(fl, projectRaster,crs="+init=EPSG:3400")
-  print(paste("----",bl[j]," projectRaster complete", Sys.time()))
   fl$fun <- mean
   fl$tolerance <-.5
   x <- do.call(raster::mosaic, fl)
+  names(x)<-names(fl[[]])
   print(paste("----",bl[j]," mosaic complete!", Sys.time()))
-  # x <- projectRaster(x, crs = st_crs(c_bb)$proj4string)
-  # print(paste("----",bl[j]," projectRaster complete", Sys.time()))
-  # x<-raster::crop(x ,c_bb)
-  # print(paste("----",bl[j]," crop complete", Sys.time()))
-  #assign(paste0(bl[j],'_mosaic'), x)
+  x<-raster::crop(x, study_area) # preserve band names when savinbg by converting the stack to a rast object from the terra package.
+  print(paste("----",bl[j]," crop complete", Sys.time()))
+  x<-terra::rast(x)
   writeRaster(x, filename=paste0("0_data/manual/raster_mosaics/",bl[j]), format="GTiff",  overwrite=T)
   print(paste("----",bl[j]," saved as GeoTIFF", Sys.time()))
   print("process time")
@@ -137,16 +137,66 @@ foreach (j = 1:length(bl)) %do%
 }
 ```
 
+
+
+
+``` {r }
+x2<-crop(x, ab_bc)
+fixed2<-crop(fixed, ab_bc)
+
+st<-stack(x, fixed)
+
+
+
+
+# preserve band names when savinbg by converting the stack to a rast object from the terra package.
+x1<-terra::rast(x)
+
+
+writeRaster(x1, filename="0_data/manual/raster_mosaics/time_series_06_2b.tif",  overwrite=T)
+
+time_series_06_2b<-raster("0_data/manual/raster_mosaics/time_series_06_2b.tif")
+
+st<-stack(time_series_06_2b, fixed2)
+
+
+
+#####
+fix_names<-brick("0_data/external/GEE_rasters//fixed/neighborhood_all_fixed_4s-0000062720-0000062720.tif")   
+names(fix_names)
+
+fixed_3<-fixed #names(fixed)
+names(fixed_3)<-gsub("_mean", "",names(fix_names))
+
+fixed_4<-raster::crop(fixed_3, study_area)
+
+#test cropped extent
+extent(study_area)
+extent(fixed_4)
+extent(ts_summer)
+
+test_combined<-brick(fixed_4, ts_summer)
+
+# if works
+fixed_AB_BC<-terra::rast(fixed_4)
+writeRaster(fixed_AB_BC, filename='0_data/manual/raster_mosaics/fixed_AB_BC.tif', format="GTiff", overwrite=TRUE)
+
+```
+
 ### Crop raster mosaics {-}
 
 ```{r}
-ab_bc<-st_read("../Data/Canada/alberta_bc")
+study_area<-st_read("../Data/Canada/alberta_bc")
 
 # raster mosaic of fixed spatial variables
 fixed<-raster::brick("0_data/manual/raster_mosaics/fixed.tif")%>%
-  crop(ab_bc)
+  crop(study_area)
 writeRaster(fixed, filename='0_data/manual/raster_mosaics/fixed_AB_BC.tif', format="GTiff", overwrite=TRUE)
 
+
+ts_summer<-x2
+
+test<-stack(x2, ts_summer)
 
 # raster mosaic of time series variables
 # summer
@@ -155,6 +205,8 @@ ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_06.tif")%>%
 writeRaster(ts_summer, filename="0_data/manual/raster_mosaics/time_series_06_AB_BC.tif", format="GTiff", overwrite=TRUE)
 
 ```
+
+
 
 ### Combine raster mosaics {-}
 
