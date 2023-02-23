@@ -19,10 +19,7 @@ description: "This is document walks through the analyses I performed for this r
 
 ---
 
-
 # Overview
-
-
 
 ```{r GlobalOptions, echo=FALSE}
 options(bookdown.render.file_scope = FALSE, knitr.duplicate.label = "allow") 
@@ -30,12 +27,10 @@ knitr::opts_chunk$set(cache.path = "5_cache/")
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
-
 ```{r setup, include=FALSE, cache=FALSE}
 #Set root directory to R project root
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
-
 
 ```{r echo=FALSE, out.width = '100%'}
 library(kableExtra)
@@ -43,12 +38,9 @@ library(knitr)
 ```
 
 
-
-
 # iButton Data
 
-
-## Prepare data
+## Prepare data {-}
 
 Use `1_code/r_notebooks/ibutton_data_prepare.Rmd`.
 
@@ -74,7 +66,7 @@ Use `1_code/r_notebooks/3_ibutton_qualityControl.Rmd`.
 
 --- 
 
-# ClimateNA
+# ClimateNA data
 
 Use `1_code/r_notebooks/get_climateNA.Rmd`
 
@@ -84,10 +76,7 @@ Use `1_code/r_notebooks/get_climateNA.Rmd`
 
 --- 
 
-# Covariates
-
-
-## Spatial
+# Spatial covariates
 
 Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
 
@@ -103,28 +92,28 @@ Use `1_code/r_notebooks/5_covariates_gee_spatial.Rmd`.
 # Modelling
 
 
-## Boosted regression trees
+## Boosted regression trees {-}
 
 Use `1_code/r_notebooks/modelling_data_exploration.Rmd`.
+
 ```{r child = '1_code/r_notebooks/6_boosted_regression_trees.Rmd'}
 ```
 
 
-## Predicted offset raster
+## Predicted offset raster {-}
 
 Use `1_code/r_notebooks/modelling_offset_raster.Rmd`.
-```{r child = '1_code/r_notebooks/modelling_offset_raster.Rmd'}
+
+```{r child = '1_code/r_notebooks/7_make_predictive_offset_raster.Rmd'}
 ```
 
 
-## Validate
+## Validate {-}
 
 Use `1_code/r_notebooks/modelling_validate_model.Rmd`.
 
-```{r child = '1_code/r_notebooks/modelling_validate_model.Rmd'}
+```{r child = '1_code/r_notebooks/8_validate_model.Rmd'}
 ```
-
-
 
 
 # References
