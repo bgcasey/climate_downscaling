@@ -128,7 +128,8 @@ foreach (j = 1:length(bl)) %do%
   fl$fun <- mean
   fl$tolerance <-.5
   x <- do.call(raster::mosaic, fl)
-  names(x)<-names(fl[[]])
+  names(x)<-names(fl[[]]) # name mosaic bands
+  names(x)<-gsub("_mean", "",names(x))
   print(paste("----",bl[j]," mosaic complete!", Sys.time()))
   x<-raster::crop(x, study_area) # crop raster to study area
   print(paste("----",bl[j]," crop complete", Sys.time())) 

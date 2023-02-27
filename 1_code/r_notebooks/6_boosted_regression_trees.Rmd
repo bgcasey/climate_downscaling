@@ -888,8 +888,6 @@ cvstats_brt_all<-rbind(cvstats.brt_maxTemp_tuned_1, cvstats.brt_maxTemp_tuned_2,
 
 save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
 
-
-
 varimp_brt_all<-varimp.brt_meanTemp_tuned_1%>%left_join(varimp.brt_meanTemp_tuned_2, by="var")%>%
   left_join(varimp.brt_meanTemp_tuned_3, by="var")%>%
   left_join(varimp.brt_maxTemp_tuned_1, by="var")%>%

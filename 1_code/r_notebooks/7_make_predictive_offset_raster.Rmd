@@ -4,25 +4,42 @@
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
+
+```{r eval=FALSE}
+library(dismo)
+library(raster)
+```
+
+
+
+from https://rspatial.org/raster/sdm/9_sdm_brt.html
+
 ### Load spatial variable rasters {.unnumbered}
 
 ```{r eval=FALSE}
 ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_06.tif")
+# ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_11.tif")
+# ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_02.tif")
+# ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_09.tif")
+
 fixed<-raster::brick("0_data/manual/raster_mosaics/fixed.tif")
 ```
 
 #### Combine raster mosaics {-}
 
 ```{r eval=FALSE}
-gee_all_summer<-brick(fixed, ts_summer)
+gee_all_summer<-raster::stack(fixed, ts_summer)
+crs(gee_all_summer)<-"EPSG:3348"
 # gee_all_spring<-brick(fixed, ts_spring)
 # gee_all_winter<-brick(fixed, ts_fall)
 # gee_all_fall<-brick(fixed, ts_winter)
 ```
 
+
+Use smaller study area to test.
+
 ```{r eval=FALSE}
-# test prediction code on a smaller raster
-# test on a smaller area
+# test prediction code on a smaller raster area to reduce processing time
 
 load("../chapter_1/empirical/0_data/manual/bird/studyarea_big.rData")
 study_area<-st_transform(c_bb, crs="EPSG:3348")
@@ -31,40 +48,35 @@ gee_all_summer_1<-crop(gee_all_summer, study_area)
 ```
 
 
-
-
 ### Difference between mean temperature {.unnumbered}
 
 Load model.
 
-from https://rspatial.org/raster/sdm/9_sdm_brt.html
-
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_meanTemp_tuned_3.rData")
+
+#import data
+load("0_data/manual/formatted_for_models/data_full.rData")
+df<-data_full%>%
+  mutate(season_2=as.factor(season_2))%>%
+  mutate(season_4=as.factor(season_4))
+df5<-df
 ```
 
 
 #### Summer {-}
 ```{r eval=FALSE}
+
 # There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season <- factor('summer', levels = levels(df5$Method))
-add <- data.frame(season)
+season_4 <- factor('Summer', levels = levels(df5$season_4))
+add <- data.frame(season_4)
 
-# test on a smaller area
-load("../chapter_1/empirical/0_data/manual/bird/studyarea_big.rData")
-study_area<-st_transform(c_bb, crs="EPSG:3348")
-
-test<-crop(gee_all_summer, studyarea)
-p <- predict(test, brt_meanTemp_tuned_3, const=add,
+p_summer <- predict(gee_all_summer, brt_meanTemp_tuned_3, const=add,
        n.trees=brt_meanTemp_tuned_3$gbm.call$best.trees, type="response")
-season_4
 
+names(p_summer)<-"Tmax_diff"
 
-p <- predict(gee_all_summer, brt_meanTemp_tuned_3, const=add,
-       n.trees=brt_meanTemp_tuned_3$gbm.call$best.trees, type="response")
-# p <- mask(p, raster(gee_all_summers, 1))
-plot(p, main='BRT prediction: difference between mean temperature')
-writeRaster(p, file="3_output/offset_rasters/meanTemp_summer_offset.tif")
+writeRaster(p_summer, file="3_output/offset_rasters/meanTemp_summer_offset.tif", format='GTiff', overwrite=TRUE)
 ```
 
 #### Fall {-}
@@ -90,3 +102,48 @@ Load model.
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_minTemp_tuned_3.rData")
 ```
+
+### Visualize {-}
+
+```{r eval=FALSE}
+library(tmap)
+library(tmaptools)
+library(RColorBrewer)
+library(viridis)
+
+#load raster
+meanTemp_summer_offset<-rast("3_output/offset_rasters/meanTemp_summer_offset.tif")
+crs(meanTemp_summer_offset)<-"EPSG:3348"
+
+#alberta boundary
+study_area<-st_read("../Data/Canada/alberta_bc")
+study_area_2<-st_transform(study_area, crs="EPSG:3348")
+study_area_3<-vect(study_area_2)
+
+# aggregate raster to plot
+a1<-terra::aggregate(meanTemp_summer_offset, 20, fun="mean", na.rm=TRUE, na.action=NULL)
+
+# mask to study area
+a2<-terra::crop(a1, study_area_3, mask=T)
+
+# palette=inferno(n=256, begin=.35, end=.75, direction = 1)
+
+mainmap<-tm_shape(a2$meanTemp_summer_offset) +
+          tm_raster(style="cont",
+                    legend.hist = TRUE,
+                    palette=cividis(n=100, begin=.1, end=1, direction = 1),
+                    title="Mean temperature offset (c)", 
+                    )+
+  # tm_rgb()+ # to color the satelite basemap
+  tm_shape(study_area_2)+
+    tm_borders("black", lwd = .5)+
+  tm_layout(legend.outside = TRUE, bg.color = NA)+
+  #   tm_symbols(shape = 4, alpha = 1, size = .6, col = "red")+
+  #tm_scale_bar(position=c("left", "BOTTOM"), text.color = "white", color.light="lightgrey")+
+  tm_graticules(lines=FALSE)
+
+tmap_save(mainmap,filename="3_output/maps/meanTemp_summer_offset.png",
+          dpi=300, height=150, width=150, units="mm")
+```
+
+
