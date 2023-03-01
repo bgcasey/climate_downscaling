@@ -1,0 +1,151 @@
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+# 
+# setwd(rprojroot::find_rstudio_root_file())
+```
+
+
+```{r include=FALSE}
+library(knitr)
+library(kableExtra)
+library(xlsx)
+library(tinytex)
+library(rrtable)
+library(htmltools)
+library(stringr)
+library(dismo)
+library(huxtable)
+library(ggplot2)
+library(dplyr)
+library(ggstance)
+library(jtools)
+```
+
+## Model parameters
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+m_param<-read.csv("3_output/tables/brt_params.csv")
+
+
+kable(m_param, caption = 'BRT parameters.')%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10)
+```
+
+
+## Model summaries
+
+```{r message=FALSE, echo=FALSE}
+load("3_output/tables/varimp_brt_all.rData")
+
+varimp_brt_all<-varimp_brt_all%>%arrange(desc(brt_meanTemp_tuned.y))
+
+kable(varimp_brt_all, caption = 'Variable importance in BRTs.',
+      col.names = c("variable","meanTemp_1", "meanTemp_2", "meanTemp_3", "maxTemp_1", "maxTemp_2", "maxTemp_3", "minTemp_1", "minTemp_2", "minTemp_3"))%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10)
+
+```
+
+
+
+
+
+
+```{r message=FALSE, echo=FALSE}
+load("3_output/tables/cvstats_brt_all.rData")
+
+cvstats_brt_all$model_name<-str_replace_all(cvstats_brt_all$model_name, "_tuned", "")
+
+kable(cvstats_brt_all, caption = 'BRT cv stats.')%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10)
+
+```
+
+```{r include=FALSE}
+load("2_pipeline/store/models/brt_minTemp_tuned_3.rData")
+load("2_pipeline/store/models/brt_minTemp_tuned_2.rData")
+load("2_pipeline/store/models/brt_minTemp_tuned_1.rData")
+load("2_pipeline/store/models/brt_maxTemp_tuned_3.rData")
+load("2_pipeline/store/models/brt_maxTemp_tuned_2.rData")
+load("2_pipeline/store/models/brt_maxTemp_tuned_1.rData")
+load("2_pipeline/store/models/brt_meanTemp_tuned_1.rData")
+load("2_pipeline/store/models/brt_meanTemp_tuned_2.rData")
+load("2_pipeline/store/models/brt_meanTemp_tuned_3.rData")
+```
+
+## Interactions
+
+**meanTemp_3**
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_meanTemp_tuned_3)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10)
+```
+
+**maxTemp_3**
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_maxTemp_tuned_3)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10)
+```
+
+**minTemp_3**
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_minTemp_tuned_3)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10)
+```
+
+
+
+
+## Partial dependence plots
+
+**meanTemp_3**
+
+```{r fig.height=12, echo=FALSE}
+gbm.plot(brt_meanTemp_tuned_3, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+**maxTemp_3**
+
+```{r fig.height=12, echo=FALSE}
+gbm.plot(brt_maxTemp_tuned_3, plot.layout = c(4,2),  write.title = FALSE, smooth=TRUE)
+```
+
+**minTemp_3**
+
+```{r fig.height=12, echo=FALSE}
+gbm.plot(brt_minTemp_tuned_3, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+## Fits
+
+**meanTemp_3**
+
+```{r fig.height=6, out.width="100%", echo=FALSE}
+gbm.plot.fits(brt_meanTemp_tuned_3)
+```
+
+**maxTemp_3**
+
+```{r fig.height=6, out.width="100%", echo=FALSE}
+gbm.plot.fits(brt_maxTemp_tuned_3)
+```
+
+**minTemp_3**
+
+```{r fig.height=6, out.width="100%", echo=FALSE}
+gbm.plot.fits(brt_minTemp_tuned_3)
+```
+
+
+
+
+
