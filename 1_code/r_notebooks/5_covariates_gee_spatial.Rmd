@@ -87,6 +87,9 @@ save(data_full, file="0_data/manual/formatted_for_models/data_full.rData")
 write.csv(data_full, file="0_data/manual/formatted_for_models/data_full.csv", row.names = FALSE)  
 ```
 
+
+
+
 ## GEE Rasters
 
 ```{r eval=FALSE}
@@ -121,13 +124,17 @@ foreach (j = 1:length(bl)) %do%
 {
   t1 = proc.time()
   print(paste("---- Begin",bl[j], Sys.time()))
+  #list .tif files in the folder
   fl <- list.files(path=paste0("0_data/external/GEE_rasters/", bl[j]), pattern = '*.tif$', recursive = T, full.names = T)
   print(paste("----",bl[j]," file scan complete", Sys.time()))
+  # If multibabnd rasters, read each file into R as a raster brick. Use raster function if   single band rasters
   fl <- lapply(fl, brick)
   print(paste("----",bl[j]," lapply raster::brick  complete", Sys.time()))
+  # set mosaic parameters
   fl$fun <- mean
   fl$tolerance <-.5
   x <- do.call(raster::mosaic, fl)
+  # rename the raster bands. For multiband rasters, the band names are lost during mosaicing
   names(x)<-names(fl[[]]) # name mosaic bands
   names(x)<-gsub("_mean", "",names(x))
   print(paste("----",bl[j]," mosaic complete!", Sys.time()))
@@ -141,3 +148,46 @@ foreach (j = 1:length(bl)) %do%
   removeTmpFiles(0) #The raster package can store a lot of files. This removes any temp raster files generated   during the loop
 }
 ```
+
+## Setup data for GBM {-}
+
+Set up a data frame to be used by the `gbm` function. It will only have
+the predictor and response variables.
+
+```{r eval= FALSE}
+load("0_data/manual/formatted_for_models/data_full.rData")
+
+df<-data_full%>%
+  mutate(season_2=as.factor(season_2))%>%
+  mutate(season_4=as.factor(season_4))
+
+df1<-df%>%
+dplyr::select(Tmax_diff, Tmin_diff, Tavg_diff, NDVI, NDMI, LAI, TWI, elevation, slope, HLI, tpi_50, tpi_500, northness, snow, NDSI, pr, srad, vs, soil, canopy_height, canopy_standard_deviation, tree_coverfraction, cloud_fraction, discrete_classification, forest_type, CHILI, Month, season_4)
+```
+
+### Check for multicollinearity between predictors {.unnumbered}
+
+```{r eval=FALSE}
+pairs_cov <-df1[c(4:23, 26)]
+
+#visualize with corrplot. Easier to visualize with a lot of variables
+M<-cor(pairs_cov, method = "pearson", use="pairwise.complete.obs")
+corrplot(M, tl.cex=0.5, method="number", type ="upper", addCoefasPercent=TRUE, order = "hclust", number.cex=.5, cl.cex=.5
+)
+
+# remove highly correlated variables
+#compare correlated predictors in univariate models
+m1<-lm(Tavg_diff~snow, data=df1)
+m2<-lm(Tavg_diff~NDSI, data=df1)
+m3<-lm(Tavg_diff~CHILI, data=df1)
+m4<-lm(Tavg_diff~HLI, data=df1)
+m5<-lm(Tavg_diff~tree_coverfraction, data=df1)
+m6<-lm(Tavg_diff~canopy_height, data=df1)
+
+df2<-df1%>%
+  dplyr::select(-c(NDSI, tree_coverfraction, HLI ))
+
+data_sub<-df2
+save(data_sub, file="0_data/manual/formatted_for_models/data_sub.rData")
+```
+
