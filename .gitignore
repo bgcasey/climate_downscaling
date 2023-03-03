@@ -53,3 +53,8 @@ vignettes/*.pdf
 *driveupload/*
 .tmp.drivedownload/*
 
+5_report/_book/
+5_report/_bookdown_files/
+5_report/_rsconnect/
+
+3_output/

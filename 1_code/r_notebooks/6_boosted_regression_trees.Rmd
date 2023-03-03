@@ -15,6 +15,7 @@ library(gbm)
 library(dplyr)
 # library(caret)        # an aggregator package for performing many machine learning models
 library(corrplot)
+library(stringr)
 
 load("0_data/manual/formatted_for_models/data_sub.rData")
 
@@ -311,8 +312,111 @@ cvstats.brt_meanTemp_tuned_4$deviance.null <- brt_meanTemp_tuned_4$self.statisti
 cvstats.brt_meanTemp_tuned_4$deviance.explained <- (cvstats.brt_meanTemp_tuned_4$deviance.null-cvstats.brt_meanTemp_tuned_4$deviance.mean)/cvstats.brt_meanTemp_tuned_4$deviance.null
 cvstats.brt_meanTemp_tuned_4$model_name<-"meanTemp_tuned_4"
 
+### Include season variable
+df3<-data_sub%>%
+  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr, season_4)
+
+brt_meanTemp_allSeasons <- gbm.step(data=df3, gbm.x = c(2:ncol(df3)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 2,  n.meanobsinnode = 15,
+                        learning.rate = 0.1, bag.fraction = 0.75, mean.trees = 50000)
+
+save(brt_meanTemp_allSeasons, file="2_pipeline/store/models/brt_meanTemp_allSeasons.rData")
+
+
+varimp.brt_meanTemp_allSeasons <- as.data.frame(brt_meanTemp_allSeasons$contributions)
+names(varimp.brt_meanTemp_allSeasons)[2] <- "brt_meanTemp_allSeasons"
+cvstats.brt_meanTemp_allSeasons<- as.data.frame(brt_meanTemp_allSeasons$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_allSeasons$deviance.null <- brt_meanTemp_allSeasons$self.statistics$mean.null
+cvstats.brt_meanTemp_allSeasons$deviance.explained <- (cvstats.brt_meanTemp_allSeasons$deviance.null-cvstats.brt_meanTemp_allSeasons$deviance.mean)/cvstats.brt_meanTemp_allSeasons$deviance.null
+cvstats.brt_meanTemp_allSeasons$model_name<-"meanTemp_allSeasons"
+
+
+
 ```
 
+
+##### Models, split by season {-}
+
+```{r eval=FALSE}
+df_summer<-data_sub_summer%>%
+  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_meanTemp_summer <- gbm.step(data=df_summer, gbm.x = c(2:ncol(df_summer)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_meanTemp_summer, file="2_pipeline/store/models/brt_meanTemp_summer.rData")
+
+summary(brt_meanTemp_summer)
+
+varimp.brt_meanTemp_summer <- as.data.frame(brt_meanTemp_summer$contributions)
+names(varimp.brt_meanTemp_summer)[2] <- "brt_meanTemp_summer"
+cvstats.brt_meanTemp_summer<- as.data.frame(brt_meanTemp_summer$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_summer$deviance.null <- brt_meanTemp_summer$self.statistics$mean.null
+cvstats.brt_meanTemp_summer$deviance.explained <- (cvstats.brt_meanTemp_summer$deviance.null-cvstats.brt_meanTemp_summer$deviance.mean)/cvstats.brt_meanTemp_summer$deviance.null
+cvstats.brt_meanTemp_summer$model_name<-"meanTemp_summer"
+
+#########################
+df_winter<-data_sub_winter%>%
+  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_meanTemp_winter <- gbm.step(data=df_winter, gbm.x = c(2:ncol(df_winter)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_meanTemp_winter, file="2_pipeline/store/models/brt_meanTemp_winter.rData")
+
+summary(brt_meanTemp_winter)
+
+varimp.brt_meanTemp_winter <- as.data.frame(brt_meanTemp_winter$contributions)
+names(varimp.brt_meanTemp_winter)[2] <- "brt_meanTemp_winter"
+cvstats.brt_meanTemp_winter<- as.data.frame(brt_meanTemp_winter$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_winter$deviance.null <- brt_meanTemp_winter$self.statistics$mean.null
+cvstats.brt_meanTemp_winter$deviance.explained <- (cvstats.brt_meanTemp_winter$deviance.null-cvstats.brt_meanTemp_winter$deviance.mean)/cvstats.brt_meanTemp_winter$deviance.null
+cvstats.brt_meanTemp_winter$model_name<-"meanTemp_winter"
+
+#########################
+df_spring<-data_sub_spring%>%
+  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_meanTemp_spring <- gbm.step(data=df_spring, gbm.x = c(2:ncol(df_spring)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_meanTemp_spring, file="2_pipeline/store/models/brt_meanTemp_spring.rData")
+
+summary(brt_meanTemp_spring)
+
+varimp.brt_meanTemp_spring <- as.data.frame(brt_meanTemp_spring$contributions)
+names(varimp.brt_meanTemp_spring)[2] <- "brt_meanTemp_spring"
+cvstats.brt_meanTemp_spring<- as.data.frame(brt_meanTemp_spring$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_spring$deviance.null <- brt_meanTemp_spring$self.statistics$mean.null
+cvstats.brt_meanTemp_spring$deviance.explained <- (cvstats.brt_meanTemp_spring$deviance.null-cvstats.brt_meanTemp_spring$deviance.mean)/cvstats.brt_meanTemp_spring$deviance.null
+cvstats.brt_meanTemp_spring$model_name<-"meanTemp_spring"
+
+#########################
+df_fall<-data_sub_fall%>%
+  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_meanTemp_fall <- gbm.step(data=df_fall, gbm.x = c(2:ncol(df_fall)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_meanTemp_fall, file="2_pipeline/store/models/brt_meanTemp_fall.rData")
+
+summary(brt_meanTemp_fall)
+
+varimp.brt_meanTemp_fall <- as.data.frame(brt_meanTemp_fall$contributions)
+names(varimp.brt_meanTemp_fall)[2] <- "brt_meanTemp_fall"
+cvstats.brt_meanTemp_fall<- as.data.frame(brt_meanTemp_fall$cv.statistics[c(1,3)])
+cvstats.brt_meanTemp_fall$deviance.null <- brt_meanTemp_fall$self.statistics$mean.null
+cvstats.brt_meanTemp_fall$deviance.explained <- (cvstats.brt_meanTemp_fall$deviance.null-cvstats.brt_meanTemp_fall$deviance.mean)/cvstats.brt_meanTemp_fall$deviance.null
+cvstats.brt_meanTemp_fall$model_name<-"meanTemp_fall"
+```
 
 
 #### Max temperature {.unnumbered}
@@ -605,10 +709,110 @@ cvstats.brt_maxTemp_tuned_4$deviance.null <- brt_maxTemp_tuned_4$self.statistics
 cvstats.brt_maxTemp_tuned_4$deviance.explained <- (cvstats.brt_maxTemp_tuned_4$deviance.null-cvstats.brt_maxTemp_tuned_4$deviance.mean)/cvstats.brt_maxTemp_tuned_4$deviance.null
 cvstats.brt_maxTemp_tuned_4$model_name<-"maxTemp_tuned_4"
 
+### Include season variable
+df3<-data_sub%>%
+  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr, season_4)
+
+brt_maxTemp_allSeasons <- gbm.step(data=df3, gbm.x = c(2:ncol(df3)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 2,  n.maxobsinnode = 15,
+                        learning.rate = 0.1, bag.fraction = 0.75, max.trees = 50000)
+
+save(brt_maxTemp_allSeasons, file="2_pipeline/store/models/brt_maxTemp_allSeasons.rData")
+
+
+varimp.brt_maxTemp_allSeasons <- as.data.frame(brt_maxTemp_allSeasons$contributions)
+names(varimp.brt_maxTemp_allSeasons)[2] <- "brt_maxTemp_allSeasons"
+cvstats.brt_maxTemp_allSeasons<- as.data.frame(brt_maxTemp_allSeasons$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_allSeasons$deviance.null <- brt_maxTemp_allSeasons$self.statistics$mean.null
+cvstats.brt_maxTemp_allSeasons$deviance.explained <- (cvstats.brt_maxTemp_allSeasons$deviance.null-cvstats.brt_maxTemp_allSeasons$deviance.mean)/cvstats.brt_maxTemp_allSeasons$deviance.null
+cvstats.brt_maxTemp_allSeasons$model_name<-"maxTemp_allSeasons"
+
 
 ```
 
 
+##### Models, split by season {-}
+
+```{r eval=FALSE}
+df_summer<-data_sub_summer%>%
+  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_maxTemp_summer <- gbm.step(data=df_summer, gbm.x = c(2:ncol(df_summer)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_maxTemp_summer, file="2_pipeline/store/models/brt_maxTemp_summer.rData")
+
+summary(brt_maxTemp_summer)
+
+varimp.brt_maxTemp_summer <- as.data.frame(brt_maxTemp_summer$contributions)
+names(varimp.brt_maxTemp_summer)[2] <- "brt_maxTemp_summer"
+cvstats.brt_maxTemp_summer<- as.data.frame(brt_maxTemp_summer$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_summer$deviance.null <- brt_maxTemp_summer$self.statistics$mean.null
+cvstats.brt_maxTemp_summer$deviance.explained <- (cvstats.brt_maxTemp_summer$deviance.null-cvstats.brt_maxTemp_summer$deviance.mean)/cvstats.brt_maxTemp_summer$deviance.null
+cvstats.brt_maxTemp_summer$model_name<-"maxTemp_summer"
+
+#########################
+df_winter<-data_sub_winter%>%
+  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_maxTemp_winter <- gbm.step(data=df_winter, gbm.x = c(2:ncol(df_winter)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_maxTemp_winter, file="2_pipeline/store/models/brt_maxTemp_winter.rData")
+
+summary(brt_maxTemp_winter)
+
+varimp.brt_maxTemp_winter <- as.data.frame(brt_maxTemp_winter$contributions)
+names(varimp.brt_maxTemp_winter)[2] <- "brt_maxTemp_winter"
+cvstats.brt_maxTemp_winter<- as.data.frame(brt_maxTemp_winter$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_winter$deviance.null <- brt_maxTemp_winter$self.statistics$mean.null
+cvstats.brt_maxTemp_winter$deviance.explained <- (cvstats.brt_maxTemp_winter$deviance.null-cvstats.brt_maxTemp_winter$deviance.mean)/cvstats.brt_maxTemp_winter$deviance.null
+cvstats.brt_maxTemp_winter$model_name<-"maxTemp_winter"
+
+#########################
+df_spring<-data_sub_spring%>%
+  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_maxTemp_spring <- gbm.step(data=df_spring, gbm.x = c(2:ncol(df_spring)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_maxTemp_spring, file="2_pipeline/store/models/brt_maxTemp_spring.rData")
+
+summary(brt_maxTemp_spring)
+
+varimp.brt_maxTemp_spring <- as.data.frame(brt_maxTemp_spring$contributions)
+names(varimp.brt_maxTemp_spring)[2] <- "brt_maxTemp_spring"
+cvstats.brt_maxTemp_spring<- as.data.frame(brt_maxTemp_spring$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_spring$deviance.null <- brt_maxTemp_spring$self.statistics$mean.null
+cvstats.brt_maxTemp_spring$deviance.explained <- (cvstats.brt_maxTemp_spring$deviance.null-cvstats.brt_maxTemp_spring$deviance.mean)/cvstats.brt_maxTemp_spring$deviance.null
+cvstats.brt_maxTemp_spring$model_name<-"maxTemp_spring"
+
+#########################
+df_fall<-data_sub_fall%>%
+  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
+
+
+brt_maxTemp_fall <- gbm.step(data=df_fall, gbm.x = c(2:ncol(df_fall)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
+                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
+
+save(brt_maxTemp_fall, file="2_pipeline/store/models/brt_maxTemp_fall.rData")
+
+summary(brt_maxTemp_fall)
+
+varimp.brt_maxTemp_fall <- as.data.frame(brt_maxTemp_fall$contributions)
+names(varimp.brt_maxTemp_fall)[2] <- "brt_maxTemp_fall"
+cvstats.brt_maxTemp_fall<- as.data.frame(brt_maxTemp_fall$cv.statistics[c(1,3)])
+cvstats.brt_maxTemp_fall$deviance.null <- brt_maxTemp_fall$self.statistics$mean.null
+cvstats.brt_maxTemp_fall$deviance.explained <- (cvstats.brt_maxTemp_fall$deviance.null-cvstats.brt_maxTemp_fall$deviance.mean)/cvstats.brt_maxTemp_fall$deviance.null
+cvstats.brt_maxTemp_fall$model_name<-"maxTemp_fall"
+```
 
 
 #### Min temperature {.unnumbered}
@@ -896,12 +1100,29 @@ cvstats.brt_minTemp_tuned_4$deviance.null <- brt_minTemp_tuned_4$self.statistics
 cvstats.brt_minTemp_tuned_4$deviance.explained <- (cvstats.brt_minTemp_tuned_4$deviance.null-cvstats.brt_minTemp_tuned_4$deviance.mean)/cvstats.brt_minTemp_tuned_4$deviance.null
 cvstats.brt_minTemp_tuned_4$model_name<-"minTemp_tuned_4"
 
+### Include season variable
+df3<-data_sub%>%
+  dplyr::select(Tmin_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr, season_4)
 
+brt_minTemp_allSeasons <- gbm.step(data=df3, gbm.x = c(2:ncol(df3)), gbm.y = 1,
+                        family = "gaussian", tree.complexity = 2,  n.minobsinnode = 15,
+                        learning.rate = 0.1, bag.fraction = 0.75, min.trees = 50000)
+
+save(brt_minTemp_allSeasons, file="2_pipeline/store/models/brt_minTemp_allSeasons.rData")
+
+
+varimp.brt_minTemp_allSeasons <- as.data.frame(brt_minTemp_allSeasons$contributions)
+names(varimp.brt_minTemp_allSeasons)[2] <- "brt_minTemp_allSeasons"
+cvstats.brt_minTemp_allSeasons<- as.data.frame(brt_minTemp_allSeasons$cv.statistics[c(1,3)])
+cvstats.brt_minTemp_allSeasons$deviance.null <- brt_minTemp_allSeasons$self.statistics$mean.null
+cvstats.brt_minTemp_allSeasons$deviance.explained <- (cvstats.brt_minTemp_allSeasons$deviance.null-cvstats.brt_minTemp_allSeasons$deviance.mean)/cvstats.brt_minTemp_allSeasons$deviance.null
+cvstats.brt_minTemp_allSeasons$model_name<-"minTemp_allSeasons"
 
 
 ```
 
-##### By season {-}
+##### Models, split by season {-}
+
 ```{r eval=FALSE}
 df_summer<-data_sub_summer%>%
   dplyr::select(Tmin_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
@@ -983,169 +1204,7 @@ cvstats.brt_minTemp_fall$deviance.explained <- (cvstats.brt_minTemp_fall$devianc
 cvstats.brt_minTemp_fall$model_name<-"minTemp_fall"
 ```
 
-##### By season {-}
-```{r eval=FALSE}
-df_summer<-data_sub_summer%>%
-  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
 
-
-brt_maxTemp_summer <- gbm.step(data=df_summer, gbm.x = c(2:ncol(df_summer)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_maxTemp_summer, file="2_pipeline/store/models/brt_maxTemp_summer.rData")
-
-summary(brt_maxTemp_summer)
-
-varimp.brt_maxTemp_summer <- as.data.frame(brt_maxTemp_summer$contributions)
-names(varimp.brt_maxTemp_summer)[2] <- "brt_maxTemp_summer"
-cvstats.brt_maxTemp_summer<- as.data.frame(brt_maxTemp_summer$cv.statistics[c(1,3)])
-cvstats.brt_maxTemp_summer$deviance.null <- brt_maxTemp_summer$self.statistics$mean.null
-cvstats.brt_maxTemp_summer$deviance.explained <- (cvstats.brt_maxTemp_summer$deviance.null-cvstats.brt_maxTemp_summer$deviance.mean)/cvstats.brt_maxTemp_summer$deviance.null
-cvstats.brt_maxTemp_summer$model_name<-"maxTemp_summer"
-
-#########################
-df_winter<-data_sub_winter%>%
-  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
-
-
-brt_maxTemp_winter <- gbm.step(data=df_winter, gbm.x = c(2:ncol(df_winter)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_maxTemp_winter, file="2_pipeline/store/models/brt_maxTemp_winter.rData")
-
-summary(brt_maxTemp_winter)
-
-varimp.brt_maxTemp_winter <- as.data.frame(brt_maxTemp_winter$contributions)
-names(varimp.brt_maxTemp_winter)[2] <- "brt_maxTemp_winter"
-cvstats.brt_maxTemp_winter<- as.data.frame(brt_maxTemp_winter$cv.statistics[c(1,3)])
-cvstats.brt_maxTemp_winter$deviance.null <- brt_maxTemp_winter$self.statistics$mean.null
-cvstats.brt_maxTemp_winter$deviance.explained <- (cvstats.brt_maxTemp_winter$deviance.null-cvstats.brt_maxTemp_winter$deviance.mean)/cvstats.brt_maxTemp_winter$deviance.null
-cvstats.brt_maxTemp_winter$model_name<-"maxTemp_winter"
-
-#########################
-df_spring<-data_sub_spring%>%
-  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
-
-
-brt_maxTemp_spring <- gbm.step(data=df_spring, gbm.x = c(2:ncol(df_spring)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_maxTemp_spring, file="2_pipeline/store/models/brt_maxTemp_spring.rData")
-
-summary(brt_maxTemp_spring)
-
-varimp.brt_maxTemp_spring <- as.data.frame(brt_maxTemp_spring$contributions)
-names(varimp.brt_maxTemp_spring)[2] <- "brt_maxTemp_spring"
-cvstats.brt_maxTemp_spring<- as.data.frame(brt_maxTemp_spring$cv.statistics[c(1,3)])
-cvstats.brt_maxTemp_spring$deviance.null <- brt_maxTemp_spring$self.statistics$mean.null
-cvstats.brt_maxTemp_spring$deviance.explained <- (cvstats.brt_maxTemp_spring$deviance.null-cvstats.brt_maxTemp_spring$deviance.mean)/cvstats.brt_maxTemp_spring$deviance.null
-cvstats.brt_maxTemp_spring$model_name<-"maxTemp_spring"
-
-#########################
-df_fall<-data_sub_fall%>%
-  dplyr::select(Tmax_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
-
-
-brt_maxTemp_fall <- gbm.step(data=df_fall, gbm.x = c(2:ncol(df_fall)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.maxobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_maxTemp_fall, file="2_pipeline/store/models/brt_maxTemp_fall.rData")
-
-summary(brt_maxTemp_fall)
-
-varimp.brt_maxTemp_fall <- as.data.frame(brt_maxTemp_fall$contributions)
-names(varimp.brt_maxTemp_fall)[2] <- "brt_maxTemp_fall"
-cvstats.brt_maxTemp_fall<- as.data.frame(brt_maxTemp_fall$cv.statistics[c(1,3)])
-cvstats.brt_maxTemp_fall$deviance.null <- brt_maxTemp_fall$self.statistics$mean.null
-cvstats.brt_maxTemp_fall$deviance.explained <- (cvstats.brt_maxTemp_fall$deviance.null-cvstats.brt_maxTemp_fall$deviance.mean)/cvstats.brt_maxTemp_fall$deviance.null
-cvstats.brt_maxTemp_fall$model_name<-"maxTemp_fall"
-```
-
-##### By season {-}
-```{r eval=FALSE}
-df_summer<-data_sub_summer%>%
-  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
-
-
-brt_meanTemp_summer <- gbm.step(data=df_summer, gbm.x = c(2:ncol(df_summer)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_meanTemp_summer, file="2_pipeline/store/models/brt_meanTemp_summer.rData")
-
-summary(brt_meanTemp_summer)
-
-varimp.brt_meanTemp_summer <- as.data.frame(brt_meanTemp_summer$contributions)
-names(varimp.brt_meanTemp_summer)[2] <- "brt_meanTemp_summer"
-cvstats.brt_meanTemp_summer<- as.data.frame(brt_meanTemp_summer$cv.statistics[c(1,3)])
-cvstats.brt_meanTemp_summer$deviance.null <- brt_meanTemp_summer$self.statistics$mean.null
-cvstats.brt_meanTemp_summer$deviance.explained <- (cvstats.brt_meanTemp_summer$deviance.null-cvstats.brt_meanTemp_summer$deviance.mean)/cvstats.brt_meanTemp_summer$deviance.null
-cvstats.brt_meanTemp_summer$model_name<-"meanTemp_summer"
-
-#########################
-df_winter<-data_sub_winter%>%
-  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
-
-
-brt_meanTemp_winter <- gbm.step(data=df_winter, gbm.x = c(2:ncol(df_winter)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_meanTemp_winter, file="2_pipeline/store/models/brt_meanTemp_winter.rData")
-
-summary(brt_meanTemp_winter)
-
-varimp.brt_meanTemp_winter <- as.data.frame(brt_meanTemp_winter$contributions)
-names(varimp.brt_meanTemp_winter)[2] <- "brt_meanTemp_winter"
-cvstats.brt_meanTemp_winter<- as.data.frame(brt_meanTemp_winter$cv.statistics[c(1,3)])
-cvstats.brt_meanTemp_winter$deviance.null <- brt_meanTemp_winter$self.statistics$mean.null
-cvstats.brt_meanTemp_winter$deviance.explained <- (cvstats.brt_meanTemp_winter$deviance.null-cvstats.brt_meanTemp_winter$deviance.mean)/cvstats.brt_meanTemp_winter$deviance.null
-cvstats.brt_meanTemp_winter$model_name<-"meanTemp_winter"
-
-#########################
-df_spring<-data_sub_spring%>%
-  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
-
-
-brt_meanTemp_spring <- gbm.step(data=df_spring, gbm.x = c(2:ncol(df_spring)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_meanTemp_spring, file="2_pipeline/store/models/brt_meanTemp_spring.rData")
-
-summary(brt_meanTemp_spring)
-
-varimp.brt_meanTemp_spring <- as.data.frame(brt_meanTemp_spring$contributions)
-names(varimp.brt_meanTemp_spring)[2] <- "brt_meanTemp_spring"
-cvstats.brt_meanTemp_spring<- as.data.frame(brt_meanTemp_spring$cv.statistics[c(1,3)])
-cvstats.brt_meanTemp_spring$deviance.null <- brt_meanTemp_spring$self.statistics$mean.null
-cvstats.brt_meanTemp_spring$deviance.explained <- (cvstats.brt_meanTemp_spring$deviance.null-cvstats.brt_meanTemp_spring$deviance.mean)/cvstats.brt_meanTemp_spring$deviance.null
-cvstats.brt_meanTemp_spring$model_name<-"meanTemp_spring"
-
-#########################
-df_fall<-data_sub_fall%>%
-  dplyr::select(Tavg_diff, tpi_50, tpi_500, canopy_height, srad, vs, northness, TWI, CHILI, pr)
-
-
-brt_meanTemp_fall <- gbm.step(data=df_fall, gbm.x = c(2:ncol(df_fall)), gbm.y = 1,
-                        family = "gaussian", tree.complexity = 3,  n.meanobsinnode = 10,
-                        learning.rate = 0.1, bag.fraction = 0.85, max.trees = 50000)
-
-save(brt_meanTemp_fall, file="2_pipeline/store/models/brt_meanTemp_fall.rData")
-
-summary(brt_meanTemp_fall)
-
-varimp.brt_meanTemp_fall <- as.data.frame(brt_meanTemp_fall$contributions)
-names(varimp.brt_meanTemp_fall)[2] <- "brt_meanTemp_fall"
-cvstats.brt_meanTemp_fall<- as.data.frame(brt_meanTemp_fall$cv.statistics[c(1,3)])
-cvstats.brt_meanTemp_fall$deviance.null <- brt_meanTemp_fall$self.statistics$mean.null
-cvstats.brt_meanTemp_fall$deviance.explained <- (cvstats.brt_meanTemp_fall$deviance.null-cvstats.brt_meanTemp_fall$deviance.mean)/cvstats.brt_meanTemp_fall$deviance.null
-cvstats.brt_meanTemp_fall$model_name<-"meanTemp_fall"
-```
 #### Combine results {.unnumbered}
 
 ```{r eval=FALSE}
@@ -1170,27 +1229,30 @@ varimp_brt_all<-varimp.brt_meanTemp_tuned_1%>%
 
 
 save(varimp_brt_all, file="3_output/tables/varimp_brt_all.rData")
-```
 
 
-#### Combine results {.unnumbered}
+### Season models
 
-```{r eval=FALSE}
-
-cvstats_brt_seasons<-rbind(cvstats.brt_maxTemp_summer, cvstats.brt_maxTemp_fall, cvstats.brt_maxTemp_winter, cvstats.brt_maxTemp_spring,  cvstats.brt_meanTemp_summer, cvstats.brt_meanTemp_fall,cvstats.brt_meanTemp_winter, cvstats.brt_meanTemp_spring, cvstats.brt_minTemp_summer, cvstats.brt_minTemp_fall, cvstats.brt_minTemp_winter, cvstats.brt_minTemp_spring)%>%
+cvstats_brt_seasons<-rbind(cvstats.brt_maxTemp_allSeasons, cvstats.brt_maxTemp_summer, cvstats.brt_maxTemp_fall, cvstats.brt_maxTemp_winter, cvstats.brt_maxTemp_spring, cvstats.brt_meanTemp_allSeasons, cvstats.brt_meanTemp_summer, cvstats.brt_meanTemp_fall,cvstats.brt_meanTemp_winter, cvstats.brt_meanTemp_spring, cvstats.brt_minTemp_allSeasons, cvstats.brt_minTemp_summer, cvstats.brt_minTemp_fall, cvstats.brt_minTemp_winter, cvstats.brt_minTemp_spring)%>%
   dplyr::select(c(5, 1:4))
 
+cvstats_brt_seasons <- data.frame(lapply(cvstats_brt_seasons, function(x) {
+                  gsub("tuned_3", "allSeasons", x)
+              }))
 save(cvstats_brt_seasons, file="3_output/tables/cvstats_brt_seasons.rData")
 
-varimp_brt_seasons<-varimp.brt_meanTemp_summer%>%
+varimp_brt_seasons<-varimp.brt_meanTemp_allSeasons%>%
+  left_join(varimp.brt_meanTemp_summer, by="var")%>%
   left_join(varimp.brt_meanTemp_fall, by="var")%>%
   left_join(varimp.brt_meanTemp_winter, by="var")%>%
   left_join(varimp.brt_meanTemp_spring, by="var")%>%
+  left_join(varimp.brt_maxTemp_allSeasons, by="var")%>%
   left_join(varimp.brt_maxTemp_summer, by="var")%>%
   left_join(varimp.brt_maxTemp_fall, by="var")%>%
   left_join(varimp.brt_maxTemp_winter, by="var")%>%
   left_join(varimp.brt_maxTemp_spring, by="var")%>%
   left_join(varimp.brt_minTemp_summer, by="var")%>%
+  left_join(varimp.brt_minTemp_allSeasons, by="var")%>%
   left_join(varimp.brt_minTemp_fall, by="var")%>%
   left_join(varimp.brt_minTemp_winter, by="var")%>%
   left_join(varimp.brt_minTemp_spring, by="var")
