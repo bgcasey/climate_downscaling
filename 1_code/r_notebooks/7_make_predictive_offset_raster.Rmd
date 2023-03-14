@@ -310,3 +310,8 @@ load("2_pipeline/store/models/brt_minTemp_tuned_3.rData")
 ```
 
 
+
+
+## Combine predictive rasters into a single multi band raster
+
+
