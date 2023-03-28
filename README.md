@@ -64,6 +64,12 @@ First we gathered temperature data from temperature data loggers
 deployed across the province of Alberta. ([Wood et al.
 2017](#ref-wood2017dtdf))
 
+| Project code | Number of loggers | Time frame | Region  | Reference                                                           |
+|--------------|-------------------|------------|---------|---------------------------------------------------------------------|
+| RIVR         | 88                | 2018-2020  | Alberta | Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
+| HILLS        | 152               | 2014-2016  | Alberta |                                                                     |
+| WOOD         | 232               | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
+
 ``` r
 library(readxl)
 iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
