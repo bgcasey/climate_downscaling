@@ -62,7 +62,7 @@ species-habitat models.
 # iButton Data
 
 First we gathered temperature data from temperature data loggers
-deployed across the province of Alberta.
+deployed across the province of Alberta @ref(tab:tw).
 
 | Project code | Number of loggers | Time frame | Region  | Reference                                                           |
 |--------------|-------------------|------------|---------|---------------------------------------------------------------------|
@@ -70,26 +70,13 @@ deployed across the province of Alberta.
 | HILLS        | 152               | 2014-2016  | Alberta |                                                                     |
 | WOOD         | 232               | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
 
-``` r
-library(readxl)
-iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
-
-
-kable(iButton_sources, format="simple", caption = 'Sources of temperature data loggers included in the analysis.')
-```
-
-| Project code | Number of loggers | Time frame | Region  | Reference                                                            |
-|:-------------|------------------:|:-----------|:--------|:---------------------------------------------------------------------|
-| RIVR         |                88 | 2018-2020  | Alberta | /Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
-| HILLS        |               152 | 2014-2016  | Alberta | NA                                                                   |
-| WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                              |
-
 Sources of temperature data loggers included in the analysis.
 
-``` r
-  # column_spec(column = 3, width = "50em") %>% 
-  # kable_styling(font_size = 6, position = "center", full_width = T)
-```
+| Project code | Number of loggers | Time frame | Region  | Reference                                                           |
+|:-------------|------------------:|:-----------|:--------|:--------------------------------------------------------------------|
+| RIVR         |                88 | 2018-2020  | Alberta | Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
+| HILLS        |               152 | 2014-2016  | Alberta | NA                                                                  |
+| WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
 
 ## Prepare data
 
