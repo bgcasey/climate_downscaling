@@ -1,8 +1,7 @@
-- <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
-  - <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
-  - <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
-    spatial objects</a>
-  - <a href="#quality-control" id="toc-quality-control">Quality control</a>
+- <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
+- <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
+  spatial objects</a>
+- <a href="#quality-control" id="toc-quality-control">Quality control</a>
 - <a href="#climatena-data" id="toc-climatena-data">ClimateNA data</a>
   - <a href="#setup" id="toc-setup">Setup</a>
   - <a href="#create-input-file" id="toc-create-input-file">Create input
@@ -59,7 +58,7 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-# iButton Data
+fsghf \# iButton Data
 
 First we gathered temperature data from temperature data loggers
 deployed across the province of Alberta. ([Wood et al.
@@ -68,12 +67,7 @@ deployed across the province of Alberta. ([Wood et al.
 ``` r
 library(readxl)
 iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
-```
 
-    ## New names:
-    ## • `` -> `...5`
-
-``` r
 kable(iButton_sources, position = "h!",
   align = c("l","l","r"), escape=F, caption = 'Sources of temperature data loggers included in the analysis.', booktabs=TRUE)
 ```
@@ -97,9 +91,6 @@ Time frame
 Region
 </th>
 <th style="text-align:left;">
-…5
-</th>
-<th style="text-align:right;">
 Reference
 </th>
 </tr>
@@ -121,13 +112,6 @@ Alberta
 <td style="text-align:left;">
 /Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022))
 </td>
-<td style="text-align:right;">
-Estevo, C.A., Stralberg, D., Nielsen, S.E., Bayne, E., 2022. Topographic
-and vegetation drivers of thermal heterogeneity along the
-boreal–grassland transition zone in western Canada: Implications for
-climate change refugia. Ecology and Evolution 12, e9008.
-<https://doi.org/10.1002/ece3.9008>
-</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -145,9 +129,6 @@ Alberta
 <td style="text-align:left;">
 NA
 </td>
-<td style="text-align:right;">
-NA
-</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -163,12 +144,7 @@ WOOD
 Alberta
 </td>
 <td style="text-align:left;">
-([Wood et al. 2017](#ref-wood2017dtdf))
-</td>
-<td style="text-align:right;">
-Wood, W.H., Marshall, S.J., Fargey, S.E., Whitehead, T.L., 2017. Daily
-temperature data from the foothills climate array mesonet, canadian
-rocky mountains, 2005-2010. <https://doi.org/10.1594/PANGAEA.880611>
+“Wood et al. ([2017](#ref-wood2017dtdf))”
 </td>
 </tr>
 </tbody>
