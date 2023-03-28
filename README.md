@@ -74,12 +74,107 @@ iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
 
 ``` r
 kable(iButton_sources, position = "h!",
-  align = c("l","l","r"), escape=F, caption = 'Spatial covariates included in the analysis.',"latex", booktabs=TRUE, linesep=c("", "", "", "", "\\addlinespace"))%>% 
-  # column_spec(column = 3, width = "50em") %>% 
-  kable_styling(latex_options="scale_down", font_size = 9)
+  align = c("l","l","r"), escape=F, caption = 'Sources of temperature data loggers included in the analysis.', booktabs=TRUE)
 ```
 
+<table>
+<caption>
+Sources of temperature data loggers included in the analysis.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Project code
+</th>
+<th style="text-align:left;">
+Number of loggers
+</th>
+<th style="text-align:right;">
+Time frame
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+…5
+</th>
+<th style="text-align:right;">
+Reference
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+RIVR
+</td>
+<td style="text-align:left;">
+88
+</td>
+<td style="text-align:right;">
+2018-2020
+</td>
+<td style="text-align:left;">
+Alberta
+</td>
+<td style="text-align:left;">
+([Estevo et al. 2022](#ref-estevoTopographicVegetationDrivers2022))
+</td>
+<td style="text-align:right;">
+Estevo, C.A., Stralberg, D., Nielsen, S.E., Bayne, E., 2022. Topographic
+and vegetation drivers of thermal heterogeneity along the
+boreal–grassland transition zone in western Canada: Implications for
+climate change refugia. Ecology and Evolution 12, e9008.
+<https://doi.org/10.1002/ece3.9008>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HILLS
+</td>
+<td style="text-align:left;">
+152
+</td>
+<td style="text-align:right;">
+2014-2016
+</td>
+<td style="text-align:left;">
+Alberta
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+WOOD
+</td>
+<td style="text-align:left;">
+232
+</td>
+<td style="text-align:right;">
+2005-2010
+</td>
+<td style="text-align:left;">
+Alberta
+</td>
+<td style="text-align:left;">
+([Wood et al. 2017](#ref-wood2017dtdf))
+</td>
+<td style="text-align:right;">
+Wood, W.H., Marshall, S.J., Fargey, S.E., Whitehead, T.L., 2017. Daily
+temperature data from the foothills climate array mesonet, canadian
+rocky mountains, 2005-2010. <https://doi.org/10.1594/PANGAEA.880611>
+</td>
+</tr>
+</tbody>
+</table>
+
 ``` r
+  # column_spec(column = 3, width = "50em") %>% 
   # kable_styling(font_size = 6, position = "center", full_width = T)
 ```
 
@@ -2991,6 +3086,16 @@ Use `1_code/r_notebooks/modelling_validate_model.Rmd`.
 # References
 
 <div id="refs" class="references csl-bib-body hanging-indent">
+
+<div id="ref-estevoTopographicVegetationDrivers2022" class="csl-entry">
+
+Estevo, Cesar A., Diana Stralberg, Scott E. Nielsen, and Erin Bayne.
+2022. “Topographic and Vegetation Drivers of Thermal Heterogeneity Along
+the Boreal–Grassland Transition Zone in Western Canada: Implications for
+Climate Change Refugia.” *Ecology and Evolution* 12 (6): e9008.
+https://doi.org/<https://doi.org/10.1002/ece3.9008>.
+
+</div>
 
 <div id="ref-wood2017dtdf" class="csl-entry">
 
