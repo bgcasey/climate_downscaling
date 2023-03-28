@@ -1,5 +1,5 @@
-- <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
-- <a href="#references" id="toc-references">References</a>
+-   <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
+-   <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
 predictions using temperature data loggers and remote sensing data
@@ -45,27 +45,15 @@ Sources of temperature data loggers.
 
 # References
 
-<div id="refs" class="references csl-bib-body hanging-indent">
-
-<div id="ref-estevoTopographicVegetationDrivers2022" class="csl-entry">
-
 Estevo, Cesar A., Diana Stralberg, Scott E. Nielsen, and Erin Bayne.
 2022. “Topographic and Vegetation Drivers of Thermal Heterogeneity Along
 the Boreal–Grassland Transition Zone in Western Canada: Implications for
 Climate Change Refugia.” *Ecology and Evolution* 12 (6): e9008.
 https://doi.org/<https://doi.org/10.1002/ece3.9008>.
 
-</div>
-
-<div id="ref-wood2017dtdf" class="csl-entry">
-
 Wood, Wendy H, Shawn J Marshall, Shannon E Fargey, and Terri L
 Whitehead. 2017. “Daily Temperature Data from the Foothills Climate
 Array Mesonet, Canadian Rocky Mountains, 2005-2010.” PANGAEA.
 <https://doi.org/10.1594/PANGAEA.880611>.
-
-</div>
-
-</div>
 
 <!--chapter:end:index.Rmd-->
