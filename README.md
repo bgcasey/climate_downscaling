@@ -61,15 +61,33 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
+``` r
+normalizePath("/Volumes/Projects/climate_downscaling", winslash = "/")
+```
+
+    ## [1] "/Volumes/Projects/climate_downscaling"
+
+``` r
+cat("/Volumes/Projects/climate_downscaling")
+```
+
+    ## /Volumes/Projects/climate_downscaling
+
 # Project folder structure
 
-. +– \_config.yml +– \_drafts \| +– begin-with-the-crazy-ideas.textile
-\| +– on-simplicity-in-technology.markdown +– \_includes \| +–
-footer.html \| +– header.html +– \_layouts \| +– default.html \| +–
-post.html +– \_posts \| +–
-2007-10-29-why-every-programmer-should-play-nethack.textile \| +–
-2009-04-26-barcamp-boston-4-roundup.textile +– \_data \| +– members.yml
-+– \_site +– index.html
+``` bash
+#!/bin/bash
+
+#File: tree-md
+
+tree=$(tree -tf --noreport -I '*~' --charset ascii $1 |
+       sed -e 's/| \+/  /g' -e 's/[|`]-\+/ */g' -e 's:\(* \)\(\(.*/\)\([^/]\+\)\):\1[\4](\2):g')
+
+printf "# Project tree\n\n${tree}"
+```
+
+    ## bash: line 5: tree: command not found
+    ## # Project tree
 
 # iButton Data
 
