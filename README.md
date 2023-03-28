@@ -1,3 +1,5 @@
+- <a href="#project-folder-structure"
+  id="toc-project-folder-structure">Project folder structure</a>
 - <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
   - <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
   - <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
@@ -30,6 +32,10 @@
   - <a href="#validate" id="toc-validate">Validate</a>
 - <a href="#references" id="toc-references">References</a>
 
+Here we present our workflow and code for refining ClimateNA temperature
+predictions using temperature data loggers and remote sensing data
+accessed via Google Earth Engine.
+
 Ecological studies often rely on interpolated climate data to predict
 species distributions and identify climate change refugia. However, the
 scale of climate data does not always correspond to the scale of habitat
@@ -55,9 +61,15 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-Here we present our workflow and code for refining ClimateNA temperature
-predictions using temperature data loggers and remote sensing data
-accessed via Google Earth Engine.
+# Project folder structure
+
+. +– \_config.yml +– \_drafts \| +– begin-with-the-crazy-ideas.textile
+\| +– on-simplicity-in-technology.markdown +– \_includes \| +–
+footer.html \| +– header.html +– \_layouts \| +– default.html \| +–
+post.html +– \_posts \| +–
+2007-10-29-why-every-programmer-should-play-nethack.textile \| +–
+2009-04-26-barcamp-boston-4-roundup.textile +– \_data \| +– members.yml
++– \_site +– index.html
 
 # iButton Data
 
