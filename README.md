@@ -1,5 +1,5 @@
--   <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
--   <a href="#references" id="toc-references">References</a>
+-   [iButton Data](#ibutton-data){#toc-ibutton-data}
+-   [References](#references){#toc-references}
 
 Here we present our workflow and code for refining ClimateNA temperature
 predictions using temperature data loggers and remote sensing data
@@ -33,27 +33,35 @@ species-habitat models.
 # iButton Data
 
 First we gathered temperature data from temperature data loggers
-deployed across the province of Alberta (Table @ref(tab:covDes))
+deployed across the province of Alberta (Table \@ref(tab:covDes))
 
-| Project code | Number of loggers | Time frame | Region  | Reference                                                           |
-|:-------------|------------------:|:-----------|:--------|:--------------------------------------------------------------------|
-| RIVR         |                88 | 2018-2020  | Alberta | Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
-| HILLS        |               152 | 2014-2016  | Alberta | NA                                                                  |
-| WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
+  Project code     Number of loggers Time frame   Region    Reference
+  -------------- ------------------- ------------ --------- -----------------------------------------
+  RIVR                            88 2018-2020    Alberta   @estevoTopographicVegetationDrivers2022
+  HILLS                          152 2014-2016    Alberta   NA
+  WOOD                           232 2005-2010    Alberta   @wood2017dtdf
 
-Sources of temperature data loggers.
+  : Sources of temperature data loggers.
 
 # References
 
+::: {#refs .references .csl-bib-body .hanging-indent}
+::: {#ref-estevoTopographicVegetationDrivers2022 .csl-entry}
 Estevo, Cesar A., Diana Stralberg, Scott E. Nielsen, and Erin Bayne.
-2022. “Topographic and Vegetation Drivers of Thermal Heterogeneity Along
-the Boreal–Grassland Transition Zone in Western Canada: Implications for
-Climate Change Refugia.” *Ecology and Evolution* 12 (6): e9008.
+2022. "Topographic and Vegetation Drivers of Thermal Heterogeneity Along
+the Boreal--Grassland Transition Zone in Western Canada: Implications
+for Climate Change Refugia." *Ecology and Evolution* 12 (6): e9008.
 https://doi.org/<https://doi.org/10.1002/ece3.9008>.
+:::
 
+::: {#ref-wood2017dtdf .csl-entry}
 Wood, Wendy H, Shawn J Marshall, Shannon E Fargey, and Terri L
-Whitehead. 2017. “Daily Temperature Data from the Foothills Climate
-Array Mesonet, Canadian Rocky Mountains, 2005-2010.” PANGAEA.
+Whitehead. 2017. "Daily Temperature Data from the Foothills Climate
+Array Mesonet, Canadian Rocky Mountains, 2005-2010." PANGAEA.
 <https://doi.org/10.1594/PANGAEA.880611>.
+:::
+:::
 
+```{=html}
 <!--chapter:end:index.Rmd-->
+```
