@@ -67,24 +67,32 @@ deployed across the province of Alberta. ([Wood et al.
 ``` r
 library(readxl)
 iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
-iButton_sources<-iButton_sources%>%unclass()
+
 
 kable(iButton_sources, position = "h!",
   align = c("l","l","r"), escape=F, caption = 'Sources of temperature data loggers included in the analysis.', booktabs=TRUE)
 ```
 
-<table class="kable_wrapper">
+<table>
 <caption>
 Sources of temperature data loggers included in the analysis.
 </caption>
-<tbody>
-<tr>
-<td>
-<table>
 <thead>
 <tr>
 <th style="text-align:left;">
-x
+Project code
+</th>
+<th style="text-align:left;">
+Number of loggers
+</th>
+<th style="text-align:right;">
+Time frame
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Reference
 </th>
 </tr>
 </thead>
@@ -93,131 +101,51 @@ x
 <td style="text-align:left;">
 RIVR
 </td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HILLS
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WOOD
-</td>
-</tr>
-</tbody>
-</table>
-</td>
-<td>
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-x
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
 <td style="text-align:left;">
 88
 </td>
-</tr>
-<tr>
-<td style="text-align:left;">
-152
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-232
-</td>
-</tr>
-</tbody>
-</table>
-</td>
-<td>
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-x
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
+<td style="text-align:right;">
 2018-2020
 </td>
-</tr>
-<tr>
-<td style="text-align:left;">
-2014-2016
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-2005-2010
-</td>
-</tr>
-</tbody>
-</table>
-</td>
-<td>
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-x
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
 <td style="text-align:left;">
 Alberta
 </td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Alberta
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Alberta
-</td>
-</tr>
-</tbody>
-</table>
-</td>
-<td>
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-x
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
 <td style="text-align:left;">
 /Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022))
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
+HILLS
+</td>
+<td style="text-align:left;">
+152
+</td>
+<td style="text-align:right;">
+2014-2016
+</td>
+<td style="text-align:left;">
+Alberta
+</td>
+<td style="text-align:left;">
 NA
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-“Wood et al. ([2017](#ref-wood2017dtdf))”
+WOOD
 </td>
-</tr>
-</tbody>
-</table>
+<td style="text-align:left;">
+232
+</td>
+<td style="text-align:right;">
+2005-2010
+</td>
+<td style="text-align:left;">
+Alberta
+</td>
+<td style="text-align:left;">
+NA
 </td>
 </tr>
 </tbody>
