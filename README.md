@@ -62,7 +62,8 @@ species-habitat models.
 # iButton Data
 
 First we gathered temperature data from temperature data loggers
-deployed across the province of Alberta.
+deployed across the province of Alberta. ([Wood et al.
+2017](#ref-wood2017dtdf))
 
 ``` r
 library(readxl)
