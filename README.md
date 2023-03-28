@@ -119,7 +119,7 @@ RIVR
 Alberta
 </td>
 <td style="text-align:left;">
-([Estevo et al. 2022](#ref-estevoTopographicVegetationDrivers2022))
+/Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022))
 </td>
 <td style="text-align:right;">
 Estevo, C.A., Stralberg, D., Nielsen, S.E., Bayne, E., 2022. Topographic
