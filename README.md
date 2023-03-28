@@ -62,21 +62,15 @@ species-habitat models.
 # iButton Data
 
 First we gathered temperature data from temperature data loggers
-deployed across the province of Alberta @ref(tab:tw).
-
-| Project code | Number of loggers | Time frame | Region  | Reference                                                           |
-|--------------|-------------------|------------|---------|---------------------------------------------------------------------|
-| RIVR         | 88                | 2018-2020  | Alberta | Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
-| HILLS        | 152               | 2014-2016  | Alberta |                                                                     |
-| WOOD         | 232               | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
-
-Sources of temperature data loggers included in the analysis.
+deployed across the province of Alberta @ref(tab:ibsources). \|
 
 | Project code | Number of loggers | Time frame | Region  | Reference                                                           |
 |:-------------|------------------:|:-----------|:--------|:--------------------------------------------------------------------|
 | RIVR         |                88 | 2018-2020  | Alberta | Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
 | HILLS        |               152 | 2014-2016  | Alberta | NA                                                                  |
 | WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
+
+Sources of temperature data loggers included in the analysis.
 
 ## Prepare data
 
