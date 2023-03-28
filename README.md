@@ -145,7 +145,7 @@ WOOD
 Alberta
 </td>
 <td style="text-align:left;">
-NA
+Wood et al. ([2017](#ref-wood2017dtdf))
 </td>
 </tr>
 </tbody>
