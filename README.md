@@ -1,5 +1,3 @@
-- <a href="#project-folder-structure"
-  id="toc-project-folder-structure">Project folder structure</a>
 - <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
   - <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
   - <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
@@ -61,35 +59,29 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-``` r
-normalizePath("/Volumes/Projects/climate_downscaling", winslash = "/")
-```
-
-    ## [1] "/Volumes/Projects/climate_downscaling"
-
-``` r
-cat("/Volumes/Projects/climate_downscaling")
-```
-
-    ## /Volumes/Projects/climate_downscaling
-
-# Project folder structure
-
-``` bash
-#!/bin/bash
-
-#File: tree-md
-
-tree=$(tree -tf --noreport -I '*~' --charset ascii $1 |
-       sed -e 's/| \+/  /g' -e 's/[|`]-\+/ */g' -e 's:\(* \)\(\(.*/\)\([^/]\+\)\):\1[\4](\2):g')
-
-printf "# Project tree\n\n${tree}"
-```
-
-    ## bash: line 5: tree: command not found
-    ## # Project tree
-
 # iButton Data
+
+First we gathered temperature data from temperature data loggers
+deployed across the province of Alberta.
+
+``` r
+library(readxl)
+iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
+```
+
+    ## New names:
+    ## • `` -> `...5`
+
+``` r
+kable(iButton_sources, position = "h!",
+  align = c("l","l","r"), escape=F, caption = 'Spatial covariates included in the analysis.',"latex", booktabs=TRUE, linesep=c("", "", "", "", "\\addlinespace"))%>% 
+  # column_spec(column = 3, width = "50em") %>% 
+  kable_styling(latex_options="scale_down", font_size = 9)
+```
+
+``` r
+  # kable_styling(font_size = 6, position = "center", full_width = T)
+```
 
 ## Prepare data
 
@@ -895,7 +887,8 @@ ibuttons_ERA5_4<-ibuttons_complete_daily%>%
 #### Snow burial
 
 We defined snow burial as ibuttons with a diural range of \<3 degrees
-for 25 consequetive days or more. \[@wood2017dtdf\]
+for 25 consequetive days or more. ([Wood et al.
+2017](#ref-wood2017dtdf))
 
 ``` r
 #define how may consecutive days are needed to define as snow
@@ -2997,7 +2990,16 @@ Use `1_code/r_notebooks/modelling_validate_model.Rmd`.
 
 # References
 
-<div id="refs">
+<div id="refs" class="references csl-bib-body hanging-indent">
+
+<div id="ref-wood2017dtdf" class="csl-entry">
+
+Wood, Wendy H, Shawn J Marshall, Shannon E Fargey, and Terri L
+Whitehead. 2017. “Daily Temperature Data from the Foothills Climate
+Array Mesonet, Canadian Rocky Mountains, 2005-2010.” PANGAEA.
+<https://doi.org/10.1594/PANGAEA.880611>.
+
+</div>
 
 </div>
 
