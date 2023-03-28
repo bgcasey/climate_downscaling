@@ -69,8 +69,7 @@ library(readxl)
 iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
 
 
-kable(iButton_sources,
-  align = c("l","l","l","r"), caption = 'Sources of temperature data loggers included in the analysis.', booktabs=TRUE)
+kable(iButton_sources, caption = 'Sources of temperature data loggers included in the analysis.')
 ```
 
 <table>
@@ -82,13 +81,13 @@ Sources of temperature data loggers included in the analysis.
 <th style="text-align:left;">
 Project code
 </th>
-<th style="text-align:left;">
+<th style="text-align:right;">
 Number of loggers
 </th>
 <th style="text-align:left;">
 Time frame
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 Region
 </th>
 <th style="text-align:left;">
@@ -101,13 +100,13 @@ Reference
 <td style="text-align:left;">
 RIVR
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
 88
 </td>
 <td style="text-align:left;">
 2018-2020
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 Alberta
 </td>
 <td style="text-align:left;">
@@ -118,13 +117,13 @@ Alberta
 <td style="text-align:left;">
 HILLS
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
 152
 </td>
 <td style="text-align:left;">
 2014-2016
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 Alberta
 </td>
 <td style="text-align:left;">
@@ -135,13 +134,13 @@ NA
 <td style="text-align:left;">
 WOOD
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
 232
 </td>
 <td style="text-align:left;">
 2005-2010
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 Alberta
 </td>
 <td style="text-align:left;">
