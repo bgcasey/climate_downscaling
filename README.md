@@ -1,7 +1,8 @@
-- <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
-- <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
-  spatial objects</a>
-- <a href="#quality-control" id="toc-quality-control">Quality control</a>
+- <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
+  - <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
+  - <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
+    spatial objects</a>
+  - <a href="#quality-control" id="toc-quality-control">Quality control</a>
 - <a href="#climatena-data" id="toc-climatena-data">ClimateNA data</a>
   - <a href="#setup" id="toc-setup">Setup</a>
   - <a href="#create-input-file" id="toc-create-input-file">Create input
@@ -58,11 +59,10 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-fsghf \# iButton Data
+# iButton Data
 
 First we gathered temperature data from temperature data loggers
-deployed across the province of Alberta. ([Wood et al.
-2017](#ref-wood2017dtdf))
+deployed across the province of Alberta.
 
 | Project code | Number of loggers | Time frame | Region  | Reference                                                           |
 |--------------|-------------------|------------|---------|---------------------------------------------------------------------|
@@ -75,86 +75,16 @@ library(readxl)
 iButton_sources <- read_excel("0_data/iButton_sources.xlsx")
 
 
-kable(iButton_sources, caption = 'Sources of temperature data loggers included in the analysis.')
+kable(iButton_sources, format="simple", caption = 'Sources of temperature data loggers included in the analysis.')
 ```
 
-<table>
-<caption>
+| Project code | Number of loggers | Time frame | Region  | Reference                                                            |
+|:-------------|------------------:|:-----------|:--------|:---------------------------------------------------------------------|
+| RIVR         |                88 | 2018-2020  | Alberta | /Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
+| HILLS        |               152 | 2014-2016  | Alberta | NA                                                                   |
+| WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                              |
+
 Sources of temperature data loggers included in the analysis.
-</caption>
-<thead>
-<tr>
-<th style="text-align:left;">
-Project code
-</th>
-<th style="text-align:right;">
-Number of loggers
-</th>
-<th style="text-align:left;">
-Time frame
-</th>
-<th style="text-align:left;">
-Region
-</th>
-<th style="text-align:left;">
-Reference
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-RIVR
-</td>
-<td style="text-align:right;">
-88
-</td>
-<td style="text-align:left;">
-2018-2020
-</td>
-<td style="text-align:left;">
-Alberta
-</td>
-<td style="text-align:left;">
-/Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022))
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HILLS
-</td>
-<td style="text-align:right;">
-152
-</td>
-<td style="text-align:left;">
-2014-2016
-</td>
-<td style="text-align:left;">
-Alberta
-</td>
-<td style="text-align:left;">
-NA
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WOOD
-</td>
-<td style="text-align:right;">
-232
-</td>
-<td style="text-align:left;">
-2005-2010
-</td>
-<td style="text-align:left;">
-Alberta
-</td>
-<td style="text-align:left;">
-Wood et al. ([2017](#ref-wood2017dtdf))
-</td>
-</tr>
-</tbody>
-</table>
 
 ``` r
   # column_spec(column = 3, width = "50em") %>% 
