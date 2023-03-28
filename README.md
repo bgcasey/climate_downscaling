@@ -34,6 +34,7 @@ species-habitat models.
 
 First we gathered temperature data from temperature data loggers
 deployed across the province of Alberta (Table @ref(tab:covDes))
+{([**covDes?**](#ref-covDes))}
 
 | Project code | Number of loggers | Time frame | Region  | Reference                                                           |
 |:-------------|------------------:|:-----------|:--------|:--------------------------------------------------------------------|
@@ -41,7 +42,7 @@ deployed across the province of Alberta (Table @ref(tab:covDes))
 | HILLS        |               152 | 2014-2016  | Alberta | NA                                                                  |
 | WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
 
-{([**covDes?**](#ref-covDes))} Sources of temperature data loggers.
+Sources of temperature data loggers.
 
 # References
 
