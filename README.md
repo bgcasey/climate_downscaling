@@ -1,14 +1,16 @@
 - <a href="#import-and-clean-temperature-data"
-  id="toc-import-and-clean-temperature-data">Import and clean temperature
-  data</a>
+  id="toc-import-and-clean-temperature-data">1. Import and clean
+  temperature data</a>
 - <a href="#get-xy-coordinates-of-data-loggers"
-  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
-  loggers</a>
+  id="toc-get-xy-coordinates-of-data-loggers">2. Get XY coordinates of
+  data loggers</a>
 - <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
 predictions using temperature data loggers and remote sensing data
-accessed via Google Earth Engine.
+accessed via Google Earth Engine. Temperature offset layers and project
+spatial data can be viewed at
+<https://bgcasey.users.earthengine.app/view/climateoffsets>.
 
 Ecological studies often rely on interpolated climate data to predict
 species distributions and identify climate change refugia. However, the
@@ -35,7 +37,7 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-# Import and clean temperature data
+# 1. Import and clean temperature data
 
 First we gathered temperature data from temperature data loggers
 deployed across the province of Alberta.
@@ -77,7 +79,7 @@ iButton data:
 6.  Combined daily temperature data from all sources into a single data
     frame.
 
-# Get XY coordinates of data loggers
+# 2. Get XY coordinates of data loggers
 
 # References
 
