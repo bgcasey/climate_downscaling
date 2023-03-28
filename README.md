@@ -33,7 +33,7 @@ species-habitat models.
 # iButton Data
 
 First we gathered temperature data from temperature data loggers
-deployed across the province of Alberta (Table @ref{tab:covDes})
+deployed across the province of Alberta (Table @ref(tab:covDes))
 
 | Project code | Number of loggers | Time frame | Region  | Reference                                                           |
 |:-------------|------------------:|:-----------|:--------|:--------------------------------------------------------------------|
