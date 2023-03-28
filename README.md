@@ -70,7 +70,7 @@ deployed across the province of Alberta (Table @ref(tab:ibs)). \|
 | HILLS        |               152 | 2014-2016  | Alberta | NA                                                                  |
 | WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
 
-Sources of temperature data loggers included in the analysis.
+Sources of temperature data loggers.
 
 ## Prepare data
 
