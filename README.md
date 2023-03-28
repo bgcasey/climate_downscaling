@@ -1,4 +1,5 @@
-- <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
+- <a href="#process-data-loggers" id="toc-process-data-loggers">Process
+  data loggers</a>
 - <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
@@ -30,11 +31,10 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-# iButton Data
+# Process data loggers
 
 First we gathered temperature data from temperature data loggers
-deployed across the province of Alberta (Table @ref(tab:covDes))
-{([**covDes?**](#ref-covDes))}
+deployed across the province of Alberta.
 
 | Project code | Number of loggers | Time frame | Region  | Reference                                                           |
 |:-------------|------------------:|:-----------|:--------|:--------------------------------------------------------------------|
@@ -43,6 +43,15 @@ deployed across the province of Alberta (Table @ref(tab:covDes))
 | WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
 
 Sources of temperature data loggers.
+
+<div class="figure">
+
+<img src="3_output/maps/ss_xy.png" alt="Locations of temperature data loggers." width="80%" />
+<p class="caption">
+Locations of temperature data loggers.
+</p>
+
+</div>
 
 # References
 
