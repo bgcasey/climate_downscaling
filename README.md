@@ -1,5 +1,9 @@
-- <a href="#process-data-loggers" id="toc-process-data-loggers">Process
-  data loggers</a>
+- <a href="#import-and-clean-temperature-data"
+  id="toc-import-and-clean-temperature-data">Import and clean temperature
+  data</a>
+- <a href="#get-xy-coordinates-of-data-loggers"
+  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
+  loggers</a>
 - <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
@@ -31,7 +35,7 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-# Process data loggers
+# Import and clean temperature data
 
 First we gathered temperature data from temperature data loggers
 deployed across the province of Alberta.
@@ -52,6 +56,28 @@ Locations of temperature data loggers.
 </p>
 
 </div>
+
+The file `1_code/r_notebooks/ibutton_data_xy.Rmd` provides code and
+instructions for importing and cleaning data from both raw and processed
+iButton temperature data. We did the following for each source of
+iButton data:
+
+1.  Imported temperature data into the r project.
+2.  Identified and removed pre-deployment and post-retrieval temperature
+    data.
+3.  Identified and fixed errors in date-time strings.
+4.  Identified and fixed errors in iButton site names and made sure that
+    each iButton deployment was associated with a unique identifier.
+5.  Calculated daily temperature summaries including:
+    - Tmax (maximum temperature)
+
+    - Tmin (minimum temperature)
+
+    - Tavg (mean temperature)
+6.  Combined daily temperature data from all sources into a single data
+    frame.
+
+# Get XY coordinates of data loggers
 
 # References
 
