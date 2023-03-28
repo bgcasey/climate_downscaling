@@ -1,4 +1,3 @@
-- <a href="#test" id="toc-test">Test</a>
 - <a href="#ibutton-data" id="toc-ibutton-data">iButton Data</a>
   - <a href="#prepare-data" id="toc-prepare-data">Prepare data</a>
   - <a href="#create-spatial-objects" id="toc-create-spatial-objects">Create
@@ -30,8 +29,6 @@
     predictive rasters into a single multi band raster</a>
   - <a href="#validate" id="toc-validate">Validate</a>
 - <a href="#references" id="toc-references">References</a>
-
-# Test
 
 Ecological studies often rely on interpolated climate data to predict
 species distributions and identify climate change refugia. However, the
