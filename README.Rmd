@@ -130,8 +130,8 @@ covariate_list<- read_excel("0_data/covariate_list.xlsx", sheet="Sheet2")
 # kable(covariate_list, format="simple", caption = 'Spatial covariates evaluated and used in our analysis.')%>%
 #     kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 
-kbl(covariate_list, align = c("l", "l", "r", "r")) %>%
-  kable_paper() %>%
+kable(covariate_list, align = c("l", "l", "r", "r")) %>%
+  # kable_paper() %>%
   column_spec(1, bold = T, border_right = T, width="5em") %>%
   column_spec(2, width = "75em")%>%
   column_spec(3, width = "15em")
