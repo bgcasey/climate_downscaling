@@ -19,7 +19,9 @@ Here we present our workflow and code for refining ClimateNA temperature
 predictions using temperature data loggers and remote sensing data
 accessed via Google Earth Engine. Temperature offset layers and project
 spatial data can be viewed at
-<https://bgcasey.users.earthengine.app/view/climateoffsets>.
+<https://bgcasey.users.earthengine.app/view/climateoffsets>. Model
+summaries can viewed at
+<https://bookdown.org/bgcasey/climateOffset_models/>.
 
 Ecological studies often rely on interpolated climate data to predict
 species distributions and identify climate change refugia. However, the
@@ -238,8 +240,8 @@ and methods used. We built the boosted-regression trees using the
 Tmin, and Tavg for the summer, fall, winter, and spring seasons:
 
 1.  Tune BRT parameters using a grid of parameter options and the `gbm`
-    R package ([**kuhn2013applied?**](#ref-kuhn2013applied); [Greenwell
-    et al. 2022](#ref-R-gbm)).
+    R package ([Kuhn, Johnson, et al. 2013](#ref-kuhn2013applied);
+    [Greenwell et al. 2022](#ref-R-gbm)).
 
 2.  Apply the `gbm.step` function in the `dismo` package to build models
     with the tuned parameters ([Hijmans et al. 2021](#ref-R-dismo))
@@ -250,17 +252,10 @@ Tmin, and Tavg for the summer, fall, winter, and spring seasons:
 4.  Rerun models with reduced set of predictor variables.
 
 5.  Generate offset rasters from the final models using `dismo::predict`
-    (see. `1_code/r_notebooks/7_boosted_regression_trees.Rmd` for the
+    (see `1_code/r_notebooks/7_boosted_regression_trees.Rmd` for the
     code).
 
-<div class="figure">
-
-<img src="3_output/maps/mean_temp_offset_eg.png" alt="Summer mean temperature offset." width="80%" />
-<p class="caption">
-Summer mean temperature offset.
-</p>
-
-</div>
+<img src="3_output/maps/mean_temp_offset_eg.png" width="100%" />
 
 # References
 
@@ -331,6 +326,13 @@ Change Service (C3s) Climate Data Store (Cds)* 10 (10.24381).
 Hijmans, Robert J., Steven Phillips, John Leathwick, and Jane Elith.
 2021. *Dismo: Species Distribution Modeling*.
 <https://rspatial.org/raster/sdm/>.
+
+</div>
+
+<div id="ref-kuhn2013applied" class="csl-entry">
+
+Kuhn, Max, Kjell Johnson, et al. 2013. *Applied Predictive Modeling*.
+Vol. 26. Springer.
 
 </div>
 
