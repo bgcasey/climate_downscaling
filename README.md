@@ -1,19 +1,4 @@
-- <a href="#import-and-clean-temperature-data"
-  id="toc-import-and-clean-temperature-data">Import and clean temperature
-  data</a>
-- <a href="#get-xy-coordinates-of-data-loggers"
-  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
-  loggers</a>
-- <a href="#temperature-data-quality-control"
-  id="toc-temperature-data-quality-control">Temperature data quality
-  control</a>
-- <a href="#climatena-temperature"
-  id="toc-climatena-temperature">ClimateNA temperature</a>
-- <a href="#spatial-covariates" id="toc-spatial-covariates">Spatial
-  covariates</a>
-- <a href="#boosted-regression-trees"
-  id="toc-boosted-regression-trees">Boosted regression trees</a>
-- <a href="#references" id="toc-references">References</a>
+# Workflow for Refining ClimateNA Temperature Predictions
 
 Here we present our workflow and code for refining ClimateNA temperature
 predictions using temperature data loggers and remote sensing data
@@ -47,6 +32,27 @@ winter minimum temperatures were on average -0.81°C (SD = 0.98) greater
 than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
+
+---
+
+- <a href="#import-and-clean-temperature-data"
+  id="toc-import-and-clean-temperature-data">Import and clean temperature
+  data</a>
+- <a href="#get-xy-coordinates-of-data-loggers"
+  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
+  loggers</a>
+- <a href="#temperature-data-quality-control"
+  id="toc-temperature-data-quality-control">Temperature data quality
+  control</a>
+- <a href="#climatena-temperature"
+  id="toc-climatena-temperature">ClimateNA temperature</a>
+- <a href="#spatial-covariates" id="toc-spatial-covariates">Spatial
+  covariates</a>
+- <a href="#boosted-regression-trees"
+  id="toc-boosted-regression-trees">Boosted regression trees</a>
+- <a href="#references" id="toc-references">References</a>
+
+
 
 # Import and clean temperature data
 
