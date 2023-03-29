@@ -21,7 +21,7 @@ accessed via Google Earth Engine. Temperature offset layers and project
 spatial data can be viewed at
 <https://bgcasey.users.earthengine.app/view/climateoffsets>. Model
 summaries can viewed at
-<https://bookdown.org/bgcasey/climateOffset_models/>.
+[https://bookdown.org/bgcasey/climateOffset_models](https://bookdown.org/bgcasey/climateOffset_models/).
 
 Ecological studies often rely on interpolated climate data to predict
 species distributions and identify climate change refugia. However, the
@@ -99,7 +99,7 @@ locations in R. We:
 
 <div class="figure">
 
-<img src="3_output/maps/ss_xy.png" alt="Locations of temperature data loggers." width="80%" />
+<img src="3_output/maps/ss_xy.png" alt="Locations of temperature data loggers." width="100%" />
 <p class="caption">
 Locations of temperature data loggers.
 </p>
@@ -124,7 +124,7 @@ Tmin, and Tavg). The markdown file describes the following steps:
     above (Mean + 3\**SD*) and temperature differences below (Mean -
     3\**SD*)
 3.  Impute missing data with a maximum gap of 10 days useing the
-    `na_interpolation` function in the r package `imputeTS` ([Moritz and
+    `na_interpolation` function in the R package `imputeTS` ([Moritz and
     Bartz-Beielstein 2017](#ref-imputeTS2017)).
 4.  Flag iButtons that may have been buried by snow. An iButton was
     flagged as buried if it had diurnal temperature range of \<3 degrees
@@ -148,7 +148,7 @@ Tmin, and Tavg). The markdown file describes the following steps:
 The file `1_code/r_notebooks/4_ibutton_climatesNA.Rmd` provides
 instructions for:
 
-1.  Installing the ClimateNA desktop application and r package ([Wang et
+1.  Installing the ClimateNA desktop application and R package ([Wang et
     al. 2016](#ref-wang2016locally)).
 2.  Extracting monthly ClimateNA temperature predictions for each
     iButton location.
@@ -236,7 +236,7 @@ boosted regression trees to predict differences between ClimateNA and
 iButton temperatures. The file
 `1_code/r_notebooks/6_boosted_regression_trees.Rmd` provides the code
 and methods used. We built the boosted-regression trees using the
-`dismo` and `gbm` r packages. We repeated the following steps for Tmax,
+`dismo` and `gbm` R packages. We repeated the following steps for Tmax,
 Tmin, and Tavg for the summer, fall, winter, and spring seasons:
 
 1.  Tune BRT parameters using a grid of parameter options and the `gbm`
