@@ -99,7 +99,7 @@ locations in R. We:
 
 <div class="figure">
 
-<img src="3_output/maps/ss_xy.png" alt="Locations of temperature data loggers." width="100%" />
+<img src="3_output/maps/ss_xy.png" alt="Locations of temperature data loggers." width="80%" />
 <p class="caption">
 Locations of temperature data loggers.
 </p>
