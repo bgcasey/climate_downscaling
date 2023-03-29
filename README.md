@@ -4,6 +4,9 @@
 - <a href="#get-xy-coordinates-of-data-loggers"
   id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
   loggers</a>
+- <a href="#temperature-data-quality-control"
+  id="toc-temperature-data-quality-control">Temperature data quality
+  control</a>
 - <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
@@ -47,13 +50,14 @@ deployed across the province of Alberta.
 | RIVR         |                88 | 2018-2020  | Alberta | Estevo et al. ([2022](#ref-estevoTopographicVegetationDrivers2022)) |
 | HILLS        |               152 | 2014-2016  | Alberta | NA                                                                  |
 | WOOD         |               232 | 2005-2010  | Alberta | Wood et al. ([2017](#ref-wood2017dtdf))                             |
+| ALEX         |                41 | 2020       | Alberta | NA                                                                  |
 
 Sources of temperature data loggers.
 
-The file `1_code/r_notebooks/ibutton_data_prepare.Rmd` provides code and
-instructions for importing and cleaning data from both raw and processed
-iButton temperature data. We did the following for each source of
-iButton data:
+The file `1_code/r_notebooks/1_ibutton_data_prepare.Rmd` provides code
+and instructions for importing and cleaning data from both raw and
+processed iButton temperature data. We did the following for each source
+of iButton data:
 
 1.  Imported temperature data into the r project.
 2.  Identified and removed pre-deployment and post-retrieval temperature
@@ -72,7 +76,7 @@ iButton data:
 
 # Get XY coordinates of data loggers
 
-The file `1_code/r_notebooks/ibutton_data_xy.Rmd` provides code and
+The file `1_code/r_notebooks/2_ibutton_data_xy.Rmd` provides code and
 instructions for generating spatial dataframes and shapefiles of iButton
 locations in R. We:
 
@@ -94,6 +98,43 @@ Locations of temperature data loggers.
 
 </div>
 
+# Temperature data quality control
+
+The file `1_code/r_notebooks/3_ibutton_qualityControl.Rmd` provides code
+and instructions for flagging outlier temperature data and identify
+iButtons that were grounded or covered by snow during their deployment.
+Once outliers were flagged and removed, we interpolated missing
+temperature data, and calculated monthly temperature metrics (Tmax,
+Tmin, and Tavg). The markdown file describes the following steps:
+
+1.  Remove the first and last months of a temperature time series if it
+    only had 20 days or less of data.
+2.  Indentify temperature outliers by calculating the difference the
+    daily temperature metrics we calculated and daily temperature
+    estimates from ERA5
+    ([**hersbach2018era5?**](#ref-hersbach2018era5)). We flagged and
+    iButton data with temperature differences that were above (Mean +
+    3\**SD*) and temperature differences below (Mean - 3\**SD*)
+3.  Impute missing data with a maximum gap of 10 days useing the
+    `na_interpolation` function in the r package `imputeTS` ([Moritz and
+    Bartz-Beielstein 2017](#ref-imputeTS2017)).
+4.  Flag iButtons that may have been buried by snow. An iButton was
+    flagged as buried if it had diurnal temperature range of \<3 degrees
+    for 25 consequetive days or more ([Wood et al.
+    2017](#ref-wood2017dtdf)).
+5.  Calculate monthly temperature summaries.
+6.  Exclude months with more than 10 missing or flagged days from our
+    data set.
+
+| Project | Site_StationKey | Month | Year | Tmax_Month | Tmin_Month | Tavg_Month |
+|:--------|:----------------|------:|-----:|-----------:|-----------:|-----------:|
+| alex    | 10_B            |     8 | 2020 | 15.1375202 |   7.590323 | 15.1375202 |
+| alex    | 10_B            |     9 | 2020 |  9.2781417 |   0.669900 |  9.2781417 |
+| alex    | 10_B            |    10 | 2020 | -0.9454788 |  -7.544984 | -0.9454788 |
+| alex    | 10_B            |    11 | 2020 | -5.8728336 | -12.753017 | -5.8728336 |
+| alex    | 10_B            |    12 | 2020 | -6.4046382 | -11.100516 | -6.4046382 |
+| alex    | 10_B            |     1 | 2021 | -4.8055731 |  -7.046516 | -4.8055731 |
+
 # References
 
 <div id="refs" class="references csl-bib-body hanging-indent">
@@ -105,6 +146,15 @@ Estevo, Cesar A., Diana Stralberg, Scott E. Nielsen, and Erin Bayne.
 the Boreal–Grassland Transition Zone in Western Canada: Implications for
 Climate Change Refugia.” *Ecology and Evolution* 12 (6): e9008.
 https://doi.org/<https://doi.org/10.1002/ece3.9008>.
+
+</div>
+
+<div id="ref-imputeTS2017" class="csl-entry">
+
+Moritz, Steffen, and Thomas Bartz-Beielstein. 2017. “<span
+class="nocase">imputeTS: Time Series Missing Value Imputation in
+R</span>.” *The R Journal* 9 (1): 207–18.
+<https://doi.org/10.32614/RJ-2017-009>.
 
 </div>
 
