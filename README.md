@@ -1,9 +1,9 @@
 - <a href="#import-and-clean-temperature-data"
-  id="toc-import-and-clean-temperature-data">1. Import and clean
-  temperature data</a>
+  id="toc-import-and-clean-temperature-data">Import and clean temperature
+  data</a>
 - <a href="#get-xy-coordinates-of-data-loggers"
-  id="toc-get-xy-coordinates-of-data-loggers">2. Get XY coordinates of
-  data loggers</a>
+  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
+  loggers</a>
 - <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
@@ -37,7 +37,7 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-# 1. Import and clean temperature data
+# Import and clean temperature data
 
 First we gathered temperature data from temperature data loggers
 deployed across the province of Alberta.
@@ -50,16 +50,7 @@ deployed across the province of Alberta.
 
 Sources of temperature data loggers.
 
-<div class="figure">
-
-<img src="3_output/maps/ss_xy.png" alt="Locations of temperature data loggers." width="80%" />
-<p class="caption">
-Locations of temperature data loggers.
-</p>
-
-</div>
-
-The file `1_code/r_notebooks/ibutton_data_xy.Rmd` provides code and
+The file `1_code/r_notebooks/ibutton_data_prepare.Rmd` provides code and
 instructions for importing and cleaning data from both raw and processed
 iButton temperature data. We did the following for each source of
 iButton data:
@@ -71,15 +62,36 @@ iButton data:
 4.  Identified and fixed errors in iButton site names and made sure that
     each iButton deployment was associated with a unique identifier.
 5.  Calculated daily temperature summaries including:
-    - Tmax (maximum temperature)
+    - **Tmax (maximum temperature)**
 
-    - Tmin (minimum temperature)
+    - **Tmin (minimum temperature)**
 
-    - Tavg (mean temperature)
+    - **Tavg (mean temperature)**
 6.  Combined daily temperature data from all sources into a single data
     frame.
 
-# 2. Get XY coordinates of data loggers
+# Get XY coordinates of data loggers
+
+The file `1_code/r_notebooks/ibutton_data_xy.Rmd` provides code and
+instructions for generating spatial dataframes and shapefiles of iButton
+locations in R. We:
+
+1.  Get XY coordinates of iButton locations.
+2.  Convert data frame with coordinates to a spatial dataframe using the
+    `sf` package.
+3.  Export as a shape file. The shape file will of point locations was
+    later uploaded as an asset to Google Earth Engine and used to
+    extract environmental variables.
+4.  Create a map of the study area using the `tmap` package.
+
+<div class="figure">
+
+<img src="3_output/maps/ss_xy.png" alt="Locations of temperature data loggers." width="80%" />
+<p class="caption">
+Locations of temperature data loggers.
+</p>
+
+</div>
 
 # References
 
