@@ -7,6 +7,8 @@
 - <a href="#temperature-data-quality-control"
   id="toc-temperature-data-quality-control">Temperature data quality
   control</a>
+- <a href="#climatena-temperature"
+  id="toc-climatena-temperature">ClimateNA temperature</a>
 - <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
@@ -128,12 +130,33 @@ Tmin, and Tavg). The markdown file describes the following steps:
 
 | Project | Site_StationKey | Month | Year | Tmax_Month | Tmin_Month | Tavg_Month |
 |:--------|:----------------|------:|-----:|-----------:|-----------:|-----------:|
-| alex    | 10_B            |     8 | 2020 | 15.1375202 |   7.590323 | 15.1375202 |
-| alex    | 10_B            |     9 | 2020 |  9.2781417 |   0.669900 |  9.2781417 |
-| alex    | 10_B            |    10 | 2020 | -0.9454788 |  -7.544984 | -0.9454788 |
-| alex    | 10_B            |    11 | 2020 | -5.8728336 | -12.753017 | -5.8728336 |
-| alex    | 10_B            |    12 | 2020 | -6.4046382 | -11.100516 | -6.4046382 |
-| alex    | 10_B            |     1 | 2021 | -4.8055731 |  -7.046516 | -4.8055731 |
+| alex    | 10_B            |     8 | 2020 |     15.138 |      7.590 |     15.138 |
+| alex    | 10_B            |     9 | 2020 |      9.278 |      0.670 |      9.278 |
+| alex    | 10_B            |    10 | 2020 |     -0.945 |     -7.545 |     -0.945 |
+| alex    | 10_B            |    11 | 2020 |     -5.873 |    -12.753 |     -5.873 |
+| alex    | 10_B            |    12 | 2020 |     -6.405 |    -11.101 |     -6.405 |
+| alex    | 10_B            |     1 | 2021 |     -4.806 |     -7.047 |     -4.806 |
+
+# ClimateNA temperature
+
+The file `1_code/r_notebooks/4_ibutton_climatesNA.Rmd` provides
+instructions for:
+
+1.  Installing the ClimateNA desktop application and r package ([Wang et
+    al. 2016](#ref-wang2016locally)).
+2.  Extracting monthly ClimateNA temperature predictions for each
+    iButton location.
+3.  Calculating difference between monthly iButton and ClimateNA
+    temperature metrics.
+
+| Project | Site_StationKey | Month | Year | Tmax_Month | Tmin_Month | Tavg_Month | Tmax_cNA | Tmin_cNA | Tavg_cNA | Tmax_diff | Tmin_diff | Tavg_diff |
+|:--------|:----------------|------:|-----:|-----------:|-----------:|-----------:|---------:|---------:|---------:|----------:|----------:|----------:|
+| alex    | 10_B            |     8 | 2020 |     15.138 |      7.590 |     15.138 |     21.5 |      8.0 |     14.8 |      6.36 |      0.41 |     -0.34 |
+| alex    | 10_B            |     9 | 2020 |      9.278 |      0.670 |      9.278 |     16.4 |      3.2 |      9.8 |      7.12 |      2.53 |      0.52 |
+| alex    | 10_B            |    10 | 2020 |     -0.945 |     -7.545 |     -0.945 |      5.1 |     -4.7 |      0.2 |      6.05 |      2.84 |      1.15 |
+| alex    | 10_B            |    11 | 2020 |     -5.873 |    -12.753 |     -5.873 |     -1.3 |    -11.6 |     -6.5 |      4.57 |      1.15 |     -0.63 |
+| alex    | 10_B            |    12 | 2020 |     -6.405 |    -11.101 |     -6.405 |     -4.8 |    -14.6 |     -9.7 |      1.60 |     -3.50 |     -3.30 |
+| alex    | 10_B            |     1 | 2021 |     -4.806 |     -7.047 |     -4.806 |     -9.6 |    -19.9 |    -14.7 |     -4.79 |    -12.85 |     -9.89 |
 
 # References
 
@@ -169,6 +192,15 @@ Pebesma, Edzer. 2022. *Sf: Simple Features for r*.
 
 Tennekes, Martijn. 2022. *Tmap: Thematic Maps*.
 <https://github.com/r-tmap/tmap>.
+
+</div>
+
+<div id="ref-wang2016locally" class="csl-entry">
+
+Wang, Tongli, Andreas Hamann, Dave Spittlehouse, and Carlos Carroll.
+2016. “Locally Downscaled and Spatially Customizable Climate Data for
+Historical and Future Periods for North America.” *PloS One* 11 (6):
+e0156720.
 
 </div>
 
