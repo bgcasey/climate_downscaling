@@ -11,6 +11,8 @@
   id="toc-climatena-temperature">ClimateNA temperature</a>
 - <a href="#spatial-covariates" id="toc-spatial-covariates">Spatial
   covariates</a>
+- <a href="#boosted-regression-trees"
+  id="toc-boosted-regression-trees">Boosted regression trees</a>
 - <a href="#references" id="toc-references">References</a>
 
 Here we present our workflow and code for refining ClimateNA temperature
@@ -166,7 +168,7 @@ Spatial covariates were extracted using Google Earth Engine’s online
 code editor at
 [code.earthengine.google.com](http://code.earthengine.google.com/).
 
-Download the Google Earth Engine script by using
+Download the Google Earth Engine script by entering
 `git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling`
 into your working directory. Earth engine sripts are also contained as
 .js files in `1_code/GEE/`. Just copy them them into the Google Earth
@@ -225,6 +227,41 @@ We calculated/extracted the following metrics in Google Earth Engine:
 
 Spatial covariates evaluated and used in our analysis.
 
+# Boosted regression trees
+
+We used the spatial variables extracted via Google Earth Engine in
+boosted regression trees to predict differences between ClimateNA and
+iButton temperatures. The file
+`1_code/r_notebooks/6_boosted_regression_trees.Rmd` provides the code
+and methods used. We built the boosted-regression trees using the
+`dismo` and `gbm` r packages. We repeated the following steps for Tmax,
+Tmin, and Tavg for the summer, fall, winter, and spring seasons:
+
+1.  Tune BRT parameters using a grid of parameter options and the `gbm`
+    R package ([**kuhn2013applied?**](#ref-kuhn2013applied); [Greenwell
+    et al. 2022](#ref-R-gbm)).
+
+2.  Apply the `gbm.step` function in the `dismo` package to build models
+    with the tuned parameters ([Hijmans et al. 2021](#ref-R-dismo))
+
+3.  Drop variables that don’t improve model performance using
+    `dismo::gbm.simplify`.
+
+4.  Rerun models with reduced set of predictor variables.
+
+5.  Generate offset rasters from the final models using `dismo::predict`
+    (see. `1_code/r_notebooks/7_boosted_regression_trees.Rmd` for the
+    code).
+
+<div class="figure">
+
+<img src="3_output/maps/mean_temp_offset_eg.png" alt="Summer mean temperature offset." width="80%" />
+<p class="caption">
+Summer mean temperature offset.
+</p>
+
+</div>
+
 # References
 
 <div id="refs" class="references csl-bib-body hanging-indent">
@@ -263,6 +300,14 @@ https://doi.org/<https://doi.org/10.1002/ece3.9008>.
 
 </div>
 
+<div id="ref-R-gbm" class="csl-entry">
+
+Greenwell, Brandon, Bradley Boehmke, Jay Cunningham, and GBM Developers.
+2022. *Gbm: Generalized Boosted Regression Models*.
+<https://github.com/gbm-developers/gbm>.
+
+</div>
+
 <div id="ref-heidinger2014noaa" class="csl-entry">
 
 Heidinger, AK, Michael J Foster, Andi Walther, and Xuepeng Zhao. 2014.
@@ -278,6 +323,14 @@ Hersbach, Hans, Bill Bell, Paul Berrisford, Gionata Biavati, András
 Horányi, Joaquín Muñoz Sabater, Julien Nicolas, et al. 2018. “ERA5
 Hourly Data on Single Levels from 1979 to Present.” *Copernicus Climate
 Change Service (C3s) Climate Data Store (Cds)* 10 (10.24381).
+
+</div>
+
+<div id="ref-R-dismo" class="csl-entry">
+
+Hijmans, Robert J., Steven Phillips, John Leathwick, and Jane Elith.
+2021. *Dismo: Species Distribution Modeling*.
+<https://rspatial.org/raster/sdm/>.
 
 </div>
 
