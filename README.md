@@ -35,7 +35,7 @@ were on average 6.81°C (SD = 1.11) less than CimateNA predictions; and
 winter minimum temperatures were on average -0.81°C (SD = 0.98) greater
 than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
-species-habitat @SF models.@Manual
+species-habitat models.
 
 # Import and clean temperature data
 
@@ -78,11 +78,12 @@ locations in R. We:
 
 1.  Get XY coordinates of iButton locations.
 2.  Convert data frame with coordinates to a spatial dataframe using the
-    `sf` package.
+    `sf` package ([Pebesma 2022](#ref-R-sf)).
 3.  Export as a shape file. The shape file will of point locations was
     later uploaded as an asset to Google Earth Engine and used to
     extract environmental variables.
-4.  Create a map of the study area using the `tmap` package.
+4.  Create a map of the study area using the `tmap` package in R
+    ([Tennekes 2022](#ref-R-tmap)).
 
 <div class="figure">
 
@@ -104,6 +105,20 @@ Estevo, Cesar A., Diana Stralberg, Scott E. Nielsen, and Erin Bayne.
 the Boreal–Grassland Transition Zone in Western Canada: Implications for
 Climate Change Refugia.” *Ecology and Evolution* 12 (6): e9008.
 https://doi.org/<https://doi.org/10.1002/ece3.9008>.
+
+</div>
+
+<div id="ref-R-sf" class="csl-entry">
+
+Pebesma, Edzer. 2022. *Sf: Simple Features for r*.
+<https://CRAN.R-project.org/package=sf>.
+
+</div>
+
+<div id="ref-R-tmap" class="csl-entry">
+
+Tennekes, Martijn. 2022. *Tmap: Thematic Maps*.
+<https://github.com/r-tmap/tmap>.
 
 </div>
 
