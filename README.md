@@ -184,6 +184,10 @@ for:
 
 We calculated/extracted the following metrics in Google Earth Engine:
 
+    ## Warning in kable_styling(., bootstrap_options = c("striped", "hover", "condensed", : Please
+    ## specify format in kable. kableExtra can customize either HTML or LaTeX outputs. See https://
+    ## haozhu233.github.io/kableExtra/ for details.
+
 | Variable                  | Description                                                                                                                                            | Resolution (m) | Source                                                                                   |
 |:--------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------|---------------:|:-----------------------------------------------------------------------------------------|
 | elevation                 | NA                                                                                                                                                     |          23.19 | Canada ([2015](#ref-natural2015canadian))                                                |
