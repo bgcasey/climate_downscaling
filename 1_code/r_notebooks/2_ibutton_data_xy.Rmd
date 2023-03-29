@@ -157,32 +157,6 @@ alex_xy<-alex_loc%>%
 alex_xy<-st_as_sf(alex_xy, coords=c("Long","Lat"), crs=4326, remove=FALSE)
 
 
-alex_xy<-alex_loc%>%
-  mutate(Site_StationKey=paste(site, plot, sep="_"))%>%
-  inner_join(alex_dailys)%>%
-  dplyr::select(Site_StationKey)%>%
-  distinct()
-
-%>%
-  group_by(Site_StationKey)%>%
-  dplyr::select(c(Site_StationKey, lat, long))%>%
-  distinct()
-
-10a
-11a
-
-
-%>%
-  mutate(min_year=min(Year))%>%
-  mutate(max_year=max(Year))%>%
-  mutate(Project="alex")%>%
-  dplyr::select(c(Project, Site_StationKey, lat, long, min_year, max_year))%>%
-  rename(c(Lat=lat, Long=long))%>%
-  dplyr::distinct()
-
-
-
-
 # save as spatial data frame
 save(alex_xy, file="0_data/manual/iButton_data/spatial/alex_xy.rData")
 
