@@ -1,3 +1,4 @@
+# Workflow for Refining ClimateNA Temperature Predictions
 
 Here we present a workflow and code for refining ClimateNA temperature
 predictions ([Wang et al. 2016](#ref-wang2016locally)) using temperature
