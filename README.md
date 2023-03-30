@@ -32,6 +32,8 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
+---
+
 - <a href="#import-and-clean-temperature-data"
   id="toc-import-and-clean-temperature-data">Import and clean temperature
   data</a>
