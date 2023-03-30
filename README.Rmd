@@ -161,3 +161,6 @@ knitr::include_graphics("3_output/maps/mean_temp_offset_eg.png")
 
 ::: {#refs}
 :::
+
+<!--chapter:end:index.Rmd-->
+
