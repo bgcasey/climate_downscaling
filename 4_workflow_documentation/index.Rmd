@@ -37,7 +37,7 @@ library(knitr)
 library(readxl)
 ```
 
-# Import and clean temperature data
+# 1 Import and clean temperature data
 
 First we gathered temperature data from temperature data loggers deployed across the province of Alberta.
 
@@ -61,7 +61,7 @@ The file `1_code/r_notebooks/1_ibutton_data_prepare.Rmd` provides code and instr
     -   **Tavg (mean temperature)**
 6.  Combined daily temperature data from all sources into a single data frame.
 
-# Get XY coordinates of data loggers
+# 2 Get XY coordinates of data loggers
 
 The file `1_code/r_notebooks/2_ibutton_data_xy.Rmd` provides code and instructions for generating spatial dataframes and shapefiles from iButton coordinates. The file describes how to:
 
@@ -74,7 +74,7 @@ The file `1_code/r_notebooks/2_ibutton_data_xy.Rmd` provides code and instructio
 knitr::include_graphics("3_output/maps/ss_xy.png")
 ```
 
-# Temperature data quality control
+# 3 Temperature data quality control
 
 The file `1_code/r_notebooks/3_ibutton_qualityControl.Rmd` provides code and instructions for flagging outlier temperature data and identifing iButtons that were covered by snow during deployment. Once outliers were flagged and removed, we interpolated missing data and calculated monthly temperature metrics (Tmax, Tmin, and Tavg). The markdown file details the following steps:
 
@@ -93,7 +93,7 @@ ibuttons_complete_monthly<-ibuttons_complete_monthly%>%mutate(across(where(is.nu
 knitr::kable(head(ibuttons_complete_monthly), "pipe") 
 ```
 
-# ClimateNA temperature
+# 4 ClimateNA temperature
 
 The file `1_code/r_notebooks/4_ibutton_climatesNA.Rmd` provides instructions for:
 
@@ -109,7 +109,7 @@ iButton_cNA_diff<-iButton_cNA_diff%>%mutate(across(where(is.numeric), round, 3))
 knitr::kable(head(iButton_cNA_diff), "pipe") 
 ```
 
-# Spatial covariates
+# 5 Spatial covariates
 
 Spatial covariates were extracted using Google Earth Engine's online code editor at [code.earthengine.google.com](http://code.earthengine.google.com/).
 
@@ -139,7 +139,7 @@ kable(covariate_list, format="simple", caption = 'Spatial covariates evaluated a
 
 ```
 
-# Boosted regression trees {.unnumbered}
+# 6 Boosted regression trees {.unnumbered}
 
 We used the spatial variables extracted via Google Earth Engine in boosted regression trees to predict differences between ClimateNA and iButton temperatures. The file `1_code/r_notebooks/6_boosted_regression_trees.Rmd` provides the code and methods used. We built boosted regression trees using the `dismo` and `gbm` R packages. We repeated the following steps for Tmax, Tmin, and Tavg for the summer, fall, winter, and spring seasons:
 
@@ -157,7 +157,7 @@ We used the spatial variables extracted via Google Earth Engine in boosted regre
 knitr::include_graphics("3_output/maps/mean_temp_offset_eg.png")
 ```
 
-# References
+# 7 References
 
 ::: {#refs}
 :::

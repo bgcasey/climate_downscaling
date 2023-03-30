@@ -1,19 +1,19 @@
 - <a href="#import-and-clean-temperature-data"
-  id="toc-import-and-clean-temperature-data">Import and clean temperature
-  data</a>
+  id="toc-import-and-clean-temperature-data">1 Import and clean
+  temperature data</a>
 - <a href="#get-xy-coordinates-of-data-loggers"
-  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
+  id="toc-get-xy-coordinates-of-data-loggers">2 Get XY coordinates of data
   loggers</a>
 - <a href="#temperature-data-quality-control"
-  id="toc-temperature-data-quality-control">Temperature data quality
+  id="toc-temperature-data-quality-control">3 Temperature data quality
   control</a>
-- <a href="#climatena-temperature"
-  id="toc-climatena-temperature">ClimateNA temperature</a>
-- <a href="#spatial-covariates" id="toc-spatial-covariates">Spatial
+- <a href="#climatena-temperature" id="toc-climatena-temperature">4
+  ClimateNA temperature</a>
+- <a href="#spatial-covariates" id="toc-spatial-covariates">5 Spatial
   covariates</a>
-- <a href="#boosted-regression-trees"
-  id="toc-boosted-regression-trees">Boosted regression trees</a>
-- <a href="#references" id="toc-references">References</a>
+- <a href="#boosted-regression-trees" id="toc-boosted-regression-trees">6
+  Boosted regression trees</a>
+- <a href="#references" id="toc-references">7 References</a>
 
 Here we present a workflow and code for refining ClimateNA temperature
 predictions ([Wang et al. 2016](#ref-wang2016locally)) using temperature
@@ -47,7 +47,7 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-# Import and clean temperature data
+# 1 Import and clean temperature data
 
 First we gathered temperature data from temperature data loggers
 deployed across the province of Alberta.
@@ -80,7 +80,7 @@ did the following for each data source:
 6.  Combined daily temperature data from all sources into a single data
     frame.
 
-# Get XY coordinates of data loggers
+# 2 Get XY coordinates of data loggers
 
 The file `1_code/r_notebooks/2_ibutton_data_xy.Rmd` provides code and
 instructions for generating spatial dataframes and shapefiles from
@@ -104,7 +104,7 @@ Locations of temperature data loggers.
 
 </div>
 
-# Temperature data quality control
+# 3 Temperature data quality control
 
 The file `1_code/r_notebooks/3_ibutton_qualityControl.Rmd` provides code
 and instructions for flagging outlier temperature data and identifing
@@ -140,7 +140,7 @@ the following steps:
 | alex    | 10_B            |    12 | 2020 |     -6.405 |    -11.101 |     -6.405 |
 | alex    | 10_B            |     1 | 2021 |     -4.806 |     -7.047 |     -4.806 |
 
-# ClimateNA temperature
+# 4 ClimateNA temperature
 
 The file `1_code/r_notebooks/4_ibutton_climatesNA.Rmd` provides
 instructions for:
@@ -161,7 +161,7 @@ instructions for:
 | alex    | 10_B            |    12 | 2020 |     -6.405 |    -11.101 |     -6.405 |     -4.8 |    -14.6 |     -9.7 |      1.60 |     -3.50 |     -3.30 |
 | alex    | 10_B            |     1 | 2021 |     -4.806 |     -7.047 |     -4.806 |     -9.6 |    -19.9 |    -14.7 |     -4.79 |    -12.85 |     -9.89 |
 
-# Spatial covariates
+# 5 Spatial covariates
 
 Spatial covariates were extracted using Google Earth Engine’s online
 code editor at
@@ -227,7 +227,7 @@ Engine:
 
 Spatial covariates evaluated and used in our analysis.
 
-# Boosted regression trees
+# 6 Boosted regression trees
 
 We used the spatial variables extracted via Google Earth Engine in
 boosted regression trees to predict differences between ClimateNA and
@@ -255,7 +255,7 @@ and Tavg for the summer, fall, winter, and spring seasons:
 
 <img src="3_output/maps/mean_temp_offset_eg.png" width="100%" />
 
-# References
+# 7 References
 
 <div id="refs" class="references csl-bib-body hanging-indent">
 
