@@ -1,40 +1,3 @@
-# Workflow for Refining ClimateNA Temperature Predictions
-
-Here we present our workflow and code for refining ClimateNA temperature
-predictions using temperature data loggers and remote sensing data
-accessed via Google Earth Engine. Temperature offset layers and project
-spatial data can be viewed at
-<https://bgcasey.users.earthengine.app/view/climateoffsets>. Model
-summaries can viewed at
-[https://bookdown.org/bgcasey/climateOffset_models](https://bookdown.org/bgcasey/climateOffset_models/).
-
-Ecological studies often rely on interpolated climate data to predict
-species distributions and identify climate change refugia. However, the
-scale of climate data does not always correspond to the scale of habitat
-conditions influencing organisms. ClimateNA, a freely available software
-package, addresses this by providing scale-free predictions of climate
-variables by interpolating gridded climate data and adjusting for
-elevation. While useful, ClimateNA predictions could be improved by
-incorporating other variables that influence micro-climatic variation.
-We developed methods to refine ClimateNA air temperature predictions
-using temperature data loggers and remote sensing data accessed via
-Google Earth Engine. Monthly temperature variables from 2005-2021 were
-calculated using near-surface temperatures gathered from 513 monitoring
-sites across Alberta, Canada. We used variables associated with terrain,
-vegetation structure, and atmospheric conditions in boosted-regression
-trees to predict differences between ClimateNA temperature predictions
-and micro-climate conditions. We produced 30 m seasonal offset layers
-for mean, maximum, and minimum temperatures covering all of Alberta and
-British Columbia. Mean summer temperatures were on average -0.03°C (SD =
-0.71) greater than ClimateNA predictions; maximum summer temperatures
-were on average 6.81°C (SD = 1.11) less than CimateNA predictions; and
-winter minimum temperatures were on average -0.81°C (SD = 0.98) greater
-than CimateNA predictions. Offset adjusted ClimateNA predictions should
-better reflect micro-climatic variation and improve the accuracy of
-species-habitat models.
-
----
-
 - <a href="#import-and-clean-temperature-data"
   id="toc-import-and-clean-temperature-data">Import and clean temperature
   data</a>
@@ -52,7 +15,37 @@ species-habitat models.
   id="toc-boosted-regression-trees">Boosted regression trees</a>
 - <a href="#references" id="toc-references">References</a>
 
+Here we present a workflow and code for refining ClimateNA temperature
+predictions ([Wang et al. 2016](#ref-wang2016locally)) using temperature
+data loggers and remote sensing accessed via Google Earth Engine. View
+temperature offsets and spatial data at
+<https://bgcasey.users.earthengine.app/view/climateoffsets>. View model
+summaries at <https://bookdown.org/bgcasey/climateOffset_models/>.
 
+Ecological studies often rely on interpolated climate data to predict
+species distributions and identify climate change refugia. However, the
+scale of climate data does not always correspond to the scale of habitat
+conditions influencing organisms. ClimateNA, a freely available software
+package, addresses this by providing scale-free predictions of climate
+variables by interpolating gridded climate data and adjusting for
+elevation. While useful, ClimateNA predictions could be improved by
+incorporating other variables that influence micro-climatic variation.
+We developed methods to refine ClimateNA air temperature predictions
+using temperature data loggers and remote sensing data accessed via
+Google Earth Engine. Monthly temperature variables from 2005-2021 were
+calculated using near-surface temperatures gathered from 513 monitoring
+sites across Alberta, Canada. We used variables associated with terrain,
+vegetation structure, and atmospheric conditions in boosted regression
+trees to predict differences between ClimateNA temperature predictions
+and micro-climate conditions. We produced 30 m seasonal offset layers
+for mean, maximum, and minimum temperatures covering all of Alberta and
+British Columbia. Mean summer temperatures were on average -0.03°C (SD =
+0.71) greater than ClimateNA predictions; maximum summer temperatures
+were on average 6.81°C (SD = 1.11) less than CimateNA predictions; and
+winter minimum temperatures were on average -0.81°C (SD = 0.98) greater
+than CimateNA predictions. Offset adjusted ClimateNA predictions should
+better reflect micro-climatic variation and improve the accuracy of
+species-habitat models.
 
 # Import and clean temperature data
 
@@ -69,16 +62,15 @@ deployed across the province of Alberta.
 Sources of temperature data loggers.
 
 The file `1_code/r_notebooks/1_ibutton_data_prepare.Rmd` provides code
-and instructions for importing and cleaning data from both raw and
-processed iButton temperature data. We did the following for each source
-of iButton data:
+and instructions for importing and cleaning iButton temperature data. We
+did the following for each data source:
 
 1.  Imported temperature data into the r project.
 2.  Identified and removed pre-deployment and post-retrieval temperature
     data.
 3.  Identified and fixed errors in date-time strings.
-4.  Identified and fixed errors in iButton site names and made sure that
-    each iButton deployment was associated with a unique identifier.
+4.  Identified and fixed errors in site names and made sure that each
+    iButton deployment was associated with a unique identifier.
 5.  Calculated daily temperature summaries including:
     - **Tmax (maximum temperature)**
 
@@ -91,17 +83,17 @@ of iButton data:
 # Get XY coordinates of data loggers
 
 The file `1_code/r_notebooks/2_ibutton_data_xy.Rmd` provides code and
-instructions for generating spatial dataframes and shapefiles of iButton
-locations in R. We:
+instructions for generating spatial dataframes and shapefiles from
+iButton coordinates. The file describes how to:
 
 1.  Get XY coordinates of iButton locations.
-2.  Convert data frame with coordinates to a spatial dataframe using the
-    `sf` package ([Pebesma 2022](#ref-R-sf)).
-3.  Export as a shape file. The shape file will of point locations was
-    later uploaded as an asset to Google Earth Engine and used to
-    extract environmental variables.
-4.  Create a map of the study area using the `tmap` package in R
-    ([Tennekes 2022](#ref-R-tmap)).
+2.  Convert a data frame with XY coordinates into a spatial data frame
+    using the `sf` package in R ([Pebesma 2022](#ref-R-sf)).
+3.  Export the spatial data frame as a shape file. The shape file of
+    point locations was later uploaded as an asset to Google Earth
+    Engine and used to extract environmental variables.
+4.  Create a map of the study area and iButton locations using the
+    `tmap` package in R ([Tennekes 2022](#ref-R-tmap)).
 
 <div class="figure">
 
@@ -115,30 +107,29 @@ Locations of temperature data loggers.
 # Temperature data quality control
 
 The file `1_code/r_notebooks/3_ibutton_qualityControl.Rmd` provides code
-and instructions for flagging outlier temperature data and identify
-iButtons that were grounded or covered by snow during their deployment.
-Once outliers were flagged and removed, we interpolated missing
-temperature data, and calculated monthly temperature metrics (Tmax,
-Tmin, and Tavg). The markdown file describes the following steps:
+and instructions for flagging outlier temperature data and identifing
+iButtons that were covered by snow during deployment. Once outliers were
+flagged and removed, we interpolated missing data and calculated monthly
+temperature metrics (Tmax, Tmin, and Tavg). The markdown file details
+the following steps:
 
-1.  Remove the first and last months of a temperature time series if it
-    only had 20 days or less of data.
-2.  Indentify temperature outliers by calculating the difference the
-    daily temperature metrics we calculated and daily temperature
-    estimates from ERA5 ([Hersbach et al. 2018](#ref-hersbach2018era5)).
-    We flagged and iButton data with temperature differences that were
-    above (Mean + 3\**SD*) and temperature differences below (Mean -
-    3\**SD*)
-3.  Impute missing data with a maximum gap of 10 days useing the
+1.  Remove the first and last months of a temperature time series if
+    they have less than 20 days of data.
+2.  Flag outlier temperatures. Calculate the difference between daily
+    temperature metrics from iButton data and daily estimates from ERA5
+    ([Hersbach et al. 2018](#ref-hersbach2018era5)). We flagged iButton
+    data with temperature differences above Mean + 3\**SD* and below
+    Mean - 3\**SD.*
+3.  Impute missing data with a maximum gap of 10 days using the
     `na_interpolation` function in the R package `imputeTS` ([Moritz and
     Bartz-Beielstein 2017](#ref-imputeTS2017)).
 4.  Flag iButtons that may have been buried by snow. An iButton was
-    flagged as buried if it had diurnal temperature range of \<3 degrees
-    for 25 consequetive days or more ([Wood et al.
+    flagged as buried if it had a diurnal temperature range of \<3
+    degrees for \> 25 consecutive days ([Wood et al.
     2017](#ref-wood2017dtdf)).
 5.  Calculate monthly temperature summaries.
-6.  Exclude months with more than 10 missing or flagged days from our
-    data set.
+6.  Exclude months with more than 10 missing or flagged days from the
+    final data set.
 
 | Project | Site_StationKey | Month | Year | Tmax_Month | Tmin_Month | Tavg_Month |
 |:--------|:----------------|------:|-----:|-----------:|-----------:|-----------:|
@@ -158,7 +149,7 @@ instructions for:
     al. 2016](#ref-wang2016locally)).
 2.  Extracting monthly ClimateNA temperature predictions for each
     iButton location.
-3.  Calculating difference between monthly iButton and ClimateNA
+3.  Calculating the difference between monthly iButton and ClimateNA
     temperature metrics.
 
 | Project | Site_StationKey | Month | Year | Tmax_Month | Tmin_Month | Tavg_Month | Tmax_cNA | Tmin_cNA | Tavg_cNA | Tmax_diff | Tmin_diff | Tavg_diff |
@@ -176,23 +167,24 @@ Spatial covariates were extracted using Google Earth Engine’s online
 code editor at
 [code.earthengine.google.com](http://code.earthengine.google.com/).
 
-Download the Google Earth Engine script by entering
+You cam download the Google Earth Engine scripts by entering
 `git clone https://earthengine.googlesource.com/users/bgcasey/climate_downscaling`
-into your working directory. Earth engine sripts are also contained as
+into your working directory. Earth engine scripts can also be found as
 .js files in `1_code/GEE/`. Just copy them them into the Google Earth
 online code editor.
 
 The file `1_code/r_notebooks/5_covariates_gee_spatial.Rmd` provides code
 for:
 
-1.  Cloning the GEE git file and copying the projects .js files.
-2.  Importing csv files of the summarized covariates generated in Google
+1.  Cloning the GEE project’s git and accessing the GEE code.
+2.  Importing csv files of summarized covariates generated in Google
     Earth Engine.
-3.  Importing and processing raster layers for each covariate (generated
-    in Google Earth Engine).
+3.  Importing and processing raster layers for each covariate. All were
+    generated in Google Earth Engine.
 4.  Setting up data for use in boosted regression trees.
 
-We calculated/extracted the following metrics in Google Earth Engine:
+We calculated and/or extracted the following metrics in Google Earth
+Engine:
 
 | Variable                  | Description                                                                                                                                            | Resolution (m) | Source                                                      |
 |:--------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------|---------------:|:------------------------------------------------------------|
@@ -241,25 +233,25 @@ We used the spatial variables extracted via Google Earth Engine in
 boosted regression trees to predict differences between ClimateNA and
 iButton temperatures. The file
 `1_code/r_notebooks/6_boosted_regression_trees.Rmd` provides the code
-and methods used. We built the boosted-regression trees using the
-`dismo` and `gbm` R packages. We repeated the following steps for Tmax,
-Tmin, and Tavg for the summer, fall, winter, and spring seasons:
+and methods used. We built boosted regression trees using the `dismo`
+and `gbm` R packages. We repeated the following steps for Tmax, Tmin,
+and Tavg for the summer, fall, winter, and spring seasons:
 
 1.  Tune BRT parameters using a grid of parameter options and the `gbm`
     R package ([Kuhn, Johnson, et al. 2013](#ref-kuhn2013applied);
     [Greenwell et al. 2022](#ref-R-gbm)).
 
-2.  Apply the `gbm.step` function in the `dismo` package to build models
-    with the tuned parameters ([Hijmans et al. 2021](#ref-R-dismo))
+2.  Build models using the tuned parameters in the `gbm.step` function
+    from the `dismo` package ([Hijmans et al. 2021](#ref-R-dismo))
 
 3.  Drop variables that don’t improve model performance using
     `dismo::gbm.simplify`.
 
-4.  Rerun models with reduced set of predictor variables.
+4.  Rerun models with the reduced set of predictor variables.
 
 5.  Generate offset rasters from the final models using `dismo::predict`
-    (see `1_code/r_notebooks/7_boosted_regression_trees.Rmd` for the
-    code).
+    (see `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for
+    the code).
 
 <img src="3_output/maps/mean_temp_offset_eg.png" width="100%" />
 
