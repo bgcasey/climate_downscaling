@@ -53,8 +53,11 @@ vignettes/*.pdf
 *driveupload/*
 .tmp.drivedownload/*
 
-5_report/_book/
-5_report/_bookdown_files/
-5_report/_rsconnect/
+5_model_summaries/_book/
+5_model_summaries/_bookdown_files/
+5_model_summaries/_rsconnect/
+5_model_summaries/rsconnect/
+5_model_summaries/model_results_files/
+5_model_summaries/climateOffset_models_files/
 
 3_output/

@@ -1,0 +1,425 @@
+---
+title: "Workflow for Refining ClimateNA Temperature Predictions"
+subtitle: "BRT model results"
+author: "Brendan Casey"
+site: bookdown::bookdown_site
+output: 
+    bookdown::gitbook:
+      split_by: "chapter"
+bibliography: [../library.bib, ../packages.bib]
+link-citations: true
+# csl: ecology.csl
+citation-style: https://www.zotero.org/styles/taylor-and-francis-apa
+---
+
+Here are summaries of the boosted regression trees we produced that predict differences between ClimateNA temperature predictions and micro-climate conditions. Temperature offset layers and project spatial data can be viewed at <https://bgcasey.users.earthengine.app/view/climateoffsets>. Code and a description of the project's workflow can be found at <https://github.com/bgcasey/climate_downscaling>.
+
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+# 
+# setwd(rprojroot::find_rstudio_root_file())
+```
+
+```{r include=FALSE}
+library(knitr)
+library(kableExtra)
+library(xlsx)
+library(tinytex)
+library(rrtable)
+library(htmltools)
+library(stringr)
+library(dismo)
+library(huxtable)
+library(ggplot2)
+library(dplyr)
+library(ggstance)
+library(jtools)
+library(readxl)
+library(readr)
+```
+
+# Model summaries
+
+## Predictor variables {.unnumbered}
+
+```{r asis=TRUE, message=FALSE, echo=FALSE, warning=FALSE}
+# cov_description<-xlsx::read.xlsx("0_data/covariate_list.xlsx", "Sheet2")%>%
+
+cov_description<- read_excel("0_data/covariate_list.xlsx", sheet="Sheet2")  %>%
+  # select(1:3)%>%
+  filter(Variable=="canopy_height"|
+         Variable=="CHILI"|
+           Variable=="srad"|
+           Variable=="vs"|
+           Variable=="northness"|
+           Variable=="pr"|
+           Variable=="tpi"|
+           Variable=="TWI"
+           )
+
+kable(cov_description,
+  align = c("l","l","r", "r"), caption = 'Spatial covariates included in top models.')%>% 
+  # column_spec(column = 3, width = "50em") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+  # kable_styling(font_size = 6, position = "center", full_width = T)
+```
+
+## gbm parameters {.unnumbered}
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+m_param<-read_csv("3_output/tables/brt_params.csv")
+
+# m_param<-m_param%>%mutate(across(where(is.numeric), round, 2))
+
+kable(m_param, caption = 'Tuned BRT parameters.')%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+## Variable importance {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+load("3_output/tables/varimp_brt_seasons.rData")
+
+varimp_brt_seasons<-varimp_brt_seasons%>%mutate(across(where(is.numeric), round, 2))
+
+df<-varimp_brt_seasons
+df2 <- data.frame(t(df[-1]))
+colnames(df2) <- df[, 1]
+df2$model_name<-rownames(df2)
+df2<-df2%>%select(c(model_name, srad:season_4))
+rownames(df2) <- NULL
+
+
+kable(df2, caption = 'Variable importance in BRTs.')%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+
+```
+
+## CV stats {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+load("3_output/tables/cvstats_brt_seasons.rData")
+
+cvstats_brt_seasons<-cvstats_brt_seasons%>%
+  mutate(across(2:5, as.numeric))%>%
+  mutate(across(where(is.numeric), round, 2))
+
+
+
+
+# cvstats_brt_seasons$model_name<-str_replace_seasons(cvstats_brt_seasons$model_name, "_tuned", "")
+
+kable(cvstats_brt_seasons, caption = 'BRT cv stats.')%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+
+```
+
+```{r include=FALSE}
+load("2_pipeline/store/models/brt_minTemp_allSeasons.rData")
+load("2_pipeline/store/models/brt_maxTemp_allSeasons.rData")
+load("2_pipeline/store/models/brt_meanTemp_allSeasons.rData")
+
+
+load("2_pipeline/store/models/brt_minTemp_summer.rData")
+load("2_pipeline/store/models/brt_minTemp_spring.rData")
+load("2_pipeline/store/models/brt_minTemp_winter.rData")
+load("2_pipeline/store/models/brt_minTemp_fall.rData")
+
+load("2_pipeline/store/models/brt_maxTemp_summer.rData")
+load("2_pipeline/store/models/brt_maxTemp_spring.rData")
+load("2_pipeline/store/models/brt_maxTemp_winter.rData")
+load("2_pipeline/store/models/brt_maxTemp_fall.rData")
+
+load("2_pipeline/store/models/brt_meanTemp_winter.rData")
+load("2_pipeline/store/models/brt_meanTemp_spring.rData")
+load("2_pipeline/store/models/brt_meanTemp_summer.rData")
+load("2_pipeline/store/models/brt_meanTemp_fall.rData")
+```
+
+# Partial dependance plots and interactions
+
+## Mean temperature difference {.unnumbered}
+
+### all seasons {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_meanTemp_allSeasons)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_meanTemp_allSeasons, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Winter {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_meanTemp_winter)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_meanTemp_winter, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Spring {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_meanTemp_spring)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_meanTemp_spring, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Summer {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_meanTemp_summer)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_meanTemp_summer, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Fall {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_meanTemp_fall)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_meanTemp_fall, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+## Max temperature difference {.unnumbered}
+
+### all seasons {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_maxTemp_allSeasons)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_maxTemp_allSeasons, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Winter {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_maxTemp_winter)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_maxTemp_winter, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Spring {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_maxTemp_spring)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_maxTemp_spring, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Summer {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_maxTemp_summer)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_maxTemp_summer, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Fall {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_maxTemp_fall)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_maxTemp_fall, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+## Min temperature difference {.unnumbered}
+
+### All seasons {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_minTemp_allSeasons)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_minTemp_allSeasons, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Winter {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_minTemp_winter)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_minTemp_winter, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Spring {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_minTemp_spring)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_minTemp_spring, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Summer {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_minTemp_summer)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_minTemp_summer, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+### Fall {.unnumbered}
+
+#### Interactions {.unnumbered}
+
+```{r message=FALSE, echo=FALSE}
+int<-gbm.interactions(brt_minTemp_fall)
+
+kable(int$interactions)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 10, full_width = F)%>% 
+  scroll_box(width = "95%")
+```
+
+#### Partial dependance plots {.unnumbered}
+
+```{r  fig.height=12, echo=FALSE, out.width="85%"}
+gbm.plot(brt_minTemp_fall, plot.layout = c(4,2), write.title = FALSE, smooth=TRUE)
+```
+
+# References
+<div id="refs"></div>
+
+
