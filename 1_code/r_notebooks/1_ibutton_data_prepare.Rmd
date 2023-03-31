@@ -3,7 +3,7 @@
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 setwd(rprojroot::find_rstudio_root_file())
-```
+``` 
 
 ```{r eval=FALSE}
 library(tidyr)
