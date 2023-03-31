@@ -60,4 +60,4 @@ vignettes/*.pdf
 5_model_summaries/model_results_files/
 5_model_summaries/climateOffset_models_files/
 
-3_output/
+#3_output/

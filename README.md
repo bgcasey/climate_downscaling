@@ -49,21 +49,6 @@ than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
 species-habitat models.
 
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following object is masked from 'package:kableExtra':
-    ## 
-    ##     group_rows
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
 # Import and clean temperature data
 
 First we gathered temperature data from temperature data loggers
@@ -295,24 +280,6 @@ Export.image.toDrive({
   maxPixels: 6000000000
 });
 ```
-
-<script type="text/javascript">
-//load temperature offsets
-var temperature_offsets = ee.Image("projects/ee-bgcasey-climate/assets/temperature_offsets");
-
-// // Optional: define a study area. Upload a shape file as a new asset and add it to the code below.
-// var aoi= ee.FeatureCollection("projects/ee-bgcasey-climate/assets/alberta_bc");
-
-Export.image.toDrive({ 
-  image: temperature_offsets,
-  description: 'temperature_offsets', // the desired file names
-  folder: 'temperature_offsets', //specify a google drive folder
-  crs:'EPSG:3348', // set the CRS
-  scale: 30, // set the scale of the exported images
-  // region: aoi, //set the study area if defined
-  maxPixels: 6000000000
-});
-</script>
 
 2.  if you want to, define a study area by uploading a shape file as an
     asset and adding the asset to the code.
