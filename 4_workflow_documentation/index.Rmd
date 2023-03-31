@@ -199,7 +199,7 @@ Export.image.toDrive({
 
 5.  Click RUN in the image export pop-up window.
 
-    ```{r  echo=FALSE, out.width = "70%"}
+    ```{r  echo=FALSE, out.width = "50%"}
     knitr::include_graphics("3_output/images/GEE_3.png")
     ```
 

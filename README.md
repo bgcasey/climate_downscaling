@@ -259,7 +259,7 @@ code.
 
 <img src="3_output/maps/mean_temp_offset_eg.png" width="100%" />
 
-To export the offset layers to a Google Drive:
+**To export the offset layers to a Google Drive:**
 
 1.  paste the following into the Google Earth Engine code editor.
 
@@ -295,7 +295,7 @@ Export.image.toDrive({
 
 5.  Click RUN in the image export pop-up window.
 
-    <img src="3_output/images/GEE_3.png" width="100%" />
+    <img src="3_output/images/GEE_3.png" width="50%" />
 
 # References
 
