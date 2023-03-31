@@ -35,6 +35,7 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 library(kableExtra)
 library(knitr)
 library(readxl)
+library(dplyr)
 ```
 
 # Import and clean temperature data
@@ -151,11 +152,58 @@ We used the spatial variables extracted via Google Earth Engine in boosted regre
 
 4.  Rerun models with the reduced set of predictor variables.
 
-5.  Generate offset rasters from the final models using `dismo::predict` (see `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for the code).
+# Generate offset raster layers {.unnumbered}
+
+Generate offset rasters from the final models using `dismo::predict`. See `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for the code.
+
 
 ```{r offset_eg, echo=FALSE, out.width = "100%"}
 knitr::include_graphics("3_output/maps/mean_temp_offset_eg.png")
 ```
+
+
+To export the offset layers to a Google Drive:
+
+1.  paste the following into the Google Earth Engine code editor.
+
+```{js}
+//load temperature offsets
+var temperature_offsets = ee.Image("projects/ee-bgcasey-climate/assets/temperature_offsets");
+
+// // Optional: define a study area. Upload a shape file as a new asset and add it to the code below.
+// var aoi= ee.FeatureCollection("projects/ee-bgcasey-climate/assets/alberta_bc");
+
+Export.image.toDrive({ 
+  image: temperature_offsets,
+  description: 'temperature_offsets', // the desired file names
+  folder: 'temperature_offsets', //specify a google drive folder
+  crs:'EPSG:3348', // set the CRS
+  scale: 30, // set the scale of the exported images
+  // region: aoi, //set the study area if defined
+  maxPixels: 6000000000
+});
+```
+
+2.  if you want to, define a study area by uploading a shape file as an asset and adding the asset to the code.
+
+3.  Click run.
+
+    ```{r  echo=FALSE, out.width = "100%"}
+    knitr::include_graphics("3_output/images/GEE_1.png")
+    ```
+
+4.  Open the tasks tab and click RUN next to the temperature_offsets task.
+
+    ```{r  echo=FALSE, out.width = "100%"}
+    knitr::include_graphics("3_output/images/GEE_2.png")
+    ```
+
+5.  Click RUN in the image export pop-up window.
+
+    ```{r  echo=FALSE, out.width = "100%"}
+    knitr::include_graphics("3_output/images/GEE_3.png")
+    ```
+
 
 # References
 

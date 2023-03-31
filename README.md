@@ -1,4 +1,21 @@
-# Workflow for Refining ClimateNA Temperature Predictions
+- <a href="#import-and-clean-temperature-data"
+  id="toc-import-and-clean-temperature-data">Import and clean temperature
+  data</a>
+- <a href="#get-xy-coordinates-of-data-loggers"
+  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
+  loggers</a>
+- <a href="#temperature-data-quality-control"
+  id="toc-temperature-data-quality-control">Temperature data quality
+  control</a>
+- <a href="#climatena-temperature"
+  id="toc-climatena-temperature">ClimateNA temperature</a>
+- <a href="#spatial-covariates" id="toc-spatial-covariates">Spatial
+  covariates</a>
+- <a href="#boosted-regression-trees"
+  id="toc-boosted-regression-trees">Boosted regression trees</a>
+- <a href="#generate-offset-raster-layers"
+  id="toc-generate-offset-raster-layers">Generate offset raster layers</a>
+- <a href="#references" id="toc-references">References</a>
 
 Here we present a workflow and code for refining ClimateNA temperature
 predictions ([Wang et al. 2016](#ref-wang2016locally)) using temperature
@@ -30,27 +47,22 @@ were on average 6.81°C (SD = 1.11) less than CimateNA predictions; and
 winter minimum temperatures were on average -0.81°C (SD = 0.98) greater
 than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
-species-habitat models. 
+species-habitat models.
 
----
+    ## 
+    ## Attaching package: 'dplyr'
 
-- <a href="#import-and-clean-temperature-data"
-  id="toc-import-and-clean-temperature-data">Import and clean temperature
-  data</a>
-- <a href="#get-xy-coordinates-of-data-loggers"
-  id="toc-get-xy-coordinates-of-data-loggers">Get XY coordinates of data
-  loggers</a>
-- <a href="#temperature-data-quality-control"
-  id="toc-temperature-data-quality-control">Temperature data quality
-  control</a>
-- <a href="#climatena-temperature"
-  id="toc-climatena-temperature">ClimateNA temperature</a>
-- <a href="#spatial-covariates" id="toc-spatial-covariates">Spatial
-  covariates</a>
-- <a href="#boosted-regression-trees"
-  id="toc-boosted-regression-trees">Boosted regression trees</a>
-- <a href="#references" id="toc-references">References</a>
+    ## The following object is masked from 'package:kableExtra':
+    ## 
+    ##     group_rows
 
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
 
 # Import and clean temperature data
 
@@ -254,11 +266,69 @@ and Tavg for the summer, fall, winter, and spring seasons:
 
 4.  Rerun models with the reduced set of predictor variables.
 
-5.  Generate offset rasters from the final models using `dismo::predict`
-    (see `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for
-    the code).
+# Generate offset raster layers
+
+Generate offset rasters from the final models using `dismo::predict`.
+See `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for the
+code.
 
 <img src="3_output/maps/mean_temp_offset_eg.png" width="100%" />
+
+To export the offset layers to a Google Drive:
+
+1.  paste the following into the Google Earth Engine code editor.
+
+``` js
+//load temperature offsets
+var temperature_offsets = ee.Image("projects/ee-bgcasey-climate/assets/temperature_offsets");
+
+// // Optional: define a study area. Upload a shape file as a new asset and add it to the code below.
+// var aoi= ee.FeatureCollection("projects/ee-bgcasey-climate/assets/alberta_bc");
+
+Export.image.toDrive({ 
+  image: temperature_offsets,
+  description: 'temperature_offsets', // the desired file names
+  folder: 'temperature_offsets', //specify a google drive folder
+  crs:'EPSG:3348', // set the CRS
+  scale: 30, // set the scale of the exported images
+  // region: aoi, //set the study area if defined
+  maxPixels: 6000000000
+});
+```
+
+<script type="text/javascript">
+//load temperature offsets
+var temperature_offsets = ee.Image("projects/ee-bgcasey-climate/assets/temperature_offsets");
+
+// // Optional: define a study area. Upload a shape file as a new asset and add it to the code below.
+// var aoi= ee.FeatureCollection("projects/ee-bgcasey-climate/assets/alberta_bc");
+
+Export.image.toDrive({ 
+  image: temperature_offsets,
+  description: 'temperature_offsets', // the desired file names
+  folder: 'temperature_offsets', //specify a google drive folder
+  crs:'EPSG:3348', // set the CRS
+  scale: 30, // set the scale of the exported images
+  // region: aoi, //set the study area if defined
+  maxPixels: 6000000000
+});
+</script>
+
+2.  if you want to, define a study area by uploading a shape file as an
+    asset and adding the asset to the code.
+
+3.  Click run.
+
+    <img src="3_output/images/GEE_1.png" width="100%" />
+
+4.  Open the tasks tab and click RUN next to the temperature_offsets
+    task.
+
+    <img src="3_output/images/GEE_2.png" width="100%" />
+
+5.  Click RUN in the image export pop-up window.
+
+    <img src="3_output/images/GEE_3.png" width="100%" />
 
 # References
 
