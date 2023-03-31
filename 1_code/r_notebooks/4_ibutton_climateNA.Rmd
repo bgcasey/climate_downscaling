@@ -8,7 +8,7 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 **Install `ClimateNAr`**
 
 Get the latest ClimateBC/NA r package by registering at a <https://register.climatena.ca/>. Follow the instructions to install the `ClimateNAr` package.
-
+ 
 ```{r eval=FALSE}
 library(ClimateNAr)
 library(dplyr)
