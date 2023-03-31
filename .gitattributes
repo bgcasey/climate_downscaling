@@ -5,3 +5,7 @@
 *.Rmd linguist-detectable=true
 *.Rmd linguist-language=RMarkdown
 *.Rmd linguist-documentation=false
+
+*.Tex linguist-detectable=false
+*.Tex linguist-language=TeX
+*.Tex linguist-documentation=false
