@@ -30,7 +30,7 @@ were on average 6.81°C (SD = 1.11) less than CimateNA predictions; and
 winter minimum temperatures were on average -0.81°C (SD = 0.98) greater
 than CimateNA predictions. Offset adjusted ClimateNA predictions should
 better reflect micro-climatic variation and improve the accuracy of
-species-habitat models.
+species-habitat models. 
 
 ---
 
