@@ -1,3 +1,7 @@
 *.md linguist-detectable=true
 *.md linguist-language=Markdown
 *.md linguist-documentation=false
+
+*.Rmd linguist-detectable=true
+*.Rmd linguist-language=RMarkdown
+*.Rmd linguist-documentation=false
