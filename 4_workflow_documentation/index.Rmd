@@ -156,13 +156,11 @@ We used the spatial variables extracted via Google Earth Engine in boosted regre
 
 Generate offset rasters from the final models using `dismo::predict`. See `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for the code.
 
-
 ```{r offset_eg, echo=FALSE, out.width = "100%"}
 knitr::include_graphics("3_output/maps/mean_temp_offset_eg.png")
 ```
 
-
-To export the offset layers to a Google Drive:
+**To export the offset layers to a Google Drive:**
 
 1.  paste the following into the Google Earth Engine code editor.
 
@@ -201,10 +199,9 @@ Export.image.toDrive({
 
 5.  Click RUN in the image export pop-up window.
 
-    ```{r  echo=FALSE, out.width = "100%"}
+    ```{r  echo=FALSE, out.width = "70%"}
     knitr::include_graphics("3_output/images/GEE_3.png")
     ```
-
 
 # References
 
