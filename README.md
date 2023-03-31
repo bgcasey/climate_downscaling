@@ -254,7 +254,7 @@ and Tavg for the summer, fall, winter, and spring seasons:
 # Generate offset raster layers
 
 Generate offset rasters from the final models using `dismo::predict`.
-See `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for the
+See `1_code/r_notebooks/7_make_predictive_offset_raster.Rmd` for
 code.
 
 <img src="3_output/maps/mean_temp_offset_eg.png" width="100%" />
