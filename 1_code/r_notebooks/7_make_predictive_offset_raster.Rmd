@@ -12,8 +12,6 @@ library(gbm)
 ```
 
 
-from https://rspatial.org/raster/sdm/9_sdm_brt.html
-
 ### Load spatial variable rasters {.unnumbered}
 
 ```{r eval=FALSE}
@@ -28,14 +26,12 @@ ts_fall<-raster::brick("0_data/manual/raster_mosaics/time_series_09.tif")
 
 fixed<-raster::brick("0_data/manual/raster_mosaics/fixed.tif")
 
-# create a season dataframe
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
+# Load data
 load("0_data/manual/formatted_for_models/data_full.rData")
 df<-data_full%>%
   mutate(season_2=as.factor(season_2))%>%
   mutate(season_4=as.factor(season_4))
 df5<-df
-
 ```
 
 #### Combine raster mosaics {-}
@@ -52,9 +48,8 @@ crs(gee_all_winter)<-"EPSG:3348"
 
 gee_all_fall<-stack(fixed, ts_fall)
 crs(gee_all_winter)<-"EPSG:3348"
-```
 
-```{r eval=FALSE}
+
 ## Use smaller study area to test.
 # test prediction code on a smaller raster area to reduce processing time
 
@@ -63,7 +58,6 @@ crs(gee_all_winter)<-"EPSG:3348"
 # # 
 # # gee_all_summer_1<-crop(gee_all_summer, study_area)
 ```
-
 
 ### Difference between mean temperature {.unnumbered}
 
@@ -75,6 +69,9 @@ load("2_pipeline/store/models/brt_meanTemp_summer.rData")
 # There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
 # season_4 <- factor('Summer', levels = levels(df5$season_4))
 # add <- data.frame(season_4)
+# add to predict function using cons=add
+# p_summer <- predict(gee_all_summer, brt_meanTemp_summer, 
+#        n.trees=brt_meanTemp_summer$gbm.call$best.trees, type="response")
 
 p_summer <- predict(gee_all_summer, brt_meanTemp_summer,
        n.trees=brt_meanTemp_summer$gbm.call$best.trees, type="response")
@@ -88,11 +85,7 @@ writeRaster(p_summer, file="3_output/offset_rasters/meanTemp_summer_offset.tif",
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_meanTemp_fall.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Fall', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_fall <- predict(gee_all_fall, brt_meanTemp_fall, const=add,
+p_fall <- predict(gee_all_fall, brt_meanTemp_fall,
        n.trees=brt_meanTemp_fall$gbm.call$best.trees, type="response")
 
 names(p_fall)<-"Tmean_diff_fall"
@@ -106,11 +99,7 @@ writeRaster(p_fall, file="3_output/offset_rasters/meanTemp_fall_offset.tif", for
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_meanTemp_winter.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Winter', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_winter <- predict(gee_all_winter, brt_meanTemp_winter, const=add,
+p_winter <- predict(gee_all_winter, brt_meanTemp_winter, 
        n.trees=brt_meanTemp_winter$gbm.call$best.trees, type="response")
 
 names(p_winter)<-"Tmean_diff_winter"
@@ -123,11 +112,7 @@ writeRaster(p_winter, file="3_output/offset_rasters/meanTemp_winter_offset.tif",
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_meanTemp_spring.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Spring', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_spring <- predict(gee_all_spring, brt_meanTemp_spring, const=add,
+p_spring <- predict(gee_all_spring, brt_meanTemp_spring, 
        n.trees=brt_meanTemp_spring$gbm.call$best.trees, type="response")
 
 names(p_spring)<-"Tmean_diff_spring"
@@ -138,27 +123,12 @@ writeRaster(p_spring, file="3_output/offset_rasters/meanTemp_spring_offset.tif",
 
 ### Difference between max temperature {.unnumbered}
 
-
 #### Summer {-}
-
-```{r eval=FALSE}
-load("0_data/manual/formatted_for_models/data_full.rData")
-
-df<-data_full%>%
-  mutate(season_2=as.factor(season_2))%>%
-  mutate(season_4=as.factor(season_4))
-df5<-df
-```
-
 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_maxTemp_summer.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Summer', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_summer <- predict(gee_all_summer, brt_maxTemp_summer, const=add,
+p_summer <- predict(gee_all_summer, brt_maxTemp_summer, 
        n.trees=brt_maxTemp_summer$gbm.call$best.trees, type="response")
 
 names(p_summer)<-"Tmax_diff_summer"
@@ -170,11 +140,7 @@ writeRaster(p_summer, file="3_output/offset_rasters/maxTemp_summer_offset.tif", 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_maxTemp_fall.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Fall', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_fall <- predict(gee_all_fall, brt_maxTemp_fall, const=add,
+p_fall <- predict(gee_all_fall, brt_maxTemp_fall, 
        n.trees=brt_maxTemp_fall$gbm.call$best.trees, type="response")
 
 names(p_fall)<-"Tmax_diff_fall"
@@ -182,17 +148,12 @@ names(p_fall)<-"Tmax_diff_fall"
 writeRaster(p_fall, file="3_output/offset_rasters/maxTemp_fall_offset.tif", format='GTiff', overwrite=TRUE)
 ```
 
-
 #### Winter {-}
 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_maxTemp_winter.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Winter', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_winter <- predict(gee_all_winter, brt_maxTemp_winter, const=add,
+p_winter <- predict(gee_all_winter, brt_maxTemp_winter, 
        n.trees=brt_maxTemp_winter$gbm.call$best.trees, type="response")
 
 names(p_winter)<-"Tmax_diff_winter"
@@ -205,11 +166,7 @@ writeRaster(p_winter, file="3_output/offset_rasters/maxTemp_winter_offset.tif", 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_maxTemp_spring.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Spring', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_spring <- predict(gee_all_spring, brt_maxTemp_spring, const=add,
+p_spring <- predict(gee_all_spring, brt_maxTemp_spring, 
        n.trees=brt_maxTemp_spring$gbm.call$best.trees, type="response")
 
 names(p_spring)<-"Tmax_diff_spring"
@@ -218,17 +175,12 @@ writeRaster(p_spring, file="3_output/offset_rasters/maxTemp_spring_offset.tif", 
 ```
 
 
-
 ### Difference between min temperature {.unnumbered}
 
 #### Summer {-}
 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_minTemp_summer.rData")
-
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-# season_4 <- factor('Summer', levels = levels(df5$season_4))
-# add <- data.frame(season_4)
 
 p_summer <- predict(gee_all_summer, brt_minTemp_summer,
        n.trees=brt_minTemp_summer$gbm.call$best.trees, type="response")
@@ -242,11 +194,7 @@ writeRaster(p_summer, file="3_output/offset_rasters/minTemp_summer_offset.tif", 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_minTemp_fall.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Fall', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_fall <- predict(gee_all_fall, brt_minTemp_fall, const=add,
+p_fall <- predict(gee_all_fall, brt_minTemp_fall, 
        n.trees=brt_minTemp_fall$gbm.call$best.trees, type="response")
 
 names(p_fall)<-"Tmin_diff_fall"
@@ -259,10 +207,6 @@ writeRaster(p_fall, file="3_output/offset_rasters/minTemp_fall_offset.tif", form
 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_minTemp_winter.rData")
-
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-# season_4 <- factor('Winter', levels = levels(df5$season_4))
-# add <- data.frame(season_4)
 
 p_winter <- predict(gee_all_winter, brt_minTemp_winter,
        n.trees=brt_minTemp_winter$gbm.call$best.trees, type="response")
@@ -277,28 +221,11 @@ writeRaster(p_winter, file="3_output/offset_rasters/minTemp_winter_offset.tif", 
 ```{r eval=FALSE}
 load("2_pipeline/store/models/brt_minTemp_spring.rData")
 
-# There is no raster for season so we'll create a data frame with a constant value to plug into the predict function.
-season_4 <- factor('Spring', levels = levels(df5$season_4))
-add <- data.frame(season_4)
-
-p_spring <- predict(gee_all_spring, brt_minTemp_spring, const=add,
+p_spring <- predict(gee_all_spring, brt_minTemp_spring, 
        n.trees=brt_minTemp_spring$gbm.call$best.trees, type="response")
 
 names(p_spring)<-"Tmin_diff_spring"
 
 writeRaster(p_spring, file="3_output/offset_rasters/minTemp_spring_offset.tif", format='GTiff', overwrite=TRUE)
 ```
-
-
-
-
-```{r eval=FALSE}
-load("2_pipeline/store/models/brt_minTemp_tuned_3.rData")
-```
-
-
-
-
-## Combine predictive rasters into a single multi band raster
-
 
