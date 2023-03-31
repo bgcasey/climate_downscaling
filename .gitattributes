@@ -1,2 +1,2 @@
 *.TeX linguist-detectable=false
-linguist-detectable=true
+*.RmD linguist-detectable=true
