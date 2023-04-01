@@ -1,5 +1,11 @@
 # Workflow for Refining ClimateNA Temperature Predictions
 
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7791082.svg)](https://doi.org/10.5281/zenodo.7791082)
+
+
+
 Here we present a workflow and code for refining ClimateNA temperature
 predictions ([Wang et al. 2016](#ref-wang2016locally)) using temperature
 data loggers and remote sensing accessed via Google Earth Engine. View
