@@ -10,15 +10,20 @@ print("ibuttons", ibuttons)
 var buf=30
 
 //// Define start and end dates for time series
-var Date_Start = ee.Date('2005-01-01');
-var Date_End = ee.Date('2021-12-31');
-
-// var Date_Start = ee.Date('2021-01-01');
+// var Date_Start = ee.Date('2005-01-01');
 // var Date_End = ee.Date('2021-12-31');
+
+// 4 seasons
+var Date_Start = ee.Date('2020-09-01');
+var Date_End = ee.Date('2021-08-31');
+ 
+ // 2 seasons
+// var Date_Start = ee.Date('2020-10-01');
+// var Date_End = ee.Date('2021-09-30');
  
  
  //set number of months in time interval
-var interval=1;
+var interval=3;
 
 // import shapefile of study area
 var study_area= ee.FeatureCollection("projects/ee-bgcasey-climate/assets/alberta_bc");
@@ -101,13 +106,24 @@ var terrain = dem.addBands(slope)
 // TPI
 ////////////////////////////////////////
 
+
 // Set TPI window parameters. These have a significant impact on output results.
+var radius = 1000;
+var shape = "circle";
+var units = "meters";
+
+// Calculate a TPI image
+var tpi_1000 = tpi.tpi(dem, radius, shape, units).rename("tpi_1000").clip(aoi);
+print("tpi_1000", tpi_1000)
+
+
+// Set TPI window parameters.
 var radius = 500;
 var shape = "circle";
 var units = "meters";
 
 // Calculate a TPI image
-var tpi_500 = tpi.tpi(dem, radius, shape, units).rename("tpi_500");
+var tpi_500 = tpi.tpi(dem, radius, shape, units).rename("tpi_500").clip(aoi);
 print("tpi_500", tpi_500)
 
 
@@ -117,7 +133,7 @@ var shape = "circle";
 var units = "meters";
 
 // Calculate a TPI image
-var tpi_300 = tpi.tpi(dem, radius, shape, units).rename("tpi_300");
+var tpi_300 = tpi.tpi(dem, radius, shape, units).rename("tpi_300").clip(aoi);
 print("tpi_300", tpi_300)
 
 
@@ -127,7 +143,7 @@ var shape = "circle";
 var units = "meters";
 
 // Calculate a TPI image
-var tpi_100 = tpi.tpi(dem, radius, shape, units).rename("tpi_100");
+var tpi_100 = tpi.tpi(dem, radius, shape, units).rename("tpi_100").clip(aoi);
 print("tpi100", tpi_100)
 
 // Set TPI window parameters.
@@ -136,7 +152,7 @@ var shape = "circle";
 var units = "meters";
 
 // Calculate a TPI image
-var tpi_50= tpi.tpi(dem, radius, shape, units).rename("tpi_50");
+var tpi_50= tpi.tpi(dem, radius, shape, units).rename("tpi_50").clip(aoi);
 print("tpi50", tpi_50)
 
 ////////////////////////////////////////
@@ -158,6 +174,7 @@ print('standard_deviation metadata:', canopy_standard_deviation);
 //combine bands into single image
 var canopy = canopy_height.addBands([canopy_standard_deviation])
 print("canopy", canopy)
+
 
 ////////////////////////////////////////
 // TWI
@@ -227,9 +244,24 @@ var all_fixed = terrain.addBands(CHILI)
               .addBands(tpi_100)
               .addBands(tpi_300)
               .addBands(tpi_500)
+              .addBands(tpi_1000)
               .addBands(canopy)
               ;
 print("all_fixed", all_fixed)
+
+// //mask to study area
+// // Construct binary image which is 1 everywhere but the geometry
+// var boundaryMask= ee.Image.constant(0).paint(study_area.geometry(), 1);
+// // Apply to existing image's mask
+// var all_fixed_2 = all_fixed.updateMask(all_fixed.mask().multiply(boundaryMask));
+// // Map.addLayer(all_fixed_2.select("tpi_50"), {}, 'Continuous Heat-Insolation Load Index').setShown(1);
+
+// // Save as GEE asset
+// Export.image.toAsset({
+//       image:all_fixed_2, 
+//       scale:30,
+//     maxPixels:10000000000000,
+//     })
 
 var all_ts = noaa.combine(terra)
               .combine(leo7)
@@ -240,82 +272,84 @@ print("all_ts", all_ts)
 // // // // ### Extract data to points ###
 // // //########################################################################################################
 
-var ev_fixed = all_fixed.reduceRegions({
-  collection: ibuttons_buff,
-  reducer: ee.Reducer.mean(),
-  crs:'EPSG:3348',
-  scale: 30
-});
-print(ev_fixed.limit(10), "ev")
+// var ev_fixed = all_fixed.reduceRegions({
+//   collection: ibuttons_buff,
+//   reducer: ee.Reducer.mean(),
+//   crs:'EPSG:3348',
+//   scale: 30
+// });
+// print(ev_fixed.limit(10), "ev")
 
-var ev_LC = LC.reduceRegions({
-  collection: ev_fixed,
-  crs:'EPSG:3348',
-  reducer: ee.Reducer.first(),
-  scale: 30
-});
+// var ev_LC = LC.reduceRegions({
+//   collection: ev_fixed,
+//   crs:'EPSG:3348',
+//   reducer: ee.Reducer.first(),
+//   scale: 30
+// });
 
-print(ev_LC.limit(10), "ev_lc")
+// print(ev_LC.limit(10), "ev_lc")
 
-var ev_all = all_ts.map(function(img) {
-  return img.reduceRegions({
-    collection: ev_LC,
-    crs:'EPSG:3348',
-    reducer: ee.Reducer.mean(), // set the names of output properties to the corresponding band names
-    scale: 30,
-    tileScale: 4
-  }).map(function (featureWithReduction) {
-    return featureWithReduction.copyProperties(img); //to get year and month properties from the stack
-  });
-}).flatten(); //  Flattens collections
+// var ev_all = all_ts.map(function(img) {
+//   return img.reduceRegions({
+//     collection: ev_LC,
+//     crs:'EPSG:3348',
+//     reducer: ee.Reducer.mean(), // set the names of output properties to the corresponding band names
+//     scale: 30,
+//     tileScale: 4
+//   }).map(function (featureWithReduction) {
+//     return featureWithReduction.copyProperties(img); //to get year and month properties from the stack
+//   });
+// }).flatten(); //  Flattens collections
  
-print(ev_all.limit(10), "ev.all")
+// print(ev_all.limit(10), "ev.all")
 
 
 // Export data to a csv
-Export.table.toDrive({
-  folder: 'google_earth_engine_tables',
-  collection: ev_all,
-  description:'ibutton_all_indices',
-  fileFormat: 'csv',
-    selectors: [ // choose properties to include in export table
-                  'year',
-                  'month',
-                  'date',
-                  'Project', 
-                  'St_SttK',
-                  'NDVI',
-                  'EVI',
-                  'NDMI',
-                  'SAVI',
-                  'BSI',
-                  'SI',
-                  'LAI',
-                  'NDSI',
-                  'snow',
-                  'discrete_classification',
-                  'forest_type',
-                  'tree-coverfraction',
-                  'elevation',
-                  'slope',
-                  'aspect',
-                  'tpi_50',
-                  'tpi_100',
-                  'tpi_300',
-                  'tpi_500',
-                  'TWI',
-                  'HLI',
-                  'CHILI',
-                  'northness',
-                  'canopy_height',
-                  'canopy_standard_deviation',
-                  'cloud_fraction',
-                  'cloud_probability',
-                  'soil',
-                  'srad',
-                  'vs'
-                  ] 
-});
+// Export.table.toDrive({
+//   folder: 'google_earth_engine_tables',
+//   collection: ev_all,
+//   description:'ibutton_all_indices',
+//   fileFormat: 'csv',
+//     selectors: [ // choose properties to include in export table
+//                   'year',
+//                   'month',
+//                   'date',
+//                   'Project', 
+//                   'St_SttK',
+//                   'discrete_classification',
+//                   'forest_type',
+//                   'tree-coverfraction',
+//                   'elevation',
+//                   'slope',
+//                   'aspect',
+//                   'tpi_50',
+//                   'tpi_100',
+//                   'tpi_300',
+//                   'tpi_500',
+//                   'tpi_1000',
+//                   'TWI',
+//                   'HLI',
+//                   'CHILI',
+//                   'northness',
+//                   'canopy_height',
+//                   'canopy_standard_deviation',
+//                   'cloud_fraction',
+//                   'cloud_probability',
+//                   'soil',
+//                   'pr',
+//                   'srad',
+//                   'vs',
+//                   'NDVI',
+//                   'EVI',
+//                   'NDMI',
+//                   'SAVI',
+//                   'BSI',
+//                   'SI',
+//                   'LAI',
+//                   'NDSI',
+//                   'snow'
+//                   ] 
+// });
 
 
 // //########################################################################################################
@@ -332,12 +366,12 @@ return img.reduceNeighborhood({
 
 print("all_ts_n", all_ts_n)
 
-var all_fixed_n= all_fixed.reduceNeighborhood({
-    reducer: ee.Reducer.mean(), // set the names of output properties to the corresponding band names
-    kernel: ee.Kernel.square(30, "meters"),
-    });
+// var all_fixed_n= all_fixed.reduceNeighborhood({
+//     reducer: ee.Reducer.mean(), // set the names of output properties to the corresponding band names
+//     kernel: ee.Kernel.square(30, "meters"),
+//     });
 
-print("all_fixed_n", all_fixed_n)
+// print("all_fixed_n", all_fixed_n)
 
 
 // // //########################################################################################################
@@ -371,21 +405,27 @@ print("all_fixed_n", all_fixed_n)
 
 // Export.image.toDrive({ 
 //   image: all_fixed_n.toFloat(),
-//   description: 'neighborhood_all_fixed',
-//   folder: 'raster_csd',
+//   description: 'neighborhood_all_fixed_4s',
+//   folder: 'raster_neighborhood_4seasons',
 //   crs:'EPSG:3348',
 //   scale: 30,
 //   region: aoi1,
 //   maxPixels: 6000000000
 // });
 
-// var batch = require('users/fitoprincipe/geetools:batch')
 
-// batch.Download.ImageCollection.toDrive(all_ts_n, 'raster_csd', 
-//                 {name:'neighborhood_rasters_{year}_{month}',
-//                 scale: 30,
-//                 crs:'EPSG:3348',
-//                 region:aoi1,
-//                 maxPixels: 6000000000
-// });
+
+
+var all_ts_n_download = all_ts_n.select('srad_mean', 'soil_mean', 'pr_mean', 'vs_mean')
+print("all_ts_n_download", all_ts_n_download)
+
+var batch = require('users/fitoprincipe/geetools:batch')
+
+batch.Download.ImageCollection.toDrive(all_ts_n_download, 'raster_neighborhood_4seasons_2', 
+                {name:'neighborhood_rasters_4s_{year}_{month}',
+                scale: 30,
+                crs:'EPSG:3348',
+                region:aoi1,
+                maxPixels: 6000000000
+});
 
