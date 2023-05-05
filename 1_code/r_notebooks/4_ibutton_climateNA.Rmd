@@ -213,6 +213,8 @@ iButton_cNA_diff %>%
 #   dplyr::select("Project","Site_StationKey","Month","Year", "Tmax_diff", "Tmin_diff", "Tavg_diff" )
 
 save(iButton_cNA_diff, file="0_data/manual/iButton_data/iButton_cNA_diff.rData")
+write.csv(iButton_cNA_diff, file="0_data/manual/iButton_data/iButton_cNA_diff.csv")
+
 ```
 
 
