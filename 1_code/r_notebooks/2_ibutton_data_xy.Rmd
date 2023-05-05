@@ -66,9 +66,8 @@ load("2_pipeline/store/hills_dailys.rData")
 Extract XY coordinates and save as shapefile.
 
 ```{r eval=FALSE}
-
 # create a station key column and convert to spatial object
-hills_xy<-hills_loc%>%
+hills_xy_all<-hills_loc%>%
       mutate(Site_StationKey=paste(hills_loc$ProjectID, hills_loc$Cluster, hills_loc$SITE, hills_loc$STATION, sep="-"))%>%
       inner_join(hills_dailys)%>%
       dplyr::rename(Project=ProjectID, Date_deplo=DEPLOY_DATE)%>%
@@ -76,13 +75,31 @@ hills_xy<-hills_loc%>%
       mutate(min_year=min(Year))%>%
       mutate(max_year=max(Year))%>%
       mutate(Project="HILLS")%>%
-      dplyr::select(c(Project, Site_StationKey, min_year, max_year, EASTING, NORTHING))%>%
-      distinct()%>%
+      # left_join(test, by=c("EASTING"="X", "NORTHING"="Y"))%>%
+      dplyr::select(c(Project, Site_StationKey, min_year, max_year, EASTING, NORTHING, UTM_Zone))%>%
+      distinct()
+
+hills_xy_zone11<-hills_xy%>%
+      filter(UTM_Zone==11)%>%
       st_as_sf(coords=c("EASTING","NORTHING"), crs=26911)%>% #NAD83 / UTM zone 11N
       st_transform(crs=st_crs(RIVR_xy))%>%
       mutate(Long = unlist(map(geometry,1)),
            Lat = unlist(map(geometry,2)))%>%
       select(c(Project, Site_StationKey, Lat, Long, min_year, max_year, geometry))
+
+
+hills_xy_zone12<-hills_xy%>%
+      filter(UTM_Zone==12)%>%
+      st_as_sf(coords=c("EASTING","NORTHING"), crs=26912)%>% #NAD83 / UTM zone 11N
+      st_transform(crs=st_crs(RIVR_xy))%>%
+      mutate(Long = unlist(map(geometry,1)),
+           Lat = unlist(map(geometry,2)))%>%
+      select(c(Project, Site_StationKey, Lat, Long, min_year, max_year, geometry))
+
+
+hills_xy<-rbind(hills_xy_zone11, hills_xy_zone12)
+
+
 
 # save as spatial data frame
 save(hills_xy, file="0_data/manual/iButton_data/spatial/hills_xy.rData")
