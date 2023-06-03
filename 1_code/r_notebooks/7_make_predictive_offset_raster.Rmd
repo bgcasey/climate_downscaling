@@ -21,7 +21,7 @@ ts_summer<-raster::brick("0_data/manual/raster_mosaics/time_series_06.tif")
 # names(ts_summer)<-gsub("_mean", "",names(test))
 
 ts_winter<-raster::brick("0_data/manual/raster_mosaics/time_series_12.tif")
-ts_spring<-raster::brick("0_data/manual/raster_mosaics/time_series_02.tif")
+ts_spring<-raster::brick("0_data/manual/raster_mosaics/time_series_03.tif")
 ts_fall<-raster::brick("0_data/manual/raster_mosaics/time_series_09.tif")
 
 fixed<-raster::brick("0_data/manual/raster_mosaics/fixed.tif")
@@ -47,7 +47,7 @@ gee_all_winter<-stack(fixed, ts_winter)
 crs(gee_all_winter)<-"EPSG:3348"
 
 gee_all_fall<-stack(fixed, ts_fall)
-crs(gee_all_winter)<-"EPSG:3348"
+crs(gee_all_fall)<-"EPSG:3348"
 
 
 ## Use smaller study area to test.

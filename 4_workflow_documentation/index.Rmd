@@ -17,8 +17,8 @@ description: "This is document walks through the analyses I performed for this r
 ---
 
 #### 
- [![DOI]([https://zenodo.org/badge/DOI/10.5281/zenodo.7791082.svg)](https://doi.org/10.5281/zenodo.7791082)](https://zenodo.org/badge/DOI/10.5281/zenodo.7791082.svg)](https://doi.org/10.5281/zenodo.7791082))
-    
+
+[![DOI](%5Bhttps://zenodo.org/badge/DOI/10.5281/zenodo.7791082.svg)](https://doi.org/10.5281/zenodo.7791082)](https://zenodo.org/badge/DOI/10.5281/zenodo.7791082.svg)](<https://doi.org/10.5281/zenodo.7791082>))
 
 Here we present a workflow and code for refining ClimateNA temperature predictions [@wang2016locally] using temperature data loggers and remote sensing accessed via Google Earth Engine. View temperature offsets and spatial data at <https://bgcasey.users.earthengine.app/view/climateoffsets>. View model summaries at <https://bookdown.org/bgcasey/climateOffset_models/>.
 
