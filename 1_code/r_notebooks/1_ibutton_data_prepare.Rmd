@@ -240,6 +240,31 @@ save(RedPlat_dailys, file="2_pipeline/store/RedPlat_dailys.rData")
 ```
 
 
+#### BC Weather station
+
+BC weather station data from https://bcgov-env.shinyapps.io/nbcclim/
+
+```{r}
+BCWS<-read.csv(file="0_data/external/iButton/BC_weatherStations/All_stations.csv")
+
+BCWS_dailys<-BCWS%>%
+  mutate(Site_StationKey=Site)%>%
+  mutate(Tmax_Day=Temp_max)%>%
+  mutate(Tmin_Day=Temp_min)%>%
+  mutate(Tavg_Day=Temp_avg)%>%
+  mutate(Date=as.Date(Date))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(Day=day(Date))%>%  
+  select(Site,Day, Month, Year, Date, Tmax_Day, Tmin_Day, Tavg_Day)%>%
+  na.omit()
+
+save(BCWS_dailys, file="2_pipeline/store/BCWS_dailys.rData")
+```
+
+
+
+
 ### Combine datasets {.unnumbered}
 
 #### **Bind dataframes**
@@ -252,9 +277,10 @@ load("2_pipeline/store/wood_dailys.rData")
 load("2_pipeline/store/ARVTFire_2020_2022_dailys.rData")
 load("2_pipeline/store/ARVTDendro_2021_dailys.rData")
 load("2_pipeline/store/RedPlat_dailys.rData")
+load("2_pipeline/store/BCWS_dailys.rData")
 
 
-ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,  "ARVTFire"=ARVTFire_2020_2022_dailys, "ARVTDendro"=ARVTDendro_2021_dailys, "wood"=wood_dailys, "RedPlat"=RedPlat_dailys, .id="Project")
+ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,  "ARVTFire"=ARVTFire_2020_2022_dailys, "ARVTDendro"=ARVTDendro_2021_dailys, "wood"=wood_dailys, "RedPlat"=RedPlat_dailys, "BCWS"=BCWS_dailys, .id="Project")
 
 save(ibuttons, file=paste0("2_pipeline/tmp/ibuttons_", Sys.Date(), ".rData"))
 ```
