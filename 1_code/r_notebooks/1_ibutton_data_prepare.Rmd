@@ -217,6 +217,29 @@ save(ARVTFire_2020_2022_dailys, file="2_pipeline/store/ARVTFire_2020_2022_dailys
 ```
 
 
+#### Red Plateau {-}
+
+The following data is from Derek van der Kamp
+
+```{r}
+RedPlat<-read.csv(file="0_data/external/iButton/Derek_VanDerKamp/redplateau.met.csv")
+
+RedPlat_dailys<-RedPlat%>%
+  mutate(Temperature=value)%>%
+  mutate(Site_StationKey=str_c(site, subsite, sep="_"))%>%
+  filter(name=="airtemp")%>%
+  mutate(Date=date(time))%>%
+  dplyr::group_by(Site_StationKey,Date) %>% #group by days, month and year
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(Day=day(Date))%>%
+  dplyr::group_by(Site_StationKey,Date)
+
+save(RedPlat_dailys, file="2_pipeline/store/RedPlat_dailys.rData")
+```
+
+
 ### Combine datasets {.unnumbered}
 
 #### **Bind dataframes**
@@ -228,10 +251,10 @@ load("2_pipeline/store/RIVR_dailys.rData")
 load("2_pipeline/store/wood_dailys.rData")
 load("2_pipeline/store/ARVTFire_2020_2022_dailys.rData")
 load("2_pipeline/store/ARVTDendro_2021_dailys.rData")
+load("2_pipeline/store/RedPlat_dailys.rData")
 
 
-ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,  "ARVTFire"=ARVTFire_2020_2022_dailys, "ARVTDendro"=ARVTDendro_2021_dailys, "wood"=wood_dailys, .id="Project")
+ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,  "ARVTFire"=ARVTFire_2020_2022_dailys, "ARVTDendro"=ARVTDendro_2021_dailys, "wood"=wood_dailys, "RedPlat"=RedPlat_dailys, .id="Project")
 
 save(ibuttons, file=paste0("2_pipeline/tmp/ibuttons_", Sys.Date(), ".rData"))
 ```
-
