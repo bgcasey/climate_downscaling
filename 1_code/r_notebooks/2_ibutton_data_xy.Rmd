@@ -150,9 +150,8 @@ st_write(wood_xy, "0_data/manual/iButton_data/spatial/wood_xy.shp")
 load("2_pipeline/store/alex_dailys.rData")
 
 # bring in xy data
-alex_loc<-read_csv(file="0_data/external/iButton/alex/2019_and_2020_2021_plot_locations_and_elevations.csv")
+alex_loc<-read_csv(file="0_data/external/iButton/old/alex/2019_and_2020_2021_plot_locations_and_elevations.csv")
 ```
-
 
 
 #### Create spatial data frame of iButton locations {.unnumbered}
@@ -181,10 +180,150 @@ save(alex_xy, file="0_data/manual/iButton_data/spatial/alex_xy.rData")
 st_write(alex_xy, "0_data/manual/iButton_data/spatial/alex_xy.shp")
 ```
 
+
+
+
+### ARVTDendro {-}
+
+```{r}
+load("0_data/external/iButton/ARVT/ARVTDendro/arvtdendro2021_cleaned_iButton_data.RData")
+
+ARVTDendro_2021_xy<-mk_cleaned%>%
+  mutate(Site_StationKey=mission_id)%>%
+  mutate(Project="ARVTDendro")%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(year(Date_Time)))%>%
+  mutate(max_year=max(year(Date_Time)))%>%
+  rename(c(Lat=lat, Long=long))%>%
+  mutate(Lat=as.numeric(Lat))%>%
+  mutate(Long=as.numeric(Long))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+  dplyr::distinct()%>%
+  st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+# save as spatial data frame
+save(ARVTDendro_2021_xy, file="0_data/manual/iButton_data/spatial/ARVTDendro_2021_xy.rData")
+
+# save as shapefile
+st_write(ARVTDendro_2021_xy, "0_data/manual/iButton_data/spatial/ARVTDendro_2021_xy.shp")
+```
+
+### ARVTFire {-}
+
+```{r}
+load("0_data/external/iButton/ARVT/ARVTFire/alex_2020_2021_cleaned_temp_data.RData")
+
+ARVTFire_2020_2021_xy<-alex_2020_cleaned%>%
+  mutate(Site_StationKey=mission_id)%>%
+  mutate(Project="ARVTFire")%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(year(Date_Time)))%>%
+  mutate(max_year=max(year(Date_Time)))%>%
+  rename(c(Lat=lat, Long=long))%>%
+  mutate(Lat=as.numeric(Lat))%>%
+  mutate(Long=as.numeric(Long))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+  dplyr::distinct()%>%
+  st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+#########################################
+
+load("0_data/external/iButton/ARVT/ARVTFire/alex_2021_2022_cleaned_temp_data.RData")
+ARVTFire_2021_2022_dailys<-alex_processed%>%
+  mutate(Site_StationKey=mission_id)%>%
+  mutate(Project="ARVTFire")%>%
+  group_by(Site_StationKey)%>%
+  mutate(Date=date(Date_Time))%>%
+  mutate(min_year=min(year(Date)))%>%
+  mutate(max_year=max(year(Date)))%>%
+  rename(c(Lat=lat, Long=long))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+  dplyr::distinct()%>%
+  st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+ARVTFire_2020_2022_dailys<-rbind(ARVTFire_2021_2022_dailys, ARVTFire_2020_2021_dailys)  
+  
+test<-alex_processed%>%
+  filter(is.na(lat))%>%
+  select(mission_id, lat, long)%>%
+  distinct()
+  
+  
+  
+  
+  
+
+# save as spatial data frame
+save(ARVTFire_2021_xy, file="0_data/manual/iButton_data/spatial/ARVTFire_2021_xy.rData")
+
+# save as shapefile
+st_write(ARVTFire_2021_xy, "0_data/manual/iButton_data/spatial/ARVTFire_2021_xy.shp")
+```
+
+
+
+### Red Plateau {-}
+
+The following data is from Derek van der Kamp
+
+```{r}
+RedPlat<-read.csv(file="0_data/external/iButton/Derek_VanDerKamp/redplateau.met.csv")
+
+RedPlat_xy<-RedPlat%>%
+    mutate(Site_StationKey=str_c(site, subsite, sep="_"))%>%
+    mutate(Project="RedPlat")%>%
+    group_by(Site_StationKey)%>%
+    mutate(Date=date(time))%>%
+    mutate(min_year=min(year(Date)))%>%
+    mutate(max_year=max(year(Date)))%>%
+    rename(c(Lat=lat, Long=lon))%>%
+    mutate(Lat=as.numeric(Lat))%>%
+    mutate(Long=as.numeric(Long))%>%
+    dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+    dplyr::distinct()%>%
+    st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+  
+save(RedPlat_xy, file="0_data/manual/iButton_data/spatial/RedPlat_xy.rData")
+
+# save as shapefile
+st_write(RedPlat_xy, "0_data/manual/iButton_data/spatial/RedPlat_xy.shp")
+  
+```
+
+
+### BC Weather station {-}
+
+BC weather station data from https://bcgov-env.shinyapps.io/nbcclim/
+
+```{r}
+BCWS<-read.csv(file="0_data/external/iButton/BC_weatherStations/All_stations.csv")
+
+BCWS_xy<-BCWS%>%
+  mutate(Site_StationKey=Site)%>%
+  mutate(Project="BCWS")%>%
+  group_by(Site_StationKey)%>%
+  mutate(Date=as.Date(Date))%>%
+  mutate(min_year=min(year(Date)))%>%
+  mutate(max_year=max(year(Date)))%>%
+  rename(c(Lat=Latitude, Long=Longitude))%>%
+  mutate(Lat=as.numeric(Lat))%>%
+  mutate(Long=as.numeric(Long))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+  dplyr::distinct()%>%
+  st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+save(BCWS_xy, file="0_data/manual/iButton_data/spatial/BCWS_xy.rData")
+
+# save as shapefile
+st_write(BCWS_xy, "0_data/manual/iButton_data/spatial/BCWS_xy.shp")
+```
+
+
+
 ### All projects {-}
 
 ```{r eval=FALSE}
-ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy)
+ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy, BCWS_xy, RedPlat_xy, ARVTDendro_2021_xy)
 
 # save as spatial data frame
 save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")
