@@ -67,7 +67,7 @@ Extract XY coordinates and save as shapefile.
 
 ```{r eval=FALSE}
 # create a station key column and convert to spatial object
-hills_xy_all<-hills_loc%>%
+hills_loc_2<-hills_loc%>%
       mutate(Site_StationKey=paste(hills_loc$ProjectID, hills_loc$Cluster, hills_loc$SITE, hills_loc$STATION, sep="-"))%>%
       inner_join(hills_dailys)%>%
       dplyr::rename(Project=ProjectID, Date_deplo=DEPLOY_DATE)%>%
@@ -79,19 +79,19 @@ hills_xy_all<-hills_loc%>%
       dplyr::select(c(Project, Site_StationKey, min_year, max_year, EASTING, NORTHING, UTM_Zone))%>%
       distinct()
 
-hills_xy_zone11<-hills_xy%>%
+hills_xy_zone11<-hills_loc_2%>%
       filter(UTM_Zone==11)%>%
       st_as_sf(coords=c("EASTING","NORTHING"), crs=26911)%>% #NAD83 / UTM zone 11N
-      st_transform(crs=st_crs(RIVR_xy))%>%
+      st_transform(crs=st_crs(4326))%>%
       mutate(Long = unlist(map(geometry,1)),
            Lat = unlist(map(geometry,2)))%>%
       select(c(Project, Site_StationKey, Lat, Long, min_year, max_year, geometry))
 
 
-hills_xy_zone12<-hills_xy%>%
+hills_xy_zone12<-hills_loc_2%>%
       filter(UTM_Zone==12)%>%
       st_as_sf(coords=c("EASTING","NORTHING"), crs=26912)%>% #NAD83 / UTM zone 11N
-      st_transform(crs=st_crs(RIVR_xy))%>%
+      st_transform(crs=st_crs(4326))%>%
       mutate(Long = unlist(map(geometry,1)),
            Lat = unlist(map(geometry,2)))%>%
       select(c(Project, Site_StationKey, Lat, Long, min_year, max_year, geometry))
