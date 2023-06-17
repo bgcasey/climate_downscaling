@@ -119,14 +119,6 @@ hills$Date.Time<-as.POSIXct(hills$Date.Time, tz="America/Edmonton")
 ```
 
 
-```{r eval=FALSE}
-hills_1<-hills %>%
-  mutate(Value=Temperature,Month=month(Date.Time),Day=day(Date.Time),Year=year(Date.Time),
-                Date_Time=Date.Time) 
-
-```
-
-
 ##### Get daily temperature summaries {.unnumbered}
 
 Create new calculated columns with the mean, max, and min daily temperatures.
@@ -170,91 +162,58 @@ wood_dailys<-read.delim(file="0_data/external/iButton/WoodEtAl/Wood_etal_2017.ta
 save(wood_dailys, file="2_pipeline/store/wood_dailys.rData")
 ```
 
+#### ARVTDendro {-}
 
-#### Alex {-}
+```{r}
+load("0_data/external/iButton/ARVT/ARVTDendro/arvtdendro2021_cleaned_iButton_data.RData")
 
-##### Clean data {-}
-
-```{r eval=FALSE}
-# read in the individidual 2020-2021 csvs
-filenames=list.files(path="0_data/external/iButton/alex/individual/2020_2021", full.names=TRUE)
-
-library(data.table)
-myMergedData <- rbindlist(sapply(filenames, fread,simplify = FALSE), idcol = 'filename')
-colnames(myMergedData)[2] <- "date_time"
-
-# check the number of site_ids per file
-n_site_id<-myMergedData %>%
-  group_by(filename) %>%
-  mutate(n_id= n_distinct(site_id))%>%
-  select(filename, n_id)%>%
-  distinct()%>%
-  filter(n_id== 1)
-
-# there is a problem with a coupe of the files:
-# filename	                                # of site_id's
-# 4D0000006E19FA41_101321_Sept20_12PM.csv	  2
-# F60000006E206641_101421_Sept23_10AM.csv	  497
-# FC0000006E203941_101321_Sept23_10AM.csv	  164
-
-# I'll exclude these for now. 
-myMergedData_2<-myMergedData %>%
-    group_by(filename) %>%
-    mutate(n_id= n_distinct(site_id))%>%
-    ungroup()%>%
-    filter(n_id == 1)%>%
-    select(-n_id)%>%
-    select(-filename)
-
-# fix date and time fields 
-alex_2020_2021a<-myMergedData_2%>%
-  mutate(date_time=gsub("\\.","",myMergedData_2$date_time))%>%
-  mutate(site_id=sub("\\(.*","",myMergedData_2$site_id))%>% # remove entore string after (
-  mutate(site_id=gsub(" ", "", site_id, fixed = TRUE))%>% # remove white space
-  mutate(site_id=gsub("(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)", "_", site_id, perl = TRUE)) %>% # add _ between digits and letters
-  drop_na(c(date_time, date_time_deployed))%>%
-  mutate(date_time_2=dmy_hm(date_time))%>%
-  # mutate(date_time_3=replace_na(list(date_time_2), 0))%>%
-  mutate(date_time_3 = ifelse(is.na(date_time_2), dmy_hms(date_time), date_time_2))%>%
-  mutate(date_time_corrected= as_datetime(date_time_3))%>%
-  # mutate(date_time_all=coalesce(date_time_2, date_time_3))%>%
-  select(-c(date_time_2, date_time_3))%>%
-  mutate(month=month(date_time_corrected))%>%
-  mutate(day=day(date_time_corrected))%>%
-  mutate(year=year(date_time_corrected))%>%
-  mutate(date_time_deployed_1=dmy_hm(date_time_deployed))%>%
-  mutate(date_time_deployed_2 = ifelse(is.na(date_time_deployed_1), dmy_hms(date_time_deployed), date_time_deployed_1))%>%
-  mutate(date_time_deployed_corrected= as_datetime(date_time_deployed_2))%>%
-  select(-c(date_time_deployed_2, date_time_deployed_1))%>%
-  # mutate(date_time_deployed_1=dmy_hms(date_time_deployed))%>%
-  arrange(temp_id, date_time_deployed_corrected)%>%
-  filter(date_time_deployed_corrected<date_time_corrected)%>%
-  distinct()%>%
-  select(-c(date_time_deployed, date_time, temp_id, serial_number, location))%>%
-  rename(c(Temperature=Value, Year=year, Day=day, Month=month, Date_Time=date_time_corrected,  Date_Time_dpl=date_time_deployed_corrected, Site_StationKey=site_id ))%>%
+ARVTDendro_2021_dailys<-mk_cleaned%>%
+  mutate(Value=Temperature, Site_StationKey=mission_id)%>%
   mutate(Date=date(Date_Time))%>%
-  mutate(Project="alex")%>%
-  filter(placement=="tree (@ dbh)")
- 
+  filter(Date_Time>Date_Time_dpl)%>%
+  filter(Date<=retr_date)%>%
+  dplyr::group_by(Site_StationKey,Date) %>% #group by days, month and year
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(Day=day(Date))%>%
+  dplyr::group_by(Site_StationKey,Date) 
 
-alex_cleaned<-alex_2020_2021a
-save(alex_cleaned, file="2_pipeline/tmp/alex_cleaned.rData")
-
+save(ARVTDendro_2021_dailys, file="2_pipeline/store/ARVTDendro_2021_dailys.rData")
 ```
 
+#### ARVTFire {-}
 
-##### Get daily temperature summaries {.unnumbered}
+```{r}
+load("0_data/external/iButton/ARVT/ARVTFire/alex_2020_2021_cleaned_temp_data.RData")
+ARVTFire_2020_2021_dailys<-alex_2020_cleaned%>%
+  mutate(Value=Temperature, Site_StationKey=mission_id)%>%
+  mutate(Date=date(Date_Time))%>%
+  filter(Date_Time>date_time_deployed)%>%
+  filter(Date<=retr_date_time)%>%
+  dplyr::group_by(Site_StationKey,Date) %>% #group by days, month and year
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(Day=day(Date))%>%
+  dplyr::group_by(Site_StationKey,Date) 
 
-Create new calculated columns with the mean, max, and min daily temperatures. 
+load("0_data/external/iButton/ARVT/ARVTFire/alex_2021_2022_cleaned_temp_data.RData")
+ARVTFire_2021_2022_dailys<-alex_processed%>%
+  mutate(Value=Temperature, Site_StationKey=mission_id)%>%
+  mutate(Date=date(Date_Time))%>%
+  filter(Date_Time>date_time_deployed)%>%
+  filter(Date<=retr_date_time)%>%
+  dplyr::group_by(Site_StationKey,Date) %>% #group by days, month and year
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(Day=day(Date))%>%
+  dplyr::group_by(Site_StationKey,Date) 
 
-```{r eval=FALSE}
-alex_dailys<-alex_cleaned %>% 
-  dplyr::group_by(Site_StationKey,Day,Month,Year,Date)%>%
-  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature))%>% 
-  dplyr::group_by(Site_StationKey,Month,Year) %>% 
-  arrange(Site_StationKey, Date)
+ARVTFire_2020_2022_dailys<-rbind(ARVTFire_2021_2022_dailys, ARVTFire_2020_2021_dailys)
 
-save(alex_dailys, file="2_pipeline/store/alex_dailys.rData")
+save(ARVTFire_2020_2022_dailys, file="2_pipeline/store/ARVTFire_2020_2022_dailys.rData")
 ```
 
 
@@ -264,13 +223,15 @@ save(alex_dailys, file="2_pipeline/store/alex_dailys.rData")
 
 ```{r eval=FALSE}
 
-load("2_pipeline/store/alex_dailys.rData")
 load("2_pipeline/store/hills_dailys.rData")
 load("2_pipeline/store/RIVR_dailys.rData")
 load("2_pipeline/store/wood_dailys.rData")
+load("2_pipeline/store/ARVTFire_2020_2022_dailys.rData")
+load("2_pipeline/store/ARVTDendro_2021_dailys.rData")
 
-ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys, "alex"=alex_dailys, "wood"=wood_dailys, .id="Project")
 
-save(ibuttons, file="2_pipeline/tmp/ibuttons.rData")
+ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,  "ARVTFire"=ARVTFire_2020_2022_dailys, "ARVTDendro"=ARVTDendro_2021_dailys, "wood"=wood_dailys, .id="Project")
+
+save(ibuttons, file=paste0("2_pipeline/tmp/ibuttons_", Sys.Date(), ".rData"))
 ```
 
