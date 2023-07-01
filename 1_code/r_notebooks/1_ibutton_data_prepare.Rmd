@@ -10,6 +10,7 @@ library(tidyr)
 library(plyr)
 library(dplyr)
 # library(eExtra)
+library(readxl)
 library(lubridate)
 library(imputeTS)
 library(readr)
@@ -240,12 +241,15 @@ save(RedPlat_dailys, file="2_pipeline/store/RedPlat_dailys.rData")
 ```
 
 
-#### BC Weather station
+#### BC Weather station {-}
 
 BC weather station data from https://bcgov-env.shinyapps.io/nbcclim/
 
 ```{r}
+# from https://bcgov-env.shinyapps.io/nbcclim/:
 BCWS<-read.csv(file="0_data/external/iButton/BC_weatherStations/All_stations.csv")
+
+
 
 BCWS_dailys<-BCWS%>%
   mutate(Site_StationKey=Site)%>%
@@ -262,7 +266,24 @@ BCWS_dailys<-BCWS%>%
 save(BCWS_dailys, file="2_pipeline/store/BCWS_dailys.rData")
 ```
 
+#### Cardinal Divide {-}
 
+```{r eval=FALSE}
+crdv_1<-read_excel("0_data/external/iButton/cardinal_divide/cardinaldividetemperaturestationsdata/Nielsen_02_SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Raw time series")
+
+crdv_2<-read_excel("/Volumes/Projects/climate_downscaling/0_data/external/iButton/cardinal_divide/fwcardinaldivideelevationtransecttemperaturedata/Nielsen-SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Raw time series")
+
+crdv_dailys<-crdv_1%>%
+  bind_rows(crdv_2)%>%
+  rename(c(time_24h=`Time (24h)`, Site_StationKey=Raw_data_identifier))%>%
+  mutate(time_24h=format(time_24h, format = "%H:%M"))%>%
+  dplyr::group_by(Site_StationKey, Year, Month, Day) %>% #group by days, month and year
+  dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature)) %>%
+  mutate(Date = ymd(paste(Year, Month, Day, sep = "-")))%>%
+  select(Site_StationKey, Date, Tmax_Day, Tmin_Day, Tavg_Day, Year, Month, Day)
+
+save(crdv_dailys, file="2_pipeline/store/crdv_dailys.rData")
+```
 
 
 ### Combine datasets {.unnumbered}
@@ -278,9 +299,9 @@ load("2_pipeline/store/ARVTFire_2020_2022_dailys.rData")
 load("2_pipeline/store/ARVTDendro_2021_dailys.rData")
 load("2_pipeline/store/RedPlat_dailys.rData")
 load("2_pipeline/store/BCWS_dailys.rData")
+load("2_pipeline/store/crdv_dailys.rData")
 
-
-ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,  "ARVTFire"=ARVTFire_2020_2022_dailys, "ARVTDendro"=ARVTDendro_2021_dailys, "wood"=wood_dailys, "RedPlat"=RedPlat_dailys, "BCWS"=BCWS_dailys, .id="Project")
+ibuttons<-bind_rows("RIVR"=RIVR_dailys,"HILLS"=hills_dailys,  "ARVTFire"=ARVTFire_2020_2022_dailys, "ARVTDendro"=ARVTDendro_2021_dailys, "wood"=wood_dailys, "RedPlat"=RedPlat_dailys, "BCWS"=BCWS_dailys, "cardinal_divide"=crdv_dailys, .id="Project")
 
 save(ibuttons, file=paste0("2_pipeline/tmp/ibuttons_", Sys.Date(), ".rData"))
 ```
