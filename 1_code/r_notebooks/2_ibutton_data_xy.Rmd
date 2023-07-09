@@ -186,14 +186,14 @@ st_write(alex_xy, "0_data/manual/iButton_data/spatial/alex_xy.shp")
 ### ARVTDendro {-}
 
 ```{r}
-load("0_data/external/iButton/ARVT/ARVTDendro/arvtdendro2021_cleaned_iButton_data.RData")
+load("0_data/external/iButton/ARVT/ARVTDendro/arvtdendro2021_lat_longs.RData")
 
-ARVTDendro_2021_xy<-mk_cleaned%>%
+ARVTDendro_2021_xy<-mk_lat_long%>%
   mutate(Site_StationKey=mission_id)%>%
   mutate(Project="ARVTDendro")%>%
   group_by(Site_StationKey)%>%
-  mutate(min_year=min(year(Date_Time)))%>%
-  mutate(max_year=max(year(Date_Time)))%>%
+  mutate(min_year=min(year(Date_Time_dpl)))%>%
+  mutate(max_year=max(year(retr_date)))%>%
   rename(c(Lat=lat, Long=long))%>%
   mutate(Lat=as.numeric(Lat))%>%
   mutate(Long=as.numeric(Long))%>%
@@ -211,20 +211,20 @@ st_write(ARVTDendro_2021_xy, "0_data/manual/iButton_data/spatial/ARVTDendro_2021
 ### ARVTFire {-}
 
 ```{r}
-load("0_data/external/iButton/ARVT/ARVTFire/alex_2020_2021_cleaned_temp_data.RData")
-
-ARVTFire_2020_2021_xy<-alex_2020_cleaned%>%
-  mutate(Site_StationKey=mission_id)%>%
-  mutate(Project="ARVTFire")%>%
-  group_by(Site_StationKey)%>%
-  mutate(min_year=min(year(Date_Time)))%>%
-  mutate(max_year=max(year(Date_Time)))%>%
-  rename(c(Lat=lat, Long=long))%>%
-  mutate(Lat=as.numeric(Lat))%>%
-  mutate(Long=as.numeric(Long))%>%
-  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
-  dplyr::distinct()%>%
-  st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+# load("0_data/external/iButton/ARVT/ARVTFire/alex_2020_2021_cleaned_temp_data.RData")
+# 
+# ARVTFire_2020_2021_xy<-alex_2020_cleaned%>%
+#   mutate(Site_StationKey=mission_id)%>%
+#   mutate(Project="ARVTFire")%>%
+#   group_by(Site_StationKey)%>%
+#   mutate(min_year=min(year(Date_Time)))%>%
+#   mutate(max_year=max(year(Date_Time)))%>%
+#   rename(c(Lat=lat, Long=long))%>%
+#   mutate(Lat=as.numeric(Lat))%>%
+#   mutate(Long=as.numeric(Long))%>%
+#   dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+#   dplyr::distinct()%>%
+#   st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
 
 #########################################
 
@@ -319,11 +319,41 @@ st_write(BCWS_xy, "0_data/manual/iButton_data/spatial/BCWS_xy.shp")
 ```
 
 
+### Cardinal Divide {-}
+
+```{r eval=FALSE}
+crdv_met_1<-read_excel("0_data/external/iButton/cardinal_divide/cardinaldividetemperaturestationsdata/Nielsen_02_SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Metadata")
+
+crdv_met_2<-read_excel("/Volumes/Projects/climate_downscaling/0_data/external/iButton/cardinal_divide/fwcardinaldivideelevationtransecttemperaturedata/Nielsen-SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Metadata")
+
+crdv_xy<-crdv_met_1%>%
+  bind_rows(crdv_met_2)%>%
+  slice(-1)%>%
+  select(Raw_data_identifier, Latitude, Longitude, Start_date_year,End_date_year)%>%
+  rename(c(min_year=Start_date_year, max_year=End_date_year, Site_StationKey=Raw_data_identifier))%>%
+  rename(c(Lat=Latitude, Long=Longitude))%>%
+  mutate(Lat=as.numeric(Lat))%>%
+  mutate(Lon=as.numeric(Long))%>%
+  mutate(Project="CRDV")%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+  dplyr::distinct()%>%
+  na.omit()%>%
+  st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+save(crdv_xy, file="0_data/manual/iButton_data/spatial/crdv_xy.rData")
+
+# save as shapefile
+st_write(crdv_xy, "0_data/manual/iButton_data/spatial/crdv_xy.shp")
+```
+
+
+
+
 
 ### All projects {-}
 
 ```{r eval=FALSE}
-ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy, BCWS_xy, RedPlat_xy, ARVTDendro_2021_xy)
+ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy, BCWS_xy, RedPlat_xy, ARVTDendro_2021_xy, ARVTFire_2021_xy, crdv_xy)
 
 # save as spatial data frame
 save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")

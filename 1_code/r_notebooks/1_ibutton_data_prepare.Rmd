@@ -269,6 +269,18 @@ save(BCWS_dailys, file="2_pipeline/store/BCWS_dailys.rData")
 #### Cardinal Divide {-}
 
 ```{r eval=FALSE}
+
+# Bring in meta data and keep on;y ibuttons that are 1.5 vm off the ground
+crdv_met_1<-read_excel("0_data/external/iButton/cardinal_divide/cardinaldividetemperaturestationsdata/Nielsen_02_SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Metadata")
+
+crdv_met_2<-read_excel("/Volumes/Projects/climate_downscaling/0_data/external/iButton/cardinal_divide/fwcardinaldivideelevationtransecttemperaturedata/Nielsen-SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Metadata")
+
+crdv_met_all<-crdv_met_1%>%
+  bind_rows(crdv_met_2)%>%
+  select(Raw_data_identifier, Sensor_height)%>%
+  rename(Site_StationKey=Raw_data_identifier)
+
+# Read raw data
 crdv_1<-read_excel("0_data/external/iButton/cardinal_divide/cardinaldividetemperaturestationsdata/Nielsen_02_SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Raw time series")
 
 crdv_2<-read_excel("/Volumes/Projects/climate_downscaling/0_data/external/iButton/cardinal_divide/fwcardinaldivideelevationtransecttemperaturedata/Nielsen-SoilTemp2.0_data-submission_template_long_unique_sensor.xlsx", sheet = "Raw time series")
@@ -276,11 +288,14 @@ crdv_2<-read_excel("/Volumes/Projects/climate_downscaling/0_data/external/iButto
 crdv_dailys<-crdv_1%>%
   bind_rows(crdv_2)%>%
   rename(c(time_24h=`Time (24h)`, Site_StationKey=Raw_data_identifier))%>%
+  left_join(crdv_met_all)%>%
+  filter(Sensor_height==150)%>%
   mutate(time_24h=format(time_24h, format = "%H:%M"))%>%
   dplyr::group_by(Site_StationKey, Year, Month, Day) %>% #group by days, month and year
   dplyr::summarize(Tmax_Day=max(Temperature),Tmin_Day=min(Temperature),Tavg_Day=mean(Temperature)) %>%
   mutate(Date = ymd(paste(Year, Month, Day, sep = "-")))%>%
   select(Site_StationKey, Date, Tmax_Day, Tmin_Day, Tavg_Day, Year, Month, Day)
+
 
 save(crdv_dailys, file="2_pipeline/store/crdv_dailys.rData")
 ```

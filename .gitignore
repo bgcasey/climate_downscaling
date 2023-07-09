@@ -38,6 +38,7 @@ vignettes/*.pdf
 # Data folder
 0_data/external/*
 0_data/manual/*
+0_data/test_ibutton_file_structure/*
 
 2_pipeline/tmp/*
 2_pipeline/store/*

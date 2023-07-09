@@ -1,0 +1,162 @@
+```{r setup, include=FALSE, cache=FALSE}
+#Set root directory to R project root
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+ 
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+
+Connect to Google Drive
+```{r}
+library(googledrive)
+
+
+# Define the authentication URL
+auth_url <- "https://accounts.google.com/o/oauth2/auth"
+
+# Perform the OAuth 2.0 authentication manually
+oauth_token <- oauth2.0_token(
+  endpoint = oauth_endpoint(auth_url, "token"),
+  app = oauth_app("googledrive", key = "", secret = "", access = "offline"),
+  scope = "https://www.googleapis.com/auth/drive",
+  use_oob = TRUE
+)
+
+# Complete the authentication process
+token <- oauth_authorize(oauth_token, auth_url)
+
+
+```
+
+
+Access and format raw iButton data
+
+## Link to data from Google Drive
+
+```{r}
+# Enter path to microclimate directory
+CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
+# setwd(CFS_microclimate)
+
+BUdeployment2022 <- read_csv(paste(CFS_microclimate, "BUiButtonDeployment2022.csv", sep=""))
+
+```
+
+
+The script should:
+1. scan and read raw csvs
+2. combine, clean and format raw csvs
+  Get lat long and accuracy from the EpiCollect deployment and retrival form
+  should have the following columbs:
+   [1] "serial_number" "serial_full"   "mission_id"    "lat"           "long"         
+ [6] "accuracy"      "retr_date"     "Date_Time_dpl" "Temperature"   "Date_Time"    
+[11] "Month"         "Day"           "Year"    
+3. create new folders for metadata and processed files
+4. add data from the processed files to other tables defined in the protocols document
+
+
+
+```{r}
+# Set the directory path
+directory <- "0_data/test_ibutton_file_structure/Projects"
+
+# Get a list of all project folders in the directory
+user_folders <- dir(directory, full.names = TRUE, recursive = FALSE)
+
+# select projects to be processed
+user_strings <- c("BUCL2022", "BUGhost2022", "BUMTN2022")
+
+for (folder in user_folders) {
+  # Check if the folder name contains any of the user-defined strings
+  if (any(sapply(user_strings, grepl, x = folder, ignore.case = TRUE))) {
+    # Get a list of files in the current folder
+    files <- list.files(folder, full.names = TRUE)
+    
+    # Print the folder name and corresponding files
+    cat("Folder:", folder, "\n")
+    cat("Files:", files, "\n\n")
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+# Iterate over each folder
+for (folder in folders_all) {
+  # Get a list of files in the current folder
+  files <- list.files(folder, full.names = TRUE)
+  
+  # Print the folder name and corresponding files
+  cat("Folder:", folder, "\n")
+  cat("Files:", files, "\n\n")
+  
+  ##additional waterton ibuttons
+  merge_wtr <- files %>% as.data.frame()
+  colnames(merge_wtr)[1] <- "file_name"
+  ##get serial numbers from file names
+  wtr_ib <- merge_wtr %>% 
+    mutate(serial_full= str_sub(file_name, 1, 16),
+           serial= str_sub(file_name, 9, 14),
+           data_downloaded_y_n= "y") %>% 
+    select(-c(file_name))
+}
+
+```
+
+Test
+
+```{r}
+file_list <- list.files(path="0_data/test_ibutton_file_structure/Projects/BUMTN2022", full.names = TRUE)
+
+# Deploymeny and retrieval form
+deployment_retrieval <- read_sheet(paste(CFS_microclimate, "CFS_microclimate/CFSdeployment retrieval/Epicollect deployment and retrieval 2022.gsheet", sep=""))
+
+~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/CFSdeployment retrieval
+
+
+combined_data <- data.frame()
+# Loop through each file
+for (i in 1:length(file_list)) {
+  # Read the data file skipping the first 19 rows
+  file_data <- fread(file_list[i],skip = "Date", sep = ",")
+  ##extract the first 18 rows
+  headers_data <- fread(file_list[i], nrows= 14, sep = ",", header = FALSE, fill = TRUE, blank.lines.skip = TRUE)
+  headers_data <- headers_data[,1]
+  ##add the file name to combined data
+  file_data$serial_full <- substr(headers_data[2], 37,52)
+  ##bring in each file name
+  file_data$filename <- file_list[i]
+  # Append the data to the combined data frame
+  combined_data <- bind_rows(combined_data, file_data)
+}
+
+mk_2021a <- combined_data %>%
+  select(-c(Unit)) %>% 
+  mutate(serial_number= str_sub(serial_full, 9, 14),
+         date_time= `Date/Time`) %>%
+  mutate(date_time2 = dmy_hms(date_time)) %>% 
+  mutate(date_time3 = case_when(serial_number== "6E21A1" ~ as_datetime(date_time, format= "%Y-%m-%d %H:%M"),
+                                 .default = date_time2)) %>% 
+  mutate(date_time_corrected= as_datetime(date_time3)) %>% 
+  select(-c(date_time2, date_time3))%>%
+  mutate(Month=month(date_time_corrected))%>%
+  mutate(Day=day(date_time_corrected))%>%
+  mutate(Year=year(date_time_corrected)) %>% 
+  distinct() %>% 
+  select(-c(`Date/Time`,filename, date_time)) %>% 
+  rename(Temperature= Value, Date_Time= date_time_corrected)
+
+```
+
+
