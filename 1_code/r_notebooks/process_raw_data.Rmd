@@ -39,10 +39,6 @@ Access and format raw iButton data
 ```{r}
 # Enter path to microclimate directory
 CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
-# setwd(CFS_microclimate)
-
-BUdeployment2022 <- read_csv(paste(CFS_microclimate, "BUiButtonDeployment2022.csv", sep=""))
-
 ```
 
 
@@ -59,6 +55,84 @@ The script should:
 
 
 
+### Test on single folder
+
+```{r}
+
+# read individual csvs
+file_list <- list.files(path="0_data/test_ibutton_file_structure/Projects/BUMTN2022", full.names = TRUE)
+
+combined_data_1 <- data.frame()
+# Loop through each file
+for (i in 1:length(file_list)) {
+  # Read the data file skipping the first 19 rows
+  file_data <- fread(file_list[i],skip = "Date", sep = ",")
+  ##extract the first 18 rows
+  headers_data <- fread(file_list[i], nrows= 14, sep = ",", header = FALSE, fill = TRUE, blank.lines.skip = TRUE)
+  headers_data <- headers_data[,1]
+  ##add the file name to combined data
+  file_data$serial_full <- substr(headers_data[2], 37,52)
+  ##bring in each file name
+  file_data$filename <- file_list[i]
+  # Append the data to the combined data frame
+  combined_data_1 <- bind_rows(combined_data_1, file_data)
+}
+
+combined_data_2 <- combined_data_1 %>%
+  select(-c(Unit)) %>% 
+  mutate(serial_number= str_sub(serial_full, 9, 14)) %>%
+  mutate(date_time = dmy_hms(`Date/Time`)) %>% 
+  mutate(month=month(date_time))%>%
+  mutate(day=day(date_time))%>%
+  mutate(year=year(date_time)) %>% 
+  rename(temperature= Value)
+
+# Bring in metadata from the epicollect deployment and retrieval table
+epc <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")
+
+
+# select projects to be processed
+projects <- c("BUCL2022", "BUGhost2022", "BUMTN2022")
+
+epc1 <- epc %>% 
+  #keep only projects listed in "projects"
+  filter(project_id %in% projects) %>%
+  # filtered by retrieved ibuttons
+  filter(deploy_or_retr=="Retrieved",
+         !(serial=="MISSIN")) %>%
+  select(c(mission_id, serial,date, lat, long, temp_sens_ht, temp_sens_comments, accuracy)) %>% 
+  mutate(retr_date= dmy(date), serial= as.character(serial))
+
+
+
+
+
+
+
+##bring in google sheet to get retrieval dates (Missions update here sheet)
+alt_gs <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oyqA254Ld69-6nNeHiX_WjwS2vg5TMDDQWVY/edit#gid=266715229")
+
+alt_gs1 <- alt_gs %>% 
+  #keep only projects listed in "projects"
+  filter(project_id %in% projects)%>%
+  filter(retrieved_y_n=="y")
+
+
+
+  filter(deploy_or_retr=="Retrieved",
+         !(serial=="MISSIN")) %>%
+
+
+
+```
+
+
+
+
+
+
+
+### Loop through multiple folders
 ```{r}
 # Set the directory path
 directory <- "0_data/test_ibutton_file_structure/Projects"
@@ -111,51 +185,7 @@ for (folder in folders_all) {
            data_downloaded_y_n= "y") %>% 
     select(-c(file_name))
 }
-
-```
-
-Test
-
-```{r}
-file_list <- list.files(path="0_data/test_ibutton_file_structure/Projects/BUMTN2022", full.names = TRUE)
-
-# Deploymeny and retrieval form
-deployment_retrieval <- read_sheet(paste(CFS_microclimate, "CFS_microclimate/CFSdeployment retrieval/Epicollect deployment and retrieval 2022.gsheet", sep=""))
-
-~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/CFSdeployment retrieval
-
-
-combined_data <- data.frame()
-# Loop through each file
-for (i in 1:length(file_list)) {
-  # Read the data file skipping the first 19 rows
-  file_data <- fread(file_list[i],skip = "Date", sep = ",")
-  ##extract the first 18 rows
-  headers_data <- fread(file_list[i], nrows= 14, sep = ",", header = FALSE, fill = TRUE, blank.lines.skip = TRUE)
-  headers_data <- headers_data[,1]
-  ##add the file name to combined data
-  file_data$serial_full <- substr(headers_data[2], 37,52)
-  ##bring in each file name
-  file_data$filename <- file_list[i]
-  # Append the data to the combined data frame
-  combined_data <- bind_rows(combined_data, file_data)
-}
-
-mk_2021a <- combined_data %>%
-  select(-c(Unit)) %>% 
-  mutate(serial_number= str_sub(serial_full, 9, 14),
-         date_time= `Date/Time`) %>%
-  mutate(date_time2 = dmy_hms(date_time)) %>% 
-  mutate(date_time3 = case_when(serial_number== "6E21A1" ~ as_datetime(date_time, format= "%Y-%m-%d %H:%M"),
-                                 .default = date_time2)) %>% 
-  mutate(date_time_corrected= as_datetime(date_time3)) %>% 
-  select(-c(date_time2, date_time3))%>%
-  mutate(Month=month(date_time_corrected))%>%
-  mutate(Day=day(date_time_corrected))%>%
-  mutate(Year=year(date_time_corrected)) %>% 
-  distinct() %>% 
-  select(-c(`Date/Time`,filename, date_time)) %>% 
-  rename(Temperature= Value, Date_Time= date_time_corrected)
+print(head(mk_cleaned))
 
 ```
 
