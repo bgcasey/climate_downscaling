@@ -4,43 +4,12 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
  
 ```{r}
-library(tidyverse)
 library(data.table)
+library(tidyverse)
+library(googlesheets4)
 ```
 
-
-Connect to Google Drive
-```{r}
-library(googledrive)
-
-
-# Define the authentication URL
-auth_url <- "https://accounts.google.com/o/oauth2/auth"
-
-# Perform the OAuth 2.0 authentication manually
-oauth_token <- oauth2.0_token(
-  endpoint = oauth_endpoint(auth_url, "token"),
-  app = oauth_app("googledrive", key = "", secret = "", access = "offline"),
-  scope = "https://www.googleapis.com/auth/drive",
-  use_oob = TRUE
-)
-
-# Complete the authentication process
-token <- oauth_authorize(oauth_token, auth_url)
-
-
-```
-
-
-Access and format raw iButton data
-
-## Link to data from Google Drive
-
-```{r}
-# Enter path to microclimate directory
-CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
-```
-
+## Process and clean raw iButton data
 
 The script should:
 1. scan and read raw csvs
@@ -54,14 +23,43 @@ The script should:
 4. add data from the processed files to other tables defined in the protocols document
 
 
-
-### Test on single folder
-
 ```{r}
 
-# read individual csvs
-file_list <- list.files(path="0_data/test_ibutton_file_structure/Projects/BUMTN2022", full.names = TRUE)
+## ----------------------- Setup -----------------------------
+# enter projects to be processed separated by "|"
+projects <- "BUCL2022|BUGhost2022|BUMTN2022"
 
+# Enter path to microclimate directory
+CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
+
+# projects <- "BUGhost2022"
+## -----------------------------------------------------------
+
+
+## ----------------Bring in project metadata------------------
+# Get deployment and project meta data
+epicollect_dpl_retr <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")%>%distinct()
+
+# Get retrieval data
+missions_update <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oyqA254Ld69-6nNeHiX_WjwS2vg5TMDDQWVY/edit#gid=266715229")
+## -----------------------------------------------------------
+
+
+## ----------------Get a list of directories------------------
+# Create a list of folders named raw in directories that match the user specified projects
+dirs <- intersect(
+        grep("raw",list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE),
+        grep(projects,list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE)
+)
+## -----------------------------------------------------------
+
+## --------- Process raw csv files in each directory ---------
+
+for (dir in dirs) {
+
+# Get a list of files in the directory lists
+file_list <- list.files(dir, pattern='*\\.csv', ignore.case=TRUE, full.names = TRUE, recursive = TRUE)
+  
 combined_data_1 <- data.frame()
 # Loop through each file
 for (i in 1:length(file_list)) {
@@ -81,112 +79,32 @@ for (i in 1:length(file_list)) {
 combined_data_2 <- combined_data_1 %>%
   select(-c(Unit)) %>% 
   mutate(serial_number= str_sub(serial_full, 9, 14)) %>%
+  #add project_id field based on the parent directory name
+  mutate(project_id=basename(dirname(dir)))%>%
+  # add mission id column
+  mutate(mission_id=paste(project_id, serial_number, sep="_"))%>%
   mutate(date_time = dmy_hms(`Date/Time`)) %>% 
+  select(-c(`Date/Time`)) %>% 
   mutate(month=month(date_time))%>%
   mutate(day=day(date_time))%>%
   mutate(year=year(date_time)) %>% 
   rename(temperature= Value)
 
-# Bring in metadata from the epicollect deployment and retrieval table
-epc <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")
+combined_data_3 <- combined_data_2 %>%
+  left_join(epicollect_dpl_retr, by = join_by(serial_full, project_id, mission_id))%>%
+  mutate(serial=as.character(serial))%>%  left_join(missions_update, by = join_by(mission_id, serial_full, serial, project_id))%>%
+  rename(c(deployment_date=`deployment_date_(dd/mm/yyyy)`, retrieval_date=`retrieval_date_(dd/mm/yyyy)`))%>%
+  dplyr::select(c(project_id, mission_id, serial, lat, long, accuracy, temp_sens_ht, shield_type, deployment_date, retrieval_date, date_time, month, day, year, temperature)) 
 
+# save as a csv within the correct project parent directory
+save_dir<-substr(dir, 1, nchar(dir) - 3)
+save_dir<- paste0(save_dir, "cleaned/") 
 
-# select projects to be processed
-projects <- c("BUCL2022", "BUGhost2022", "BUMTN2022")
+df_name<-paste0(basename(dirname(dir)), "_cleaned")
+assign(df_name, combined_data_3)
 
-epc1 <- epc %>% 
-  #keep only projects listed in "projects"
-  filter(project_id %in% projects) %>%
-  # filtered by retrieved ibuttons
-  filter(deploy_or_retr=="Retrieved",
-         !(serial=="MISSIN")) %>%
-  select(c(mission_id, serial,date, lat, long, temp_sens_ht, temp_sens_comments, accuracy)) %>% 
-  mutate(retr_date= dmy(date), serial= as.character(serial))
-
-
-
-
-
-
-
-##bring in google sheet to get retrieval dates (Missions update here sheet)
-alt_gs <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oyqA254Ld69-6nNeHiX_WjwS2vg5TMDDQWVY/edit#gid=266715229")
-
-alt_gs1 <- alt_gs %>% 
-  #keep only projects listed in "projects"
-  filter(project_id %in% projects)%>%
-  filter(retrieved_y_n=="y")
-
-
-
-  filter(deploy_or_retr=="Retrieved",
-         !(serial=="MISSIN")) %>%
-
-
-
-```
-
-
-
-
-
-
-
-### Loop through multiple folders
-```{r}
-# Set the directory path
-directory <- "0_data/test_ibutton_file_structure/Projects"
-
-# Get a list of all project folders in the directory
-user_folders <- dir(directory, full.names = TRUE, recursive = FALSE)
-
-# select projects to be processed
-user_strings <- c("BUCL2022", "BUGhost2022", "BUMTN2022")
-
-for (folder in user_folders) {
-  # Check if the folder name contains any of the user-defined strings
-  if (any(sapply(user_strings, grepl, x = folder, ignore.case = TRUE))) {
-    # Get a list of files in the current folder
-    files <- list.files(folder, full.names = TRUE)
-    
-    # Print the folder name and corresponding files
-    cat("Folder:", folder, "\n")
-    cat("Files:", files, "\n\n")
-  }
+write_csv(combined_data_3, file=paste0(save_dir, combined_data_3$project_id[1], "_cleaned_", format(Sys.Date(), "%Y%m%d"), ".csv"))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-# Iterate over each folder
-for (folder in folders_all) {
-  # Get a list of files in the current folder
-  files <- list.files(folder, full.names = TRUE)
-  
-  # Print the folder name and corresponding files
-  cat("Folder:", folder, "\n")
-  cat("Files:", files, "\n\n")
-  
-  ##additional waterton ibuttons
-  merge_wtr <- files %>% as.data.frame()
-  colnames(merge_wtr)[1] <- "file_name"
-  ##get serial numbers from file names
-  wtr_ib <- merge_wtr %>% 
-    mutate(serial_full= str_sub(file_name, 1, 16),
-           serial= str_sub(file_name, 9, 14),
-           data_downloaded_y_n= "y") %>% 
-    select(-c(file_name))
-}
-print(head(mk_cleaned))
-
 ```
 
 
