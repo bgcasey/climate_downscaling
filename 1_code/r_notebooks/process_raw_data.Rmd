@@ -29,6 +29,8 @@ The script should:
 # enter projects to be processed separated by "|"
 projects <- "BUCL2022|BUGhost2022|BUMTN2022"
 
+projects <- "BUCL2022"
+
 # Enter path to microclimate directory
 CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
 
@@ -37,10 +39,10 @@ CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared
 
 
 ## ----------------Bring in project metadata------------------
-# Get deployment and project meta data
+# Get deployment and project meta data ("Missions update here")
 epicollect_dpl_retr <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")%>%distinct()
 
-# Get retrieval data
+# Get retrieval data ("Epicollect deployment and retrieval 2022")
 missions_update <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oyqA254Ld69-6nNeHiX_WjwS2vg5TMDDQWVY/edit#gid=266715229")
 ## -----------------------------------------------------------
 
@@ -66,7 +68,7 @@ for (i in 1:length(file_list)) {
   # Read the data file skipping the first 19 rows
   file_data <- fread(file_list[i],skip = "Date", sep = ",")
   ##extract the first 18 rows
-  headers_data <- fread(file_list[i], nrows= 14, sep = ",", header = FALSE, fill = TRUE, blank.lines.skip = TRUE)
+  headers_data <- fread(file_list[i], nrows= 18, sep = ",", header = FALSE, fill = TRUE, blank.lines.skip = TRUE)
   headers_data <- headers_data[,1]
   ##add the file name to combined data
   file_data$serial_full <- substr(headers_data[2], 37,52)
