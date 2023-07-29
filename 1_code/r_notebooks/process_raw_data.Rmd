@@ -29,7 +29,7 @@ The script should:
 # enter projects to be processed separated by "|"
 projects <- "BUCL2022|BUGhost2022|BUMTN2022"
 
-projects <- "BUCL2022"
+# projects <- "BUCL2022"
 
 # Enter path to microclimate directory
 CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
@@ -40,10 +40,26 @@ CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared
 
 ## ----------------Bring in project metadata------------------
 # Get deployment and project meta data ("Missions update here")
-epicollect_dpl_retr <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")%>%distinct()
+epicollect_dpl_retr <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")%>%
+  distinct()%>%  
+  mutate(serial=as.character(serial))
+
 
 # Get retrieval data ("Epicollect deployment and retrieval 2022")
 missions_update <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oyqA254Ld69-6nNeHiX_WjwS2vg5TMDDQWVY/edit#gid=266715229")
+
+# Get retrieval data ("Epicollect deployment and retrieval 2023")
+epi_2023<-read_csv("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_20230729.csv")%>%
+  select(mission_id, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
+
+# combine metadata we are interested in into a single dataframe
+mission_meta<-missions_update%>%
+  left_join(epicollect_dpl_retr)%>%
+  select(mission_id, shield_type, temp_sens_ht, lat, long, accuracy, `retrieval_date_(dd/mm/yyyy)`, `deployment_date_(dd/mm/yyyy)`)%>%
+  rename(c(latitude=lat, longitude=long, retrieval_date=`retrieval_date_(dd/mm/yyyy)`, deployment_date=`deployment_date_(dd/mm/yyyy)`))%>% 
+  rbind(epi_2023)%>%
+  distinct()
+
 ## -----------------------------------------------------------
 
 
@@ -93,20 +109,63 @@ combined_data_2 <- combined_data_1 %>%
   rename(temperature= Value)
 
 combined_data_3 <- combined_data_2 %>%
-  left_join(epicollect_dpl_retr, by = join_by(serial_full, project_id, mission_id))%>%
-  mutate(serial=as.character(serial))%>%  left_join(missions_update, by = join_by(mission_id, serial_full, serial, project_id))%>%
-  rename(c(deployment_date=`deployment_date_(dd/mm/yyyy)`, retrieval_date=`retrieval_date_(dd/mm/yyyy)`))%>%
-  dplyr::select(c(project_id, mission_id, serial, lat, long, accuracy, temp_sens_ht, shield_type, deployment_date, retrieval_date, date_time, month, day, year, temperature)) 
+  left_join(mission_meta)
 
 # save as a csv within the correct project parent directory
 save_dir<-substr(dir, 1, nchar(dir) - 3)
 save_dir<- paste0(save_dir, "cleaned/") 
 
 df_name<-paste0(basename(dirname(dir)), "_cleaned")
-assign(df_name, combined_data_3)
+assign(df_name, combined_data_3, envir = .GlobalEnv)
 
 write_csv(combined_data_3, file=paste0(save_dir, combined_data_3$project_id[1], "_cleaned_", format(Sys.Date(), "%Y%m%d"), ".csv"))
 }
+
+
+
+
+
+# combined_data_3a <- combined_data_2 %>%
+#   left_join(epicollect_dpl_retr, by = join_by(serial_full, project_id, mission_id))%>%
+#   # mutate(serial=as.character(serial))%>%  
+#   left_join(missions_update, by = join_by(mission_id, serial_full, serial, project_id))%>%
+#   rename(c(deployment_date=`deployment_date_(dd/mm/yyyy)`, retrieval_date=`retrieval_date_(dd/mm/yyyy)`))%>%
+#   dplyr::select(c(project_id, mission_id, serial, lat, long, accuracy, temp_sens_ht, shield_type, deployment_date, retrieval_date, date_time, month, day, year, temperature))%>%
+#   left_join(epi_2023, by="mission_id")
+# 
+# 
+# xy<-combined_data_3a%>%filter(is.na(lat))
+# 
+# 
+# #See what we have location info for
+# proj_loc<-epicollect_dpl_retr%>%filter(!is.na(lat))%>%
+#   select(mission_id, lat, long)%>%
+#   distinct()%>%
+#   filter(grepl("^BUCL2022", mission_id)|grepl("^BUGhost2022", mission_id)|grepl("^BUMTN2022", mission_id))%>%
+#   arrange(mission_id)
+# 
+# proj_loc_BUGHOST<-BUGhost2022_cleaned%>%
+#   # filter(!is.na(latitude))%>%
+#   select(mission_id, latitude, longitude)%>%
+#   distinct()%>%
+#   filter(grepl("^BUCL2022", mission_id)|grepl("^BUGhost2022", mission_id)|grepl("^BUMTN2022", mission_id))%>%
+#   arrange(mission_id)
+# 
+# proj_loc_BUGMTN<-BUMTN2022_cleaned%>%
+#   # filter(!is.na(latitude))%>%
+#   select(mission_id, latitude, longitude)%>%
+#   distinct()%>%
+#   filter(grepl("^BUCL2022", mission_id)|grepl("^BUGhost2022", mission_id)|grepl("^BUMTN2022", mission_id))%>%
+#   arrange(mission_id)
+# 
+# proj_loc_BUCL<-BUCL2022_cleaned%>%
+#   # filter(!is.na(latitude))%>%
+#   select(mission_id, latitude, longitude)%>%
+#   distinct()%>%
+#   filter(grepl("^BUCL2022", mission_id)|grepl("^BUGhost2022", mission_id)|grepl("^BUMTN2022", mission_id))%>%
+#   arrange(mission_id)
+
+
 ```
 
 

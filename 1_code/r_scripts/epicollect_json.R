@@ -2,6 +2,7 @@
 
 ## Import Libraries -------
 library(rjson)
+library(tidyverse)
 
 ## Import single json file --------
 file_location <- "0_data/test_ibutton_file_structure/epicollect/ibuttondeploymentcfs-v2-json/form-1__ibutton-deployment.json"
@@ -10,18 +11,21 @@ json_data <- rjson::fromJSON(file = file_location)
 file_location <- "0_data/test_ibutton_file_structure/epicollect/ibuttondeploymentcfs-v2-json/branch-1__enter-1-branch-for-each-temperature-sensor-at-this-site.json"
 json_data2 <- rjson::fromJSON(file = file_location)
 
-## Otput to csv -----------
 
 
-#### site.json... ----
+## Multiple JSON files to CSV -----------
+
+### site json -----------
+
+#### List .json files in a directory ... ----
 dir <- "0_data/test_ibutton_file_structure/epicollect/ibuttondeploymentcfs-v2-json/"
 files <- list.files(dir, pattern = "*site.json", recursive = TRUE)
 filepaths <- file.path(dir, files)
 
-#####  Initialise output data frame -----------
+####  Initialize output data frame -----------
 df_site <- data.frame()
 
-##### Iterate over all JSON files -----------
+#### Iterate over all JSON files -----------
 for (filepath in filepaths) {
   # Import files
   json_data <- rjson::fromJSON(file = filepath)
@@ -33,13 +37,13 @@ for (filepath in filepaths) {
     sensorID= as.character(sapply(json_data$data, function(x) x[["14_Temperature_senso"]])),
     sensorID_2= as.character(sapply(json_data$data, function(x) x[["15_Temperature_senso"]])),
     shielding= sapply(json_data$data, function(x) x[["21_What_shielding_is"]]),
-    height= sapply(json_data$data, function(x) x[["17_At_what_height_is"]])
+    temp_sens_ht= sapply(json_data$data, function(x) x[["17_At_what_height_is"]])
   )
   # Add new row to output data frame
   df_site <- rbind(df_site, new_row)
 }
 
-##### Clean dataframe ----
+#### Clean dataframe ----
 df_site_2<-df_site%>%
     mutate(sensorID = ifelse(sensorID == "list()", sensorID_2, sensorID)) %>%
     select(-sensorID_2)%>%
@@ -47,15 +51,15 @@ df_site_2<-df_site%>%
     mutate(sensorID = ifelse(sensorID == "", sensorID_3, sensorID))%>%
     select(-sensorID_3, -title)
 
-#### deployment.json... ----
+### deployment JSON ----
 dir <- "0_data/test_ibutton_file_structure/epicollect/ibuttondeploymentcfs-v2-json/"
 files <- list.files(dir, pattern = "*deployment.json", recursive = TRUE)
 filepaths <- file.path(dir, files)
 
-#####  Initialise output data frame -----------
+####  Initialise output data frame -----------
 df_deployment <- data.frame()
 
-##### Iterate over all JSON files -----------
+#### Iterate over all JSON files -----------
 for (filepath in filepaths) {
   # Import files
   json_data <- rjson::fromJSON(file = filepath)
@@ -77,67 +81,12 @@ for (filepath in filepaths) {
 }
 
 
-#### Join dataframes -----
-deployment_retrivals<-left_join(df_deployment, df_site_2, by=c("ec5_uuid"= "ec5_branch_owner_uuid"))%>%
+### Join dataframes -----
+deployment_retrievals<-left_join(df_deployment, df_site_2, by=c("ec5_uuid"= "ec5_branch_owner_uuid"))%>%
   group_by(ec5_uuid)%>%
-  pivot_wider(names_from = deployment_or_retrieval, values_from = date)
+  pivot_wider(names_from = deployment_or_retrieval, values_from = date)%>%
+  rename(c(deployment_date=Deploying, retrieval_date=Retrieving, shield_type=shielding, project_id=project))%>%
+  mutate(mission_id=paste(project_id, sensorID, sep="_"))
 
-test<-deployment_retrivals%>%
-  ungroup()%>%
-  select(project, sensorID)%>%
-  distinct()
+write_csv(deployment_retrievals, file = paste("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_", format(Sys.Date(), "%Y%m%d"), ".csv", sep = ""))
 
-
-
-# add to master deployment/retrieval form in google. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Work with jsonlite package -------
-# library(jsonlite)
-# library(tidyverse)
-# 
-# 
-# json_data2 <- jsonlite::fromJSON(file = file_location)
-# 
-# 
-# your_df <- json_data%>%
-#   
-#   # remove classification level
-#   purrr::flatten() %>%
-#   
-#   # turn nested lists into dataframes
-#   map_if(is_list, as_tibble) %>%
-#   
-#   # bind_cols needs tibbles to be in lists
-#   map_if(is_tibble, list) %>%
-#   
-#   # creates nested dataframe
-#   bind_cols()
-# 
-# json_data
-# 
-# title<-sapply(json_data, function(x) x$title)
-# 
-# names <- sapply(json_data$data, function(x) if ("title" %in% names(x)) x$title else NA)
-# 
-# ages <- sapply(json_data$data, function(x) x$title)

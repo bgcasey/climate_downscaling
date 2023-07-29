@@ -39,6 +39,7 @@ vignettes/*.pdf
 0_data/external/*
 0_data/manual/*
 0_data/test_ibutton_file_structure/*
+0_data/test/*
 
 2_pipeline/tmp/*
 2_pipeline/store/*
@@ -65,3 +66,4 @@ vignettes/*.pdf
 
 # Google Drive Icon file
 Icon?
+
