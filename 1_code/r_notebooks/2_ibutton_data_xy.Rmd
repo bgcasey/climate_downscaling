@@ -211,25 +211,24 @@ st_write(ARVTDendro_2021_xy, "0_data/manual/iButton_data/spatial/ARVTDendro_2021
 ### ARVTFire {-}
 
 ```{r}
-# load("0_data/external/iButton/ARVT/ARVTFire/alex_2020_2021_cleaned_temp_data.RData")
-# 
-# ARVTFire_2020_2021_xy<-alex_2020_cleaned%>%
-#   mutate(Site_StationKey=mission_id)%>%
-#   mutate(Project="ARVTFire")%>%
-#   group_by(Site_StationKey)%>%
-#   mutate(min_year=min(year(Date_Time)))%>%
-#   mutate(max_year=max(year(Date_Time)))%>%
-#   rename(c(Lat=lat, Long=long))%>%
-#   mutate(Lat=as.numeric(Lat))%>%
-#   mutate(Long=as.numeric(Long))%>%
-#   dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
-#   dplyr::distinct()%>%
-#   st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+load("0_data/external/iButton/ARVT/ARVTFire/alex_2020_2021_cleaned_temp_data.RData")
+ARVTFire2021_locations_comments <-read_csv("0_data/external/iButton/ARVT/ARVTFire/ARVTFire2021_locations_comments.csv")
 
-#########################################
+ARVTFire_2020_2021_xy<-alex_2020_cleaned%>%
+  mutate(Site_StationKey=mission_id)%>%
+  mutate(Project="ARVTFire")%>%
+  group_by(Site_StationKey)%>%
+  mutate(min_year=min(year(Date_Time)))%>%
+  mutate(max_year=max(year(Date_Time)))%>%
+  dplyr::select(c(Project, Site_StationKey,min_year, max_year))%>%
+  distinct()%>%
+  left_join(ARVTFire2021_locations_comments,by = c("Site_StationKey"="mission_id"))%>%
+  rename(c(Lat=Latitude, Long=Longitude))%>%
+  dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
+  dplyr::distinct()
 
 load("0_data/external/iButton/ARVT/ARVTFire/alex_2021_2022_cleaned_temp_data.RData")
-ARVTFire_2021_2022_dailys<-alex_processed%>%
+ARVTFire_2021_2022_xy<-alex_processed%>%
   mutate(Site_StationKey=mission_id)%>%
   mutate(Project="ARVTFire")%>%
   group_by(Site_StationKey)%>%
@@ -238,26 +237,17 @@ ARVTFire_2021_2022_dailys<-alex_processed%>%
   mutate(max_year=max(year(Date)))%>%
   rename(c(Lat=lat, Long=long))%>%
   dplyr::select(c(Project, Site_StationKey, Lat, Long, min_year, max_year))%>%
-  dplyr::distinct()%>%
+  dplyr::distinct()
+
+ARVTFire_2020_2022_xy<-rbind(ARVTFire_2021_2022_xy, ARVTFire_2020_2021_xy)%>%
+  na.omit()%>%
   st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
 
-ARVTFire_2020_2022_dailys<-rbind(ARVTFire_2021_2022_dailys, ARVTFire_2020_2021_dailys)  
-  
-test<-alex_processed%>%
-  filter(is.na(lat))%>%
-  select(mission_id, lat, long)%>%
-  distinct()
-  
-  
-  
-  
-  
-
 # save as spatial data frame
-save(ARVTFire_2021_xy, file="0_data/manual/iButton_data/spatial/ARVTFire_2021_xy.rData")
+save(ARVTFire_2020_2022_xy, file="0_data/manual/iButton_data/spatial/ARVTFire_2020_2022_xy.rData")
 
 # save as shapefile
-st_write(ARVTFire_2021_xy, "0_data/manual/iButton_data/spatial/ARVTFire_2021_xy.shp")
+st_write(ARVTFire_2020_2022_xy, "0_data/manual/iButton_data/spatial/ARVTFire_2020_2022_xy.shp")
 ```
 
 
@@ -353,7 +343,16 @@ st_write(crdv_xy, "0_data/manual/iButton_data/spatial/crdv_xy.shp")
 ### All projects {-}
 
 ```{r eval=FALSE}
-ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy, BCWS_xy, RedPlat_xy, ARVTDendro_2021_xy, ARVTFire_2021_xy, crdv_xy)
+load("0_data/manual/iButton_data/spatial/BCWS_xy.rData")
+load("0_data/manual/iButton_data/spatial/RIVR_xy.rData")
+load("0_data/manual/iButton_data/spatial/hills_xy.rData")
+load("0_data/manual/iButton_data/spatial/wood_xy.rData")
+load("0_data/manual/iButton_data/spatial/alex_xy.rData")
+load("0_data/manual/iButton_data/spatial/ARVTDendro_2021_xy.rData")
+load("0_data/manual/iButton_data/spatial/ARVTFire_2020_2022_xy.rData")
+load("0_data/manual/iButton_data/spatial/RedPlat_xy.rData")
+load("0_data/manual/iButton_data/spatial/crdv_xy.rData")
+ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy, BCWS_xy, RedPlat_xy, ARVTDendro_2021_xy, ARVTFire_2020_2022_xy, crdv_xy)
 
 # save as spatial data frame
 save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")
