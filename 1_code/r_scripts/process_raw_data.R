@@ -1,31 +1,23 @@
-```{r setup, include=FALSE, cache=FALSE}
-#Set root directory to R project root
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-```
- 
-```{r}
+
 library(data.table)
 library(tidyverse)
 library(googlesheets4)
-```
-
-## Process and clean raw iButton data
-
-The script should:
-1. scan and read raw csvs
-2. combine, clean and format raw csvs
-  Get lat long and accuracy from the EpiCollect deployment and retrival form
-  should have the following columbs:
-   [1] "serial_number" "serial_full"   "mission_id"    "lat"           "long"         
- [6] "accuracy"      "retr_date"     "Date_Time_dpl" "Temperature"   "Date_Time"    
-[11] "Month"         "Day"           "Year"    
-3. create new folders for metadata and processed files
-4. add data from the processed files to other tables defined in the protocols document
 
 
-```{r}
+# The script should:
+#   1. scan and read raw csvs
+# 2. combine, clean and format raw csvs
+# Get lat long and accuracy from the EpiCollect deployment and retrival form
+# should have the following columbs:
+#   [1] "serial_number" "serial_full"   "mission_id"    "lat"           "long"         
+# [6] "accuracy"      "retr_date"     "Date_Time_dpl" "Temperature"   "Date_Time"    
+# [11] "Month"         "Day"           "Year"    
+# 3. create new folders for metadata and processed files
+# 4. add data from the processed files to other tables defined in the protocols document
 
-## ----------------------- Setup -----------------------------
+
+
+# ----------------------- Setup -----------------------------
 # enter projects to be processed separated by "|"
 projects <- "BUCL2022|BUGhost2022|BUMTN2022"
 
@@ -35,11 +27,12 @@ projects <- "BUCL2022|BUGhost2022|BUMTN2022"
 CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
 
 # projects <- "BUGhost2022"
-## -----------------------------------------------------------
 
 
-## ----------------Bring in project metadata------------------
+
+# ----------------Bring in project metadata------------------
 # Get deployment and project meta data ("Missions update here")
+gs4_deauth()
 epicollect_dpl_retr <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")%>%
   distinct()%>%  
   mutate(serial=as.character(serial))
@@ -50,7 +43,7 @@ missions_update <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oy
 
 # Get retrieval data ("Epicollect deployment and retrieval 2023")
 epi_2023<-read_csv("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_20230806.csv")%>%
-  select(mission_id, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
+  select(ec5_uuid, mission_id, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
 
 # combine metadata we are interested in into a single dataframe
 mission_meta<-missions_update%>%
@@ -60,69 +53,71 @@ mission_meta<-missions_update%>%
   rbind(epi_2023)%>%
   distinct()
 
-## -----------------------------------------------------------
 
 
-## ----------------Get a list of directories------------------
+# ----------------Get a list of directories------------------
 # Create a list of folders named raw in directories that match the user specified projects
 dirs <- intersect(
-        grep("raw",list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE),
-        grep(projects,list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE)
+  grep("raw",list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE),
+  grep(projects,list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE)
 )
-## -----------------------------------------------------------
+
 
 ## --------- Process raw csv files in each directory ---------
 
 for (dir in dirs) {
-
-# Get a list of files in the directory lists
-file_list <- list.files(dir, pattern='*\\.csv', ignore.case=TRUE, full.names = TRUE, recursive = TRUE)
   
-combined_data_1 <- data.frame()
-# Loop through each file
-for (i in 1:length(file_list)) {
-  # Read the data file skipping the first 19 rows
-  file_data <- fread(file_list[i],skip = "Date", sep = ",")
-  ##extract the first 18 rows
-  headers_data <- fread(file_list[i], nrows= 18, sep = ",", header = FALSE, fill = TRUE, blank.lines.skip = TRUE)
-  headers_data <- headers_data[,1]
-  ##add the file name to combined data
-  file_data$serial_full <- substr(headers_data[2], 37,52)
-  ##bring in each file name
-  file_data$filename <- file_list[i]
-  # Append the data to the combined data frame
-  combined_data_1 <- bind_rows(combined_data_1, file_data)
+  # Get a list of files in the directory lists
+  file_list <- list.files(dir, pattern='*\\.csv', ignore.case=TRUE, full.names = TRUE, recursive = TRUE)
+  
+  combined_data_1 <- data.frame()
+  # Loop through each file
+  for (i in 1:length(file_list)) {
+    # Read the data file skipping the first 19 rows
+    file_data <- fread(file_list[i],skip = "Date", sep = ",")
+    ##extract the first 18 rows
+    headers_data <- fread(file_list[i], nrows= 18, sep = ",", header = FALSE, fill = TRUE, blank.lines.skip = TRUE)
+    headers_data <- headers_data[,1]
+    ##add the file name to combined data
+    file_data$serial_full <- substr(headers_data[2], 37,52)
+    ##bring in each file name
+    file_data$filename <- file_list[i]
+    # Append the data to the combined data frame
+    combined_data_1 <- bind_rows(combined_data_1, file_data)
+  }
+  
+  combined_data_2 <- combined_data_1 %>%
+    select(-c(Unit)) %>% 
+    mutate(serial_number= str_sub(serial_full, 9, 14)) %>%
+    #add project_id field based on the parent directory name
+    mutate(project_id=basename(dirname(dir)))%>%
+    # add mission id column
+    mutate(mission_id=paste(project_id, serial_number, sep="_"))%>%
+    mutate(date_time = dmy_hms(`Date/Time`)) %>% 
+    select(-c(`Date/Time`)) %>% 
+    mutate(month=month(date_time))%>%
+    mutate(day=day(date_time))%>%
+    mutate(year=year(date_time)) %>% 
+    rename(temperature= Value)
+  
+  combined_data_3 <- combined_data_2 %>%
+    left_join(mission_meta)
+  
+  # save as a csv within the correct project parent directory
+  save_dir<-substr(dir, 1, nchar(dir) - 3)
+  save_dir<- paste0(save_dir, "cleaned/") 
+  
+  df_name<-paste0(basename(dirname(dir)), "_cleaned")
+  assign(df_name, combined_data_3, envir = .GlobalEnv)
+  
+  write_csv(combined_data_3, file=paste0(save_dir, combined_data_3$project_id[1], "_cleaned_", format(Sys.Date(), "%Y%m%d"), ".csv"))
 }
 
-combined_data_2 <- combined_data_1 %>%
-  select(-c(Unit)) %>% 
-  mutate(serial_number= str_sub(serial_full, 9, 14)) %>%
-  #add project_id field based on the parent directory name
-  mutate(project_id=basename(dirname(dir)))%>%
-  # add mission id column
-  mutate(mission_id=paste(project_id, serial_number, sep="_"))%>%
-  mutate(date_time = dmy_hms(`Date/Time`)) %>% 
-  select(-c(`Date/Time`)) %>% 
-  mutate(month=month(date_time))%>%
-  mutate(day=day(date_time))%>%
-  mutate(year=year(date_time)) %>% 
-  rename(temperature= Value)
 
-combined_data_3 <- combined_data_2 %>%
-  left_join(mission_meta)
-
-# save as a csv within the correct project parent directory
-save_dir<-substr(dir, 1, nchar(dir) - 3)
-save_dir<- paste0(save_dir, "cleaned/") 
-
-df_name<-paste0(basename(dirname(dir)), "_cleaned")
-assign(df_name, combined_data_3, envir = .GlobalEnv)
-
-write_csv(combined_data_3, file=paste0(save_dir, combined_data_3$project_id[1], "_cleaned_", format(Sys.Date(), "%Y%m%d"), ".csv"))
-}
-
-
-
+# View missing deployment/retrieval info ----
+missing<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned)%>%
+  select(mission_id, latitude, longitude, accuracy, retrieval_date, deployment_date)%>%
+  distinct()
 
 
 # combined_data_3a <- combined_data_2 %>%
@@ -164,8 +159,3 @@ write_csv(combined_data_3, file=paste0(save_dir, combined_data_3$project_id[1], 
 #   distinct()%>%
 #   filter(grepl("^BUCL2022", mission_id)|grepl("^BUGhost2022", mission_id)|grepl("^BUMTN2022", mission_id))%>%
 #   arrange(mission_id)
-
-
-```
-
-

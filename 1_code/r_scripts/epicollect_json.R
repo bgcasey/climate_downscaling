@@ -3,6 +3,7 @@
 ## Import Libraries -------
 library(rjson)
 library(tidyverse)
+library(readr)
 
 ## Import single json file --------
 file_location <- "0_data/test_ibutton_file_structure/epicollect/ibuttondeploymentcfs-v2-json/form-1__ibutton-deployment.json"
@@ -86,7 +87,59 @@ deployment_retrievals<-left_join(df_deployment, df_site_2, by=c("ec5_uuid"= "ec5
   group_by(ec5_uuid)%>%
   pivot_wider(names_from = deployment_or_retrieval, values_from = date)%>%
   rename(c(deployment_date=Deploying, retrieval_date=Retrieving, shield_type=shielding, project_id=project))%>%
-  mutate(mission_id=paste(project_id, sensorID, sep="_"))
+  mutate(mission_id=paste(project_id, sensorID, sep="_"))%>%
+  select("ec5_uuid", "project_id", "site_id", "sensorID", "mission_id", "deployment_date", "retrieval_date", "time", "longitude", "latitude", "accuracy", "ec5_branch_uuid", "shield_type", "temp_sens_ht")
 
 write_csv(deployment_retrievals, file = paste("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_", format(Sys.Date(), "%Y%m%d"), ".csv", sep = ""))
+
+
+## Missing data ----
+
+### Missing by mission_id ----
+
+# deployment_retrievals <- read_csv("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_20230806.csv")
+
+
+missing_values_summary_1 <- deployment_retrievals %>%
+  #replace empty strings with NA
+  mutate_all(~na_if(., ''))%>%
+  filter(!is.na(project_id)&!is.na(sensorID))%>%
+  group_by(mission_id) %>%
+  summarize(across(everything(), ~sum(is.na(.))))%>%
+  select(-c("ec5_uuid", "project_id", "site_id", "sensorID"))
+print(missing_values_summary_1)
+
+# Create an empty dataframe to store the final result
+missing_values_summary_2 <- data.frame()
+
+# Loop through each row of the missing_values_summary dataframe
+for (i in 1:nrow(missing_values_summary_1)) {
+  mission_id <- missing_values_summary_1$mission_id[i]
+  missing_columns <- names(missing_values_summary_1)[-1][missing_values_summary_1[i, -1] > 0]
+  
+  # Create a new row with mission_id and missing columns
+  new_row <- data.frame(mission_id = mission_id, 
+                        setNames(data.frame(t(missing_columns)), paste0("missing_", seq_along(missing_columns))))
+  
+  # Append the new row to the new_df
+  missing_values_summary_2 <- bind_rows(missing_values_summary_2, new_row)
+}
+
+print(missing_values_summary_2)
+
+### Missing projects ----
+
+missing_projects <- deployment_retrievals %>%
+  #replace empty strings with NA
+  mutate_all(~na_if(., ''))%>%
+  group_by(ec5_uuid) %>%
+  summarize(across(everything(), ~sum(is.na(.))))%>%
+  select(-c("site_id", "mission_id","deployment_date", "retrieval_date", "time", "longitude", "latitude", "accuracy", "ec5_branch_uuid", "shield_type", "temp_sens_ht"))%>%
+  filter(project_id==1|sensorID==1)%>%
+  rename(c(missing_project_id=project_id, missing_sensorID=sensorID))
+print(missing_projects_1)
+
+
+
+
 
