@@ -25,7 +25,6 @@ projects <- "BUCL2022|BUGhost2022|BUMTN2022"
 
 # Enter path to microclimate directory
 CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
-
 # projects <- "BUGhost2022"
 
 
@@ -33,10 +32,11 @@ CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared
 # ----------------Bring in project metadata------------------
 # Get deployment and project meta data ("Missions update here")
 gs4_deauth()
-epicollect_dpl_retr <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738")%>%
-  distinct()%>%  
-  mutate(serial=as.character(serial))
+# epicollect_dpl_retr <- read_sheet("https://docs.google.com/spreadsheets/d/17XlD9aDWxbF-hT_lgHHTUPqp7LcqJtmg-D2WjVK31D4/edit#gid=707838738") %>%
+#   distinct()%>%  
+#   mutate(serial=as.character(serial))
 
+epicollect_dpl_retr <- read_csv("~/Google Drive/Shared drives/CFS_microclimate/deployment_retrieval/CFSdeployment_retrieval/Epicollect deployment and retrieval 2022.csv")
 
 # Get retrieval data ("Epicollect deployment and retrieval 2022")
 missions_update <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oyqA254Ld69-6nNeHiX_WjwS2vg5TMDDQWVY/edit#gid=266715229")
@@ -48,13 +48,41 @@ epi_2023<-read_csv("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/ep
 # combine metadata we are interested in into a single dataframe
 mission_meta<-missions_update%>%
   left_join(epicollect_dpl_retr)%>%
-  select(mission_id, shield_type, temp_sens_ht, lat, long, accuracy, `retrieval_date_(dd/mm/yyyy)`, `deployment_date_(dd/mm/yyyy)`)%>%
-  rename(c(latitude=lat, longitude=long, retrieval_date=`retrieval_date_(dd/mm/yyyy)`, deployment_date=`deployment_date_(dd/mm/yyyy)`))%>% 
-  rbind(epi_2023)%>%
-  distinct()
+  select(ec5_uuid, mission_id, shield_type, temp_sens_ht, lat, long, accuracy, `retrieval_date_(dd/mm/yyyy)`, `deployment_date_(dd/mm/yyyy)`)%>%
+  rename(c(latitude=lat, longitude=long, retrieval_date=`retrieval_date_(dd/mm/yyyy)`, deployment_date=`deployment_date_(dd/mm/yyyy)`))%>%
+  left_join(epi_2023, join_by(ec5_uuid, mission_id))%>%
+  #fill missing values
+  mutate(
+    shield_type=(coalesce(shield_type.x, shield_type.y)),
+    temp_sens_ht=(coalesce(temp_sens_ht.x, temp_sens_ht.y)),
+    latitude=(coalesce(latitude.x, latitude.y)),
+    longitude=(coalesce(latitude.x, latitude.y)),
+    accuracy=(coalesce(accuracy.x, accuracy.y)),
+    retrieval_date=(coalesce(retrieval_date.x, retrieval_date.y)),
+    deployment_date=(coalesce(deployment_date.x, deployment_date.y)))%>%
+  dplyr::select(ec5_uuid, mission_id, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
+  
+epi_2023_2<-epi_2023%>%
+  anti_join(missions_update, join_by(mission_id))
+
+mission_meta<-mission_meta%>%
+  rbind(epi_2023_2)
+
+### add missing Ghost mission IDs ----
+epi_2023_3<-read_csv("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_20230806.csv")%>%
+select(mission_id, site_id, project_id, deployment_date, sensorID)%>%distinct()
 
 
 
+mission_meta_2 <- mission_meta %>%
+  left_join(epi_2023_3, by = join_by(mission_id,
+                                      deployment_date))%>%
+  mutate(mission_id_2= ifelse(grepl(site_id, "Ghst") & is.na(project_id) & substr(deployment_date, 1, 4) == "2022", "mission_id", mission_id))%>%
+  mutate(mission_id_3=ifelse(!is.na(mission_id_2), as.character(mission_id_2), mission_id))%>%
+  # select(-c(mission_id, mission_id_2, site_id, project_id, sensorID))%>%
+  select(-c(mission_id, mission_id_2))%>%
+  rename(mission_id=mission_id_3)
+  
 # ----------------Get a list of directories------------------
 # Create a list of folders named raw in directories that match the user specified projects
 dirs <- intersect(
@@ -101,7 +129,7 @@ for (dir in dirs) {
     rename(temperature= Value)
   
   combined_data_3 <- combined_data_2 %>%
-    left_join(mission_meta)
+    left_join(mission_meta_2)
   
   # save as a csv within the correct project parent directory
   save_dir<-substr(dir, 1, nchar(dir) - 3)
@@ -115,9 +143,17 @@ for (dir in dirs) {
 
 
 # View missing deployment/retrieval info ----
+BUMTN2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUMTN2022/cleaned/BUMTN2022_cleaned_20230806.csv")
+BUGhost2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUGhost2022/cleaned/BUGhost2022_cleaned_20230806.csv")
+BUCL2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUCL2022/cleaned/BUCL2022_cleaned_20230806.csv")
+
 missing<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned)%>%
   select(mission_id, latitude, longitude, accuracy, retrieval_date, deployment_date)%>%
   distinct()
+
+
+
+
 
 
 # combined_data_3a <- combined_data_2 %>%

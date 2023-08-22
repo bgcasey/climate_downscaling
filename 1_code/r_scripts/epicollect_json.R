@@ -140,6 +140,24 @@ missing_projects <- deployment_retrievals %>%
 print(missing_projects_1)
 
 
+## Fix entry errors as needed ----
 
+### Bring in 2022 deployment entries from Tharindu ----
+library(readxl)
+DeploymentFixed <- read_excel("0_data/external/remissingepicollectformsibuttons/DeploymentFixed.xlsx")
+DeplymentFixed_1<-DeploymentFixed%>%
+  select(ec5_uuid, contains("deploy"))
+
+df<-deployment_retrievals%>%semi_join(DeplymentFixed_1)
+
+Retrieval_Entries <- read_excel("0_data/external/remissingepicollectformsibuttons/Retrieval Entries_ibutton entries_Comments section_Retrieval form 2022_NEW.xlsx")
+
+
+deployment_retrievals_1<-deployment_retrievals%>%
+  select(ec5_uuid, contains("deploy"))
+
+df1<-deployment_retrievals%>%semi_join(deployment_retrievals_1)
+
+df2<-deployment_retrievals%>%inner_join(deployment_retrievals_1, join_by(ec5_uuid))
 
 
