@@ -20,8 +20,9 @@ library(googlesheets4)
 # ----------------------- Setup -----------------------------
 # enter projects to be processed separated by "|"
 # projects <- "BUCL2022|BUGhost2022|BUMTN2022"
-projects <- "ABMI2022|ABMI2023"
+projects <- "CFSYukon2022"
 
+# projects <- "BUCL2022"
 
 # Enter path to microclimate directory
 CFS_microclimate<-"~/Library/CloudStorage/GoogleDrive-bgcasey@ualberta.ca/Shared drives/CFS_microclimate/"
@@ -41,6 +42,7 @@ epicollect_dpl_retr <- read_csv("~/Google Drive/Shared drives/CFS_microclimate/d
 # Get retrieval data ("Epicollect deployment and retrieval 2022")
 # missions_update <- read_sheet("https://docs.google.com/spreadsheets/d/1k0tpoW2oyqA254Ld69-6nNeHiX_WjwS2vg5TMDDQWVY/edit#gid=266715229")
 missions_update <- read_csv("~/Google Drive/Shared drives/CFS_microclimate/deployment_retrieval/CFSdeployment_retrieval/Missions update here.csv")
+
 
 
 # Get retrieval data ("Epicollect deployment and retrieval 2023")
@@ -96,17 +98,10 @@ mission_meta<-missions_update%>%
   
 # ----------------Get a list of directories------------------
 # Create a list of folders named raw in directories that match the user specified projects
-# dirs <- intersect(
-#   grep("raw",list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE),
-#   grep(projects,list.dirs(path="0_data/test_ibutton_file_structure/Projects/",recursive=TRUE),value=TRUE)
-# )
-# 
-
 dirs <- intersect(
   grep("raw",list.dirs(path=paste0(CFS_microclimate, "Projects/"),recursive=TRUE),value=TRUE),
   grep(projects,list.dirs(path=paste0(CFS_microclimate, "Projects/"),recursive=TRUE),value=TRUE)
 )
-
 
 ## --------- Process raw csv files in each directory ---------
 
@@ -163,17 +158,15 @@ for (dir in dirs) {
 BUMTN2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUMTN2022/cleaned/BUMTN2022_cleaned_20230821.csv")
 BUGhost2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUGhost2022/cleaned/BUGhost2022_cleaned_20230821.csv")
 BUCL2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUCL2022/cleaned/BUCL2022_cleaned_20230821.csv")
-ABMI2022_cleaned <- read_csv(paste0(CFS_microclimate, "Projects/ABMI2022/cleaned/ABMI2022_cleaned_20230915.csv"))
-ABMI2023_cleaned <- read_csv(paste0(CFS_microclimate, "Projects/ABMI2023/cleaned/ABMI2023_cleaned_20230915.csv"))
 
-missing<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned, ABMI2022_cleaned, ABMI2023_cleaned)%>%
+missing<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned)%>%
   select(mission_id, latitude, longitude, accuracy, retrieval_date, deployment_date)%>%
   distinct()
 
 save(missing, file="2_pipeline/tmp/missing.rData")
 write_csv(missing, file="2_pipeline/tmp/missing_metadata.csv")
 
-
+test<-left_join(missing, deployment_retrievals, join_by(mission_id))
 
 
 # combined_data_3a <- combined_data_2 %>%
