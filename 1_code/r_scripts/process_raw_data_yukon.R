@@ -20,6 +20,13 @@ missions_update <- read_csv("~/Google Drive/Shared drives/CFS_microclimate/deplo
 epi_2023<-read_csv("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_20230902.csv")%>%
   select(ec5_uuid, mission_id, site_id, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
 
+#Updated site names
+yukon_site<-read_xlsx("~/Google Drive/Shared drives/CFS_microclimate/deployment_retrieval/Yukon_Revised iButton Deployment Data 2.0.xlsx")%>%
+  select("ec5_uuid","Site #s")
+
+
+
+
 # combine metadata we are interested in into a single dataframe
 mission_meta<-missions_update%>%
   left_join(epicollect_dpl_retr)%>%
@@ -38,7 +45,9 @@ mission_meta<-missions_update%>%
     accuracy=(coalesce(accuracy.x, accuracy.y)),
     retrieval_date=(coalesce(retrieval_date.x, retrieval_date.y)),
     deployment_date=(coalesce(deployment_date.x, deployment_date.y)))%>%
-  dplyr::select(ec5_uuid, mission_id, site_id, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
+    left_join(yukon_site)%>%
+    dplyr::select(ec5_uuid, mission_id, site_id, `Site #s`, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
+ 
 
 # ----------------Get a list of directories------------------
 # Create a list of folders named raw in directories that match the user specified projects
@@ -98,18 +107,42 @@ for (dir in dirs) {
   write_csv(combined_data_3, file=paste0(save_dir, combined_data_3$project_id[1], "_cleaned_", format(Sys.Date(), "%Y%m%d"), ".csv"))
 }
 
+
 CFSYukon2022_daily<-combined_data_3%>%
-  mutate(Value=temperature, Site_StationKey=mission_id)%>%
+  mutate(Value=temperature)%>%
   mutate(Date=date(date_time))%>%
   mutate(deployment_date=strptime(deployment_date, format = "%d/%m/%Y"))%>%
   mutate(retrieval_date = strptime(retrieval_date, format = "%m/%d/%Y"))%>%
-  filter(date_time>deployment_date)%>%
-  filter(Date<=retrieval_date)%>%
-  dplyr::group_by(site_id, Site_StationKey,Date) %>% #group by days, month and year
-  dplyr::summarize(Tmax_Day=max(temperature),Tmin_Day=min(temperature),Tavg_Day=mean(temperature))%>%
+  dplyr::group_by(site_id, mission_id, Date) %>% 
+  mutate(Tmax_Day=max(temperature),Tmin_Day=min(temperature),Tavg_Day=mean(temperature))%>%
+  ungroup()%>%
   mutate(Year=year(Date))%>%
   mutate(Month=month(Date))%>%
   mutate(Day=day(Date))%>%
-  dplyr::group_by(Site_StationKey,Date) 
+  dplyr::select(c(site_id, mission_id, Date, Year, Month, Day, deployment_date, retrieval_date,Tmax_Day,Tmin_Day,Tavg_Day))%>%
+  distinct()
 
-write_csv(CFSYukon2022_daily, file=paste0(CFS_microclimate, "Projects/CFSYukon2022_a/cleaned/CFSYukon2022_daily.csv"))
+write_csv(CFSYukon2022_daily, file=paste0(CFS_microclimate, "Projects/CFSYukon2022_a/cleaned/CFSYukon2022", "_daily_", format(Sys.Date(), "%Y%m%d"), ".csv"))
+
+# View missing deployment/retrieval info ----
+missing<-CFSYukon2022_a_cleaned%>%
+  select(mission_id, latitude, longitude, accuracy, retrieval_date, deployment_date)%>%
+  distinct()
+
+save(missing, file="2_pipeline/tmp/missing_CFSYukon2022.rData")
+write_csv(missing, file="2_pipeline/tmp/missing_CFSYukon2022_metadata.csv")
+
+
+
+
+xy<-combined_data_3%>%
+  select(project_id, mission_id, latitude, longitude, year)%>%
+  group_by(project_id, mission_id, latitude, longitude)%>%
+  dplyr::summarize(min_year=min(year), max_year=max(year))%>%
+  dplyr::rename(c(Project=project_id, Site_StationKey=mission_id, Lat=latitude, Long=longitude))%>%
+  dplyr::distinct()%>%
+  na.omit()%>%
+  st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+
+
