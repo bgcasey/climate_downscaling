@@ -31,9 +31,10 @@ soiltemp_people<- read_excel("~/Google_Drive/Shared drives/CFS_microclimate/Soil
 
 
 ### BU ibutton data----
-BUMTN2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUMTN2022/cleaned/BUMTN2022_cleaned_20230821.csv")
-BUGhost2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUGhost2022/cleaned/BUGhost2022_cleaned_20230821.csv")
-BUCL2022_cleaned <- read_csv("0_data/test_ibutton_file_structure/Projects/BUCL2022/cleaned/BUCL2022_cleaned_20230821.csv")
+BUMTN2022_cleaned <- read_csv("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUMTN2022/cleaned/BUMTN2022_cleaned_20231016.csv")
+BUGhost2022_cleaned <- read_csv("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUGhost2022/cleaned/BUGhost2022_cleaned_20231016.csv")
+BUCL2022_cleaned <- read_csv("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUCL2022/cleaned/BUCL2022_cleaned_20231016.csv")
+BUGen2022_cleaned <- read_csv("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUGen2022/cleaned/BUGen2022_cleaned_20231016.csv")
 
 ### Project metadata----
 epicollect_dpl_retr <- read_csv("~/Google Drive/Shared drives/CFS_microclimate/deployment_retrieval/CFSdeployment_retrieval/Epicollect deployment and retrieval 2022.csv")
@@ -69,7 +70,7 @@ mission_meta<-missions_update%>%
 
 # Combine BU data----
 # Combine BU data into single data frame
-BU<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned)
+BU<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned, BUGen2022_cleaned)
 
 
 ##////////////////////////////////////////////////////////////////
@@ -78,7 +79,7 @@ BU<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned)
 # Add missing metadata
 BU_2<-left_join(BU, mission_meta)
 
-BU_md<-BU_2%>%
+BU_metadata<-BU_2%>%
   dplyr::group_by(mission_id) %>%
   arrange(mission_id, date_time) %>%
   mutate(Temporal_resolution = as.numeric(difftime(date_time, lag(date_time), units = "mins"))) %>%
@@ -115,11 +116,11 @@ BU_md<-BU_2%>%
   select(-c(shield_type, filename, serial_full, ec5_uuid, retrieval_date, deployment_date, count))%>%
   rename(Site_id=site_id, Experiment_name=project_id, Logger_code=serial_number, Raw_data_identifier=mission_id, Latitude=latitude, Longitude=longitude, GPS_accuracy=accuracy, Sensor_height=temp_sens_ht)
 
-BU_md <- soiltemp_metadata %>%
+BU_metadata <- soiltemp_metadata %>%
   bind_rows(BU_md, .id = "source") %>%
   select(-source)
 
-write_csv(BU_md, file="2_pipeline/tmp/BU_md.csv")
+write_csv(BU_metadata, file="2_pipeline/tmp/BU_metadata.csv")
 
 ##////////////////////////////////////////////////////////////////
 #Format for soiltemp_raw----
@@ -129,6 +130,14 @@ BU_raw<-BU%>%
   select(Raw_data_identifier,	Year,	Month,	Day,	`Time (24h)`,	Temperature)
 
 write_csv(BU_raw, file="2_pipeline/tmp/BU_raw.csv")
+
+
+
+
+
+
+
+
 
 
 
