@@ -47,8 +47,6 @@ st_write(RIVR_xy, "0_data/manual/iButton_data/spatial/RIVR_xy.shp")
 ```
 
 
-
-
 ### HILL {.unnumbered}
 
 **Load data**
@@ -336,6 +334,41 @@ save(crdv_xy, file="0_data/manual/iButton_data/spatial/crdv_xy.rData")
 st_write(crdv_xy, "0_data/manual/iButton_data/spatial/crdv_xy.shp")
 ```
 
+### BU projects
+
+```{r}
+BUMTN2022_xy <- st_read("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUMTN2022/cleaned/BUMTN2022_xy_20231016.shp")
+BUGhost2022_xy <- load("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUGhost2022/cleaned/BUGhost2022_xy_20231016.rData")
+BUCL2022_xy <- load("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUCL2022/cleaned/BUCL2022_xy_20231016.rData")
+BUGen2022_xy <- load("~/Google_Drive/Shared drives/CFS_microclimate/Projects/BUGen2022/cleaned/BUGen2022_xy_20231016.rData")
+
+BU_xy<-rbind(BUCL2022_xy, BUGhost2022_xy, BUMTN2022_xy, BUGen2022_xy)
+
+%>%
+  select(project_id, mission_id, latitude, longitude, year)%>%
+    group_by(project_id, mission_id, latitude, longitude)%>%
+    dplyr::summarize(min_year=min(year), max_year=max(year))%>%
+    dplyr::rename(c(Project=project_id, Site_StationKey=mission_id, Lat=latitude, Long=longitude))%>%
+    dplyr::distinct()%>%
+    na.omit()%>%
+    st_as_sf(coords=c("Long","Lat"), crs=4326, remove=FALSE)
+
+
+st_write(BU_xy, "0_data/manual/iButton_data/spatial/BU_xy.shp")
+  
+
+
+  
+
+```
+
+
+
+
+
+###
+
+
 
 
 
@@ -352,7 +385,16 @@ load("0_data/manual/iButton_data/spatial/ARVTDendro_2021_xy.rData")
 load("0_data/manual/iButton_data/spatial/ARVTFire_2020_2022_xy.rData")
 load("0_data/manual/iButton_data/spatial/RedPlat_xy.rData")
 load("0_data/manual/iButton_data/spatial/crdv_xy.rData")
-ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy, BCWS_xy, RedPlat_xy, ARVTDendro_2021_xy, ARVTFire_2020_2022_xy, crdv_xy)
+
+BUGhost2022_xy<-readRDS("~/Google Drive/Shared drives/CFS_microclimate/Projects/BUGhost2022/cleaned/BUGhost2022_xy_20231017.rds")
+BUCL2022_xy<-readRDS("~/Google Drive/Shared drives/CFS_microclimate/Projects/BUCL2022/cleaned/BUCL2022_xy_20231017.rds")
+BUGen2022_xy<-readRDS("~/Google Drive/Shared drives/CFS_microclimate/Projects/BUGen2022/cleaned/BUGen2022_xy_20231017.rds")
+BUMTN2022_xy<-readRDS("~/Google Drive/Shared drives/CFS_microclimate/Projects/BUMTN2022/cleaned/BUMTN2022_xy_20231017.rds")
+
+
+BU_xy<-rbind(BUCL2022_xy, BUGhost2022_xy, BUMTN2022_xy, BUGen2022_xy)
+
+ss_xy<-rbind(RIVR_xy, wood_xy, hills_xy, alex_xy, BCWS_xy, RedPlat_xy, ARVTDendro_2021_xy, ARVTFire_2020_2022_xy, crdv_xy, BU_xy)
 
 # save as spatial data frame
 save(ss_xy, file="0_data/manual/iButton_data/spatial/ss_xy.rData")
