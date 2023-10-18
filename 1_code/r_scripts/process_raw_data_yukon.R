@@ -1,6 +1,7 @@
 
 library(data.table)
 library(tidyverse)
+library(readxl)
 
 projects <- "CFSYukon2022_a"
 
@@ -19,6 +20,9 @@ missions_update <- read_csv("~/Google Drive/Shared drives/CFS_microclimate/deplo
 # Get retrieval data ("Epicollect deployment and retrieval 2023")
 epi_2023<-read_csv("0_data/test_ibutton_file_structure/epicollect/cleaned_csv/epicollect_deployment_retrivals_20230902.csv")%>%
   select(ec5_uuid, mission_id, site_id, shield_type, temp_sens_ht, latitude, longitude, accuracy, retrieval_date, deployment_date)
+
+
+
 
 #Updated site names
 yukon_site<-read_xlsx("~/Google Drive/Shared drives/CFS_microclimate/deployment_retrieval/Yukon_Revised iButton Deployment Data 2.0.xlsx")%>%
@@ -112,17 +116,36 @@ CFSYukon2022_daily<-combined_data_3%>%
   mutate(Value=temperature)%>%
   mutate(Date=date(date_time))%>%
   mutate(deployment_date=strptime(deployment_date, format = "%d/%m/%Y"))%>%
-  mutate(retrieval_date = strptime(retrieval_date, format = "%m/%d/%Y"))%>%
+  mutate(retrieval_date = strptime(retrieval_date, format = "%d/%m/%Y"))%>%
   dplyr::group_by(site_id, mission_id, Date) %>% 
   mutate(Tmax_Day=max(temperature),Tmin_Day=min(temperature),Tavg_Day=mean(temperature))%>%
   ungroup()%>%
   mutate(Year=year(Date))%>%
   mutate(Month=month(Date))%>%
   mutate(Day=day(Date))%>%
-  dplyr::select(c(site_id, mission_id, Date, Year, Month, Day, deployment_date, retrieval_date,Tmax_Day,Tmin_Day,Tavg_Day))%>%
+  dplyr::select(c(`Site #s`, mission_id, Date, Year, Month, Day, deployment_date, retrieval_date,Tmax_Day,Tmin_Day,Tavg_Day))%>%
   distinct()
 
 write_csv(CFSYukon2022_daily, file=paste0(CFS_microclimate, "Projects/CFSYukon2022_a/cleaned/CFSYukon2022", "_daily_", format(Sys.Date(), "%Y%m%d"), ".csv"))
+
+
+CFSYukon2022_monthly<-combined_data_3%>%
+  mutate(Value=temperature)%>%
+  mutate(Date=date(date_time))%>%
+  mutate(Year=year(Date))%>%
+  mutate(Month=month(Date))%>%
+  mutate(deployment_date=strptime(deployment_date, format = "%d/%m/%Y"))%>%
+  mutate(retrieval_date = strptime(retrieval_date, format = "%d/%m/%Y"))%>%
+  dplyr::group_by(`Site #s`, mission_id, Year, Month) %>% 
+  mutate(Tmax_month=max(temperature),Tmin_month=min(temperature),Tavg_month=mean(temperature))%>%
+  ungroup()%>%
+  dplyr::select(c(`Site #s`, mission_id, Year, Month, deployment_date, retrieval_date,Tmax_month,Tmin_month,Tavg_month))%>%
+  distinct()
+
+write_csv(CFSYukon2022_monthly, file=paste0(CFS_microclimate, "Projects/CFSYukon2022_a/cleaned/CFSYukon2022", "_monthly_", format(Sys.Date(), "%Y%m%d"), ".csv"))
+
+
+
 
 # View missing deployment/retrieval info ----
 missing<-CFSYukon2022_a_cleaned%>%
