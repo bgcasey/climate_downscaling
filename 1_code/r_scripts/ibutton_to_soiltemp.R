@@ -79,6 +79,7 @@ BU<-rbind(BUCL2022_cleaned, BUGhost2022_cleaned, BUMTN2022_cleaned, BUGen2022_cl
 # Add missing metadata
 BU_2<-left_join(BU, mission_meta)
 
+
 BU_metadata<-BU_2%>%
   dplyr::group_by(mission_id) %>%
   arrange(mission_id, date_time) %>%
@@ -89,6 +90,7 @@ BU_metadata<-BU_2%>%
   ungroup() %>%
   select(-c(temperature, date_time, month, day, year))%>%
   distinct()%>%
+  filter(!is.na(latitude))%>%
   mutate(meta_id=as.character(row_number()))%>%
   mutate(Country_code="CA")%>%
   mutate(Experimental_manipulation="No")%>%
@@ -96,28 +98,34 @@ BU_metadata<-BU_2%>%
   mutate(Experiment_climate="No")%>%
   mutate(Experiment_citizens="No")%>%
   mutate(EPSG=4326)%>%
-  mutate(Sensor_shielding = ifelse(!is.na(shield_type), "yes", ""))%>%
+  mutate(Logger_brand= "iButton")%>%
+  mutate(Sensor_code = "Temperature")%>%
+  mutate(Sensor_shielding = "Yes")%>%
+  mutate(Sensor_shielding_type = "Yes")%>%
   mutate(Logger_serial_number=serial_number)%>%
+  mutate(Experiment_insitu="Yes")%>%
   mutate(Microclimate_measurement= "Temperature")%>%
   mutate(Unit= "°C ")%>%
+  mutate(Sensor_height="150")%>%
   mutate(Timezone="Local")%>%
-  mutate(Time_difference="Local")%>%
+  mutate(Time_difference="-6")%>%
   mutate(Licence="CC-BY")%>%
   mutate(Species_composition="No")%>%
   mutate(Species_trait="No")%>%
-  mutate(deployment_date=as.POSIXct(deployment_date, format = "%m/%d/%Y"))%>%
-  mutate(retrieval_date=as.POSIXct(retrieval_date, format = "%m/%d/%Y"))%>%
+  mutate(deployment_date=as.POSIXct(deployment_date, format = "%d/%m/%Y"))%>%
+  mutate(retrieval_date=as.POSIXct(retrieval_date, format = "%d/%m/%Y"))%>%
   mutate(Start_date_year=year(deployment_date))%>%
   mutate(Start_date_month=month(deployment_date))%>%
   mutate(Start_date_day=day(deployment_date))%>%
   mutate(End_date_year=year(retrieval_date))%>%
   mutate(End_date_month=month(retrieval_date))%>%
   mutate(End_date_day=day(retrieval_date))%>%
-  select(-c(shield_type, filename, serial_full, ec5_uuid, retrieval_date, deployment_date, count))%>%
-  rename(Site_id=site_id, Experiment_name=project_id, Logger_code=serial_number, Raw_data_identifier=mission_id, Latitude=latitude, Longitude=longitude, GPS_accuracy=accuracy, Sensor_height=temp_sens_ht)
+  select(-c(shield_type, filename, serial_full, ec5_uuid, count, deployment_date, retrieval_date, temp_sens_ht))%>%
+  rename(Site_id=site_id, Experiment_name=project_id, Logger_code=serial_number, Raw_data_identifier=mission_id, Latitude=latitude, Longitude=longitude, GPS_accuracy=accuracy)
+  
 
 BU_metadata <- soiltemp_metadata %>%
-  bind_rows(BU_md, .id = "source") %>%
+  bind_rows(BU_metadata, .id = "source") %>%
   select(-source)
 
 write_csv(BU_metadata, file="2_pipeline/tmp/BU_metadata.csv")
@@ -127,7 +135,8 @@ write_csv(BU_metadata, file="2_pipeline/tmp/BU_metadata.csv")
 BU_raw<-BU%>%
   mutate(`Time (24h)`=format(date_time, "%H:%M:%S"))%>%
   rename(Raw_data_identifier=mission_id, Year=year, Month=month, Day=day, Temperature=temperature)%>%
-  select(Raw_data_identifier,	Year,	Month,	Day,	`Time (24h)`,	Temperature)
+  select(Raw_data_identifier,	Year,	Month,	Day,	`Time (24h)`,	Temperature)%>%
+  semi_join(BU_metadata)
 
 write_csv(BU_raw, file="2_pipeline/tmp/BU_raw.csv")
 

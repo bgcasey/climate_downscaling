@@ -1,3 +1,16 @@
+# ---
+# title: "Process raw data: Yukon"
+# author: "Brendan Casey"
+# created: "2023-09-15"
+# description: "Process raw iButton csv's"
+# ---
+
+
+# Setup ----
+
+## Load packages----
+
+
 
 library(data.table)
 library(tidyverse)
